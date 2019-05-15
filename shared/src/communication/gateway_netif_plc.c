@@ -32,14 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stddef.h>
-#include <stdbool.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
 #include <assert.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 

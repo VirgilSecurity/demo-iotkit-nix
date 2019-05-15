@@ -140,7 +140,6 @@ base64encode_len(int len) {
     return ((len + 2) / 3 * 4) + 1;
 }
 
-
 int
 base64encode(const unsigned char *in, int inlen, char *out, int *outlen) {
     int i;

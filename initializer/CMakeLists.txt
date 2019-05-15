@@ -38,7 +38,6 @@ cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 #	Define variables
 #
 set (IOT_GW_INITIALIZER virgil-iot-gateway-initialializer)
-set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
 
 #
 #	Source files

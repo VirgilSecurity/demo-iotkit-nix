@@ -34,49 +34,38 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
+project(freertos VERSION 0.1.0 LANGUAGES C)
 
-set(RPI_GW_LIB rpi_gw)
+# ---------------------------------------------------------------------------
+#   Pure FreeRTOS library
+# ---------------------------------------------------------------------------
 
-
-#
-#   Source code
-#
-set(RPI_GW_SRC
-		src/base64/base64.c
-		src/communication/gateway_netif_plc.c
-		src/secbox_impl/gateway_secbox_impl.c
-		src/helpers/file-system.c
-		src/hal/hal.c
-		)
+set(FREERTOS_LIB freertos)
 
 #
-#   RaspberryPi gateway library
+# file folders
 #
-add_library(${RPI_GW_LIB}
-		${RPI_GW_SRC}
-		)
+set(FREERTOS_ROOT     "${CMAKE_CURRENT_SOURCE_DIR}/freertos/FreeRTOS")
+set(FREERTOS_SOURCE   "${FREERTOS_ROOT}/Source")
+set(FREERTOS_INCLUDE  "${FREERTOS_ROOT}/Source/include")
 
 #
-#   -Wall -Werror
+#   Freertos core sources
 #
-set_target_properties(${RPI_GW_LIB} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set(FREERTOS_LIB_SOURCE_FILES
+        "${FREERTOS_SOURCE}/tasks.c"
+        "${FREERTOS_SOURCE}/timers.c"
+        "${FREERTOS_SOURCE}/list.c"
+        "${FREERTOS_SOURCE}/queue.c"
+        "${FREERTOS_SOURCE}/event_groups.c"
+        "${FREERTOS_SOURCE}/stream_buffer.c"
+        "${FREERTOS_SOURCE}/croutine.c"
+        "${FREERTOS_SOURCE}/portable/MemMang/heap_3.c"
+        )
 
-#
-#   Common include directories
-#
+add_library(${FREERTOS_LIB}
+        ${FREERTOS_LIB_SOURCE_FILES}
+        )
 
-set (VIRGIL_SDK_DIR "${CMAKE_SOURCE_DIR}/ext/virgil-iot-sdk")
-target_include_directories(${RPI_GW_LIB}
-		PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${VIRGIL_SDK_DIR}/protocols/sdmp/include
-		${VIRGIL_SDK_DIR}/secbox/include
-		)
-
-#
-# Format code
-#
-if(COMMAND add_clangformat)
-	add_clangformat(${RPI_GW_LIB})
-endif()
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_INCLUDE})
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_SOURCE})
