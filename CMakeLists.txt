@@ -34,61 +34,91 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
+# ---------------------------------------------------------------------------
+#   Enable Golang
+# ---------------------------------------------------------------------------
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/golang.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/flags.cmake)
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+
 #
 #   Clang format
 #
-include("ap/security-sdk/cmake/clangformat.cmake")
+include(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 
 #
 #   Setup project
 #
-project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C)
+project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C Go)
 
+# ---------------------------------------------------------------------------
+#   Settings
+# ---------------------------------------------------------------------------
+
+#
+#   Enable/Disable simulator
+#
+option(GATEWAY_SIMULATOR "On/Off code for simulator." ON)
+add_definitions(-DSIMULATOR=${GATEWAY_SIMULATOR})
 
 #
 #   Address sanitizer
 #
-set(USE_ASAN OFF CACHE BOOL "Enable Address sanitizer")
+option(USE_ASAN "On/Off Address sanitizer." OFF)
 message("-- Address Sanitizer: ${USE_ASAN}")
 if (USE_ASAN)
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 endif()
 
-
 #
 #   Undefined behavior sanitizer
 #
-set(USE_UBSAN OFF CACHE BOOL "Enable Undefined behavior sanitizer")
+option(USE_UBSAN "On/Off Undefined behavior sanitizer." OFF)
 message("-- Undefined behavior Sanitizer: ${USE_UBSAN}")
 if (USE_UBSAN)
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=undefined")
 endif()
 
-#
-#   Security processor
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sp)
+# ---------------------------------------------------------------------------
+#   Folders with targets
+# ---------------------------------------------------------------------------
 
+#
+#   Virgil crypto C
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-crypto-c)
+
+#
+#   Virgil IoT SDK
+#
+set(VIRGIL_IOT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk CACHE STRING "Path to the Virgil IoT SDK")
+set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/rpi CACHE STRING "Path to the Virgil IoT SDK configuration")
+add_subdirectory(${VIRGIL_IOT_DIRECTORY})
+
+#
+#   FreeRTOS
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos)
+
+#
+#   Gateway library
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shared)
+
+#
+#   Initalizer
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
 
 #
 #   Application
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ap)
-
-#
-#   MCU Initializer
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/device/initializer)
-
-# Build examples
-if (ENABLE_EXAMPLES)
-    add_subdirectory (examples/iot_crypto_app)
-endif (ENABLE_EXAMPLES)
+#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
 
 # Unit tests
 #if (ENABLE_TESTING)
-    enable_testing ()
-    add_subdirectory (tests)
+#    TODO: Add tests
 #endif (ENABLE_TESTING)

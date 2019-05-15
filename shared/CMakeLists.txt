@@ -45,9 +45,12 @@ set(RPI_GW_LIB rpi_gw)
 set(RPI_GW_SRC
 		src/base64/base64.c
 		src/communication/gateway_netif_plc.c
-		src/secbox_impl/gateway_keystorage_tl.c
 		src/secbox_impl/gateway_secbox_impl.c
-		src/secbox_impl/secbox_files.c
+		src/helpers/file-system.c
+		src/hal/crypto_hal.c
+		src/hal/file_io_hal.c
+		src/hal/keypair_hal.c
+		src/hal/hal.c
 		)
 
 #
@@ -57,6 +60,12 @@ add_library(${RPI_GW_LIB}
 		${RPI_GW_SRC}
 		)
 
+target_link_libraries(${RPI_GW_LIB}
+		hsm
+		logger
+		foundation
+		converters
+		)
 #
 #   -Wall -Werror
 #
@@ -66,16 +75,12 @@ set_target_properties(${RPI_GW_LIB} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno
 #   Common include directories
 #
 
-set (VIRGIL_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk")
+set (VIRGIL_SDK_DIR "${CMAKE_SOURCE_DIR}/ext/virgil-iot-sdk")
 target_include_directories(${RPI_GW_LIB}
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 		${VIRGIL_SDK_DIR}/protocols/sdmp/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/protocols/sdmp/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/secbox/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../sp/crypto/inc
-		PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../inc
+		${VIRGIL_SDK_DIR}/secbox/include
 		)
 
 #

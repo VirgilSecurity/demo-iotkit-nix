@@ -70,7 +70,7 @@ set (GW_APP_SRC
 		${CMAKE_CURRENT_SOURCE_DIR}/src/update/upd_http_retrieval_thread.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/communication/gateway_netif_plc.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/secbox_impl/gateway_secbox_impl.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/secbox_impl/secbox_files.c
+		../shared/src/helpers/file-system.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/secbox_impl/gateway_keystorage_tl.c
 		src/json/json_parser.c
 		src/json/json_generator.c

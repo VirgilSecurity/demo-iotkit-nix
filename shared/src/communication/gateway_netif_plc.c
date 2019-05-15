@@ -32,14 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stddef.h>
-#include <stdbool.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
 #include <assert.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
@@ -50,7 +50,7 @@ _plc_init(const vs_netif_rx_cb_t rx_cb);
 static int
 _plc_deinit();
 static int
-_plc_tx(const uint8_t *data, const size_t data_sz);
+_plc_tx(const uint8_t *data, const uint16_t data_sz);
 static int
 _plc_mac(struct vs_mac_addr_t *mac_addr);
 
@@ -166,7 +166,7 @@ _gateway_plc_recv(void *param, iot_pkt_t *pkt) {
 
 /******************************************************************************/
 static int
-_plc_tx(const uint8_t *data, const size_t data_sz) {
+_plc_tx(const uint8_t *data, const uint16_t data_sz) {
     iot_pkt_t pkt;
 
     pkt.head = pkt.data = (uint8_t *)data;

@@ -32,63 +32,40 @@
 #
 #   Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+
+project(freertos VERSION 0.1.0 LANGUAGES C)
+
+# ---------------------------------------------------------------------------
+#   Pure FreeRTOS library
+# ---------------------------------------------------------------------------
+
+set(FREERTOS_LIB freertos)
 
 #
-#	Define variables
+# file folders
 #
-set (IOT_GW_INITIALIZER virgil-iot-gateway-initializer)
+set(FREERTOS_ROOT     "${CMAKE_CURRENT_SOURCE_DIR}/freertos/FreeRTOS")
+set(FREERTOS_SOURCE   "${FREERTOS_ROOT}/Source")
+set(FREERTOS_INCLUDE  "${FREERTOS_ROOT}/Source/include")
 
 #
-#	Source files
+#   Freertos core sources
 #
-set (GW_INITIALIZER_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-#		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp_initializer.c
-#		${CMAKE_CURRENT_SOURCE_DIR}/src/sdmp/prvs_implementation.c
-		)
+set(FREERTOS_LIB_SOURCE_FILES
+        "${FREERTOS_SOURCE}/tasks.c"
+        "${FREERTOS_SOURCE}/timers.c"
+        "${FREERTOS_SOURCE}/list.c"
+        "${FREERTOS_SOURCE}/queue.c"
+        "${FREERTOS_SOURCE}/event_groups.c"
+        "${FREERTOS_SOURCE}/stream_buffer.c"
+        "${FREERTOS_SOURCE}/croutine.c"
+        "${FREERTOS_SOURCE}/portable/MemMang/heap_3.c"
+        )
 
-#
-#	MCU Initializer
-#
-add_executable(${IOT_GW_INITIALIZER}
-		${GW_INITIALIZER_SRC}
-		)
+add_library(${FREERTOS_LIB}
+        ${FREERTOS_LIB_SOURCE_FILES}
+        )
 
-#
-#   -Wall -Werror
-#
-set_target_properties(${IOT_GW_INITIALIZER} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
-
-#
-#   Include directories
-#
-target_include_directories(${IOT_GW_INITIALIZER}
-		PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/protocols/sdmp/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/secbox/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../sp/crypto/inc
-		)
-
-#
-#	Link libraries
-#
-target_link_libraries (${IOT_GW_INITIALIZER}
-		foundation
-		sdmp
-		secbox
-		rpi_gw
-		logger
-		hsm
-		converters
-		)
-
-#
-#	Add cmake test
-#
-add_test (
-		NAME ${IOT_GW_INITIALIZER}
-		COMMAND "${CMAKE_CURRENT_BINARY_DIR}/${IOT_GW_INITIALIZER}"
-)
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_INCLUDE})
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_SOURCE})

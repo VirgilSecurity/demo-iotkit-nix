@@ -36,30 +36,33 @@
 #include <unistd.h>
 
 #include <virgil/crypto/common/vsc_buffer.h>
-#include <virgil/crypto/foundation/vscf_iotelic_sha256.h>
+#include <virgil/crypto/foundation/vscf_sha256.h>
 
 #include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/secbox/secbox.h>
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
-#include "iotelic/keystorage_tl.h"
+//#include "iotelic/keystorage_tl.h"
+
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/hsm/hsm_interface.h>
 
 /******************************************************************************/
 uint32_t
 app_crypto_entry() {
     uint32_t ret = 0;
-    const vs_netif_t *plc_netif = NULL;
+//    const vs_netif_t *plc_netif = NULL;
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
 
     // Get PLC Network interface
-    plc_netif = vs_hal_netif_plc();
+//    plc_netif = vs_hal_netif_plc();
 
-    init_keystorage_tl();
+//    init_keystorage_tl();
 
     // Start SDMP protocol over PLC interface
-    vs_sdmp_comm_start(plc_netif);
+//    vs_sdmp_comm_start(plc_netif);
 
     sleep(300);
 
@@ -85,10 +88,89 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
+static
+void test_sign_verify(void){
+    static const vs_iot_hsm_slot_e slot = VS_KEY_SLOT_STD_MTP_1;
+    static const vs_hsm_keypair_type_e keypair_type = VS_KEYPAIR_EC_SECP256R1;
+    static const vs_hsm_hash_type_e hash_type = VS_HASH_SHA_256;
+    static const uint8_t tbs[] = {"Some message to be signed"};
+    vs_hsm_keypair_type_e keypair_type_loaded;
+    uint8_t hash[128];
+    uint16_t hash_sz = sizeof(hash);
+    uint8_t sign[128];
+    uint16_t sign_sz = sizeof(sign);
+    uint8_t pubkey[128];
+    uint16_t pubkey_sz = sizeof(pubkey);
+
+    VS_LOG_INFO("AES tests");
+
+    if(VS_HSM_ERR_OK != vs_hsm_keypair_create(slot, keypair_type)){
+        VS_LOG_ERROR("vs_hsm_keypair_create error");
+        goto terminate;
+    }
+
+    if(VS_HSM_ERR_OK != vs_hsm_hash_create(hash_type, tbs, sizeof(tbs), hash, hash_sz, &hash_sz)){
+        VS_LOG_ERROR("vs_hsm_hash_create error");
+        goto terminate;
+    }
+
+    if(VS_HSM_ERR_OK != vs_hsm_ecdsa_sign(slot, hash_type, hash, sign, sign_sz, &sign_sz)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_sign error");
+        goto terminate;
+    }
+
+    if(VS_HSM_ERR_OK != vs_hsm_keypair_get_pubkey(slot, pubkey, pubkey_sz, &pubkey_sz, &keypair_type_loaded)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_sign error");
+        goto terminate;
+    }
+
+    if(keypair_type != keypair_type_loaded){
+        VS_LOG_ERROR("Unconsistent keypair types");
+        goto terminate;
+    }
+
+    if(VS_HSM_ERR_OK != vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_verify error");
+        goto terminate;
+    }
+
+/*    pubkey[3] = ~pubkey[3];
+
+    if(VS_HSM_ERR_OK == vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_verify false positive because of corrupted public key");
+        goto terminate;
+    }
+
+    pubkey[3] = ~pubkey[3];
+*/
+
+    sign[3] = ~sign[3];
+
+    if(VS_HSM_ERR_OK == vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_verify false positive because of corrupted signature");
+        goto terminate;
+    }
+
+    sign[3] = ~sign[3];
+
+    hash[3] = ~hash[3];
+
+    if(VS_HSM_ERR_OK == vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
+        VS_LOG_ERROR("vs_hsm_ecdsa_verify false positive because of corrupted signature");
+        goto terminate;
+    }
+
+terminate:;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
+
+    vs_logger_init(VS_LOGLEV_DEBUG);
+    test_sign_verify();
 
     if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
