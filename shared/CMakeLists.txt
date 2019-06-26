@@ -50,6 +50,7 @@ set(RPI_GW_SRC
 		src/hal/crypto_hal.c
 		src/hal/file_io_hal.c
 		src/hal/keypair_hal.c
+		src/hal/signature_converters.c
 		src/hal/hal.c
 		)
 
