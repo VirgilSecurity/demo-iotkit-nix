@@ -104,21 +104,25 @@ void test_sign_verify(void){
 
     VS_LOG_INFO("AES tests");
 
+    VS_LOG_INFO("*** vs_hsm_keypair_create");
     if(VS_HSM_ERR_OK != vs_hsm_keypair_create(slot, keypair_type)){
         VS_LOG_ERROR("vs_hsm_keypair_create error");
         goto terminate;
     }
 
+    VS_LOG_INFO("*** vs_hsm_hash_create");
     if(VS_HSM_ERR_OK != vs_hsm_hash_create(hash_type, tbs, sizeof(tbs), hash, hash_sz, &hash_sz)){
         VS_LOG_ERROR("vs_hsm_hash_create error");
         goto terminate;
     }
 
+    VS_LOG_INFO("*** vs_hsm_ecdsa_sign");
     if(VS_HSM_ERR_OK != vs_hsm_ecdsa_sign(slot, hash_type, hash, sign, sign_sz, &sign_sz)){
         VS_LOG_ERROR("vs_hsm_ecdsa_sign error");
         goto terminate;
     }
 
+    VS_LOG_INFO("*** vs_hsm_keypair_get_pubkey");
     if(VS_HSM_ERR_OK != vs_hsm_keypair_get_pubkey(slot, pubkey, pubkey_sz, &pubkey_sz, &keypair_type_loaded)){
         VS_LOG_ERROR("vs_hsm_ecdsa_sign error");
         goto terminate;
@@ -129,6 +133,7 @@ void test_sign_verify(void){
         goto terminate;
     }
 
+    VS_LOG_INFO("*** vs_hsm_ecdsa_verify");
     if(VS_HSM_ERR_OK != vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
         VS_LOG_ERROR("vs_hsm_ecdsa_verify error");
         goto terminate;

@@ -80,7 +80,7 @@ static int
 vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     vscf_secp256r1_private_key_t *prvkey_ctx = NULL;
     vscf_secp256r1_public_key_t *pubkey_ctx = NULL;
-    vsc_buffer_t *keypair_buf = NULL;
+    vsc_buffer_t keypair_buf;
     uint8_t buf[KEYPAIR_BUF_SZ] = {0};
     uint8_t key_sz;
     int res = VS_HSM_ERR_CRYPTO;
@@ -99,11 +99,11 @@ vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e ke
                "Unable to generate private key memory for slot %s",
                get_slot_name(slot));
 
-    keypair_buf = vsc_buffer_new();
-    vsc_buffer_use(keypair_buf, buf, sizeof(buf));
+    vsc_buffer_init(&keypair_buf);
+    vsc_buffer_use(&keypair_buf, buf, sizeof(buf));
 
     buf[KEYPAIR_BUF_KEYTYPE_OFF] = keypair_type;
-    vsc_buffer_inc_used(keypair_buf, KEYPAIR_BUF_KEYTYPE_SIZEOF);
+    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_KEYTYPE_SIZEOF);
 
     key_sz = vscf_secp256r1_private_key_exported_private_key_len(prvkey_ctx);
     if (key_sz > MAX_KEY_SZ) {
@@ -111,9 +111,9 @@ vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e ke
         goto terminate;
     }
     buf[KEYPAIR_BUF_PRVKEYSZ_OFF] = key_sz;
-    vsc_buffer_inc_used(keypair_buf, KEYPAIR_BUF_PRVKEYSZ_SIZEOF);
+    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_PRVKEYSZ_SIZEOF);
 
-    CHECK_VSCF(vscf_secp256r1_private_key_export_private_key(prvkey_ctx, keypair_buf), "Unable to save private key");
+    CHECK_VSCF(vscf_secp256r1_private_key_export_private_key(prvkey_ctx, &keypair_buf), "Unable to save private key");
 
     VS_LOG_DEBUG("Private key size : %d", key_sz);
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Private key : ", buf + KEYPAIR_BUF_PRVKEY_OFF, key_sz);
@@ -130,16 +130,16 @@ vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e ke
         goto terminate;
     }
     buf[KEYPAIR_BUF_PUBKEYSZ_OFF(buf)] = key_sz;
-    vsc_buffer_inc_used(keypair_buf, KEYPAIR_BUF_PUBKEYSZ_SIZEOF);
+    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_PUBKEYSZ_SIZEOF);
 
-    CHECK_VSCF(vscf_secp256r1_public_key_export_public_key(pubkey_ctx, keypair_buf), "Unable to save public key");
+    CHECK_VSCF(vscf_secp256r1_public_key_export_public_key(pubkey_ctx, &keypair_buf), "Unable to save public key");
 
-    assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(keypair_buf));
+    assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(&keypair_buf));
 
     VS_LOG_DEBUG("Public key size : %d", key_sz);
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Public key : ", buf + KEYPAIR_BUF_PUBKEY_OFF(buf), key_sz);
 
-    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(keypair_buf)),
+    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
               "Unable to save keypair buffer to the slot %s",
               get_slot_name(slot));
 
@@ -152,9 +152,6 @@ terminate:
     }
     if (pubkey_ctx) {
         vscf_secp256r1_public_key_delete(pubkey_ctx);
-    }
-    if (keypair_buf) {
-        vsc_buffer_delete(keypair_buf);
     }
 
     return res;
@@ -212,8 +209,6 @@ vs_hsm_keypair_get_pubkey(vs_iot_hsm_slot_e slot,
                  get_slot_name(slot),
                  vs_hsm_keypair_type_descr(*keypair_type));
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Public key : ", buf, *key_sz);
-
-    // convert from internal (use converter)
 
     res = VS_HSM_ERR_OK;
 

@@ -65,7 +65,7 @@ target_link_libraries(${RPI_GW_LIB}
 		hsm
 		logger
 		foundation
-		converters
+#		converters
 		)
 #
 #   -Wall -Werror

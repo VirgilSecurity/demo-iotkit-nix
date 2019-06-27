@@ -82,7 +82,7 @@ target_link_libraries (${IOT_GW_INITIALIZER}
 		rpi_gw
 		logger
 		hsm
-		converters
+#		converters
 		)
 
 #

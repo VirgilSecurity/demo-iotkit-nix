@@ -40,7 +40,8 @@
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/converters/crypto_format_converters.h>
+//#include <virgil/iot/converters/crypto_format_converters.h>
+#include "crypto_format_converters.h"
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
@@ -95,38 +96,11 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
         return VS_HSM_ERR_NOT_IMPLEMENTED;
     }
 
-    return VS_HSM_ERR_OK;
-}
-
-/********************************************************************************
-static int
-_init_hash_for_ecdsa_sign(vscf_signer_t *signer, vs_hsm_hash_type_e hash_type, const uint8_t *hash) {
-    size_t hash_sz;
-
-    switch (hash_type) {
-    case VS_HASH_SHA_256:
-        vscf_signer_take_hash(signer, vscf_sha256_impl(vscf_sha256_new()));
-        hash_sz = 256 / 8;
-        break;
-    case VS_HASH_SHA_384:
-        vscf_signer_take_hash(signer, vscf_sha384_impl(vscf_sha384_new()));
-        hash_sz = 384 / 8;
-        break;
-    case VS_HASH_SHA_512:
-        vscf_signer_take_hash(signer, vscf_sha512_impl(vscf_sha512_new()));
-        hash_sz = 512 / 8;
-        break;
-    default:
-        assert(false && "Unsupported hash type");
-        VS_LOG_ERROR("Unsupported hash type %d", hash_type);
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
-    }
-
-    vscf_signer_update(signer, vsc_data(hash, hash_sz));
+    VS_LOG_DEBUG("Hash size %d, type %s", vsc_buffer_len(&out_data), vs_hsm_hash_type_descr(hash_type));
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Hash : ", vsc_buffer_begin(&out_data), vsc_buffer_len(&out_data));
 
     return VS_HSM_ERR_OK;
 }
-*/
 
 /********************************************************************************/
 static int
@@ -230,6 +204,9 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
 
     *signature_sz = vsc_buffer_len(&sign_data);
 
+    VS_LOG_DEBUG("INT Signature size : %d bytes", *signature_sz);
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "INT Signature : ", vsc_buffer_begin(&sign_data), *signature_sz);
+
     CHECK_BOOL(vs_converters_mbedtls_sign_to_raw(keypair_type,
                                                  vsc_buffer_begin(&sign_data),
                                                  *signature_sz,
@@ -274,10 +251,12 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
     NOT_ZERO(signature);
     NOT_ZERO(signature_sz);
 
-    CHECK_BOOL(vs_converters_mbedtls_sign_to_virgil(
-                       hash_type, signature, signature_sz, int_sign, int_sign_sz, &int_sign_sz),
+    CHECK_BOOL(vs_converters_raw_sign_to_mbedtls(
+                       keypair_type, signature, signature_sz, int_sign, int_sign_sz, &int_sign_sz),
                "Unable to convert Virgil signature format to the raw one");
 
+    VS_LOG_DEBUG("INT Signature size : %d bytes", int_sign_sz);
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "INT Signature : ", int_sign, int_sign_sz);
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
         pubkey = (vscf_impl_t *)vscf_secp256r1_public_key_new();
@@ -295,7 +274,7 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
 
     CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
 
-    CHECK_VSCF(vscf_verify_hash(pubkey, vsc_data(hash, hash_sz), hash_id, vsc_data(int_sign, int_sign_sz)),
+    CHECK_BOOL(vscf_verify_hash(pubkey, vsc_data(hash, hash_sz), hash_id, vsc_data(int_sign, int_sign_sz)),
                "Unable to verify signature");
 
     res = VS_HSM_ERR_OK;
