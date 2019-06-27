@@ -32,6 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+// TODO : to remove this file when virgil-iot-sdk/converters will be used
+
 #include <string.h>
 #include <stdbool.h>
 #include <mbedtls/oid.h>
@@ -40,7 +42,7 @@
 
 #include <stdio.h>
 
-#include "private/macros.h"
+#include "private/helpers.h"
 #include "crypto_format_converters.h"
 #include <virgil/iot/hsm/hsm_structs.h>
 #include <virgil/iot/logger/logger.h>
@@ -105,12 +107,12 @@ _raw_ec_sign_to_mbedtls(vs_hsm_keypair_type_e keypair_type,
     NOT_ZERO(raw);
     NOT_ZERO(signature_sz);
 
-    CHECK_BOOL_GOTO(buf_sz >= MBEDTLS_ECDSA_MAX_LEN, -1);
+    CHECK_BOOL(buf_sz >= MBEDTLS_ECDSA_MAX_LEN, "Buffer size %d must be bigger than %d", buf_sz, MBEDTLS_ECDSA_MAX_LEN);
 
     mbedtls_mpi_init(&r);
     mbedtls_mpi_init(&s);
 
-    CHECK_BOOL_GOTO(raw_sz >= (component_sz * 2), -1);
+    CHECK_BOOL(raw_sz >= (component_sz * 2), "Raw size %d must be bigger than %d", raw_sz, component_sz * 2);
 
     // Read r, s
     MBEDTLS_CHECK(mbedtls_mpi_read_binary(&r, raw, component_sz), -1);
@@ -152,7 +154,7 @@ vs_converters_raw_sign_to_mbedtls(vs_hsm_keypair_type_e keypair_type,
         return _raw_ec_sign_to_mbedtls(keypair_type, raw, raw_sz, signature, buf_sz, signature_sz);
     }
 
-    CHECK_BOOL_GOTO(buf_sz >= raw_sz, -1);
+    CHECK_BOOL(buf_sz >= raw_sz, "Buffer size %d must be bigger that raw size %d", buf_sz, raw_sz);
     memcpy(signature, raw, raw_sz);
     *signature_sz = raw_sz;
 

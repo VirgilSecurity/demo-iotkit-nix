@@ -32,24 +32,34 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_GATEWAY_HAL_HELPERS_H
-#define IOT_RPI_GATEWAY_HAL_HELPERS_H
+#ifndef VS_CRYPTO_CONVERTERS_MACROS_H
+#define VS_CRYPTO_CONVERTERS_MACROS_H
 
-#include <assert.h>
+#include <stdbool.h>
 #include <stdarg.h>
 #include <stdint.h>
 
-#include <virgil/iot/hsm/hsm_structs.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
+#include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
 
-#define MAX_KEY_SZ 128
+#define MAX_KEY_SZ  (128)
 
-#define CHECK_MEM_ALLOC(OPERATION, DESCRIPTION, ...)                                                                   \
+#define ASN1_CHK_ADD(g, f)                                                                                             \
     do {                                                                                                               \
-        if (!(OPERATION)) {                                                                                            \
-            VS_LOG_ERROR((DESCRIPTION), ##__VA_ARGS__);                                                                \
-            goto terminate;                                                                                            \
+        if ((res_sz = f) < 0)                                                                                          \
+            return (false);                                                                                            \
+        else                                                                                                           \
+            g += res_sz;                                                                                               \
+    } while (0)
+
+#define MBEDTLS_CHECK(COMMAND, RESCODE)                                                                                \
+    do {                                                                                                               \
+        mbedtls_res = (COMMAND);                                                                                       \
+        if (mbedtls_res < 0) {                                                                                         \
+            VS_LOG_ERROR("Crypto error : %d", mbedtls_res);\
+            res = (RESCODE);                                              \
+            goto terminate;                                               \
         }                                                                                                              \
     } while (0)
 
@@ -61,21 +71,11 @@
         }                                                                                                              \
     } while (0)
 
-#define CHECK_VSCF(OPERATION, DESCRIPTION, ...)                                                                        \
-    do {                                                                                                               \
-        if (vscf_status_SUCCESS != (OPERATION)) {                                                                      \
-            VS_LOG_ERROR((DESCRIPTION), ##__VA_ARGS__);                                                                \
-            goto terminate;                                                                                            \
-        }                                                                                                              \
-    } while (0)
+#define CHECK_MEM_ALLOC(OPERATION, DESCRIPTION, ...)    CHECK_BOOL(OPERATION, DESCRIPTION, ## __VA_ARGS__)
 
-#define CHECK_HSM(OPERATION, DESCRIPTION, ...)                                                                         \
-    do {                                                                                                               \
-        if (VS_HSM_ERR_OK != (res = (OPERATION))) {                                                                            \
-            VS_LOG_ERROR((DESCRIPTION), ##__VA_ARGS__);                                                                \
-            goto terminate;                                                                                            \
-        }                                                                                                              \
-    } while (0)
+#define CHECK_VSCF(OPERATION, DESCRIPTION, ...)         CHECK_BOOL((vscf_status_SUCCESS != (OPERATION)), DESCRIPTION, ##__VA_ARGS__)
+
+#define CHECK_HSM(OPERATION, DESCRIPTION, ...)          CHECK_BOOL((VS_HSM_ERR_OK != (res = (OPERATION))), DESCRIPTION, ##__VA_ARGS__)
 
 #define NOT_ZERO(ARG)                                                                                                  \
     do {                                                                                                               \
@@ -95,4 +95,5 @@ vs_hsm_keypair_get_prvkey(vs_iot_hsm_slot_e slot,
                           uint16_t *key_sz,
                           vs_hsm_keypair_type_e *keypair_type);
 
-#endif //IOT_RPI_GATEWAY_HAL_HELPERS_H
+
+#endif // VS_CRYPTO_CONVERTERS_MACROS_H

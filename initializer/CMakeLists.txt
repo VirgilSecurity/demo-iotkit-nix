@@ -44,6 +44,7 @@ set (IOT_GW_INITIALIZER virgil-iot-gateway-initializer)
 #
 set (GW_INITIALIZER_SRC
 		${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+# TODO : temporary disabled
 #		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp_initializer.c
 #		${CMAKE_CURRENT_SOURCE_DIR}/src/sdmp/prvs_implementation.c
 		)
@@ -82,6 +83,8 @@ target_link_libraries (${IOT_GW_INITIALIZER}
 		rpi_gw
 		logger
 		hsm
+		virgil-iot-sdk-tests
+# TODO : temporary disabled
 #		converters
 		)
 

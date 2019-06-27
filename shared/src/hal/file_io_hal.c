@@ -92,14 +92,10 @@ _init_fio(void) {
     for (p = tmp + 1; *p; p++)
         if (*p == '/') {
             *p = 0;
-            if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO)) {
-                if (errno != EEXIST) {
-                    VS_LOG_ERROR("mkdir call for %s path has not been successful. errno = %d (%s)",
-                                 tmp,
-                                 errno,
-                                 strerror(errno));
-                    goto terminate;
-                }
+            if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO) && errno != EEXIST) {
+                VS_LOG_ERROR(
+                        "mkdir call for %s path has not been successful. errno = %d (%s)", tmp, errno, strerror(errno));
+                goto terminate;
             }
             *p = '/';
         }

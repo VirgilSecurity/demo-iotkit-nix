@@ -39,6 +39,8 @@
  * @brief Conversion between virgil asn1 structures and plain data for atecc508a
  */
 
+// TODO : to remove this file when virgil-iot-sdk/converters will be used
+
 #ifndef VS_CRYPTO_CONVERTERS_H
 #define VS_CRYPTO_CONVERTERS_H
 

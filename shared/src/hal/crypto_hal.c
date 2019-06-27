@@ -32,11 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+// TODO : to remove this file when virgil-iot-sdk/converters will be used
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
 
-#include <hal_helpers.h>
+#include "private/helpers.h"
+
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>

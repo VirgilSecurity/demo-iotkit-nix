@@ -36,13 +36,16 @@
 #include <unistd.h>
 
 #include <virgil/crypto/common/vsc_buffer.h>
-#include <virgil/crypto/foundation/vscf_sha256.h>
 
 #include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/tests/tests.h>
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
-//#include "iotelic/keystorage_tl.h"
+// TODO : temporary disabled
+#if 0
+#include "iotelic/keystorage_tl.h"
+#endif
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/hsm/hsm_interface.h>
@@ -51,20 +54,23 @@
 uint32_t
 app_crypto_entry() {
     uint32_t ret = 0;
-//    const vs_netif_t *plc_netif = NULL;
+// TODO : temporary disabled
+#if 0
+    const vs_netif_t *plc_netif = NULL;
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
 
     // Get PLC Network interface
-//    plc_netif = vs_hal_netif_plc();
+    plc_netif = vs_hal_netif_plc();
 
-//    init_keystorage_tl();
+    init_keystorage_tl();
 
     // Start SDMP protocol over PLC interface
-//    vs_sdmp_comm_start(plc_netif);
+    vs_sdmp_comm_start(plc_netif);
 
     sleep(300);
+#endif
 
     return ret;
 }
@@ -87,7 +93,7 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
     return false;
 }
 
-/******************************************************************************/
+/******************************************************************************
 static
 void test_sign_verify(void){
     static const vs_iot_hsm_slot_e slot = VS_KEY_SLOT_STD_MTP_1;
@@ -139,15 +145,15 @@ void test_sign_verify(void){
         goto terminate;
     }
 
-/*    pubkey[3] = ~pubkey[3];
+//    pubkey[3] = ~pubkey[3];
+//
+//    if(VS_HSM_ERR_OK == vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
+//        VS_LOG_ERROR("vs_hsm_ecdsa_verify false positive because of corrupted public key");
+//        goto terminate;
+//    }
+//
+//    pubkey[3] = ~pubkey[3];
 
-    if(VS_HSM_ERR_OK == vs_hsm_ecdsa_verify(keypair_type, pubkey, pubkey_sz, hash_type, hash, sign, sign_sz)){
-        VS_LOG_ERROR("vs_hsm_ecdsa_verify false positive because of corrupted public key");
-        goto terminate;
-    }
-
-    pubkey[3] = ~pubkey[3];
-*/
 
     sign[3] = ~sign[3];
 
@@ -167,15 +173,17 @@ void test_sign_verify(void){
 
 terminate:;
 }
+*/
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
+    int result;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
-    test_sign_verify();
+    result = virgil_iot_sdk_tests();
 
     if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
@@ -186,7 +194,7 @@ main(int argc, char *argv[]) {
 
     // Start app
     app_crypto_entry();
-    return 0;
+    return result;
 }
 
 /******************************************************************************/
