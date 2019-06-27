@@ -48,6 +48,12 @@
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
+#include <virgil/crypto/foundation/vscf_curve25519_private_key.h>
+#include <virgil/crypto/foundation/vscf_curve25519_public_key.h>
+#include <virgil/crypto/foundation/vscf_ed25519_private_key.h>
+#include <virgil/crypto/foundation/vscf_ed25519_public_key.h>
+#include <virgil/crypto/foundation/vscf_rsa_private_key.h>
+#include <virgil/crypto/foundation/vscf_rsa_public_key.h>
 #include <virgil/crypto/foundation/vscf_sha256.h>
 #include <virgil/crypto/foundation/vscf_sha384.h>
 #include <virgil/crypto/foundation/vscf_sha512.h>
@@ -127,6 +133,26 @@ _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_ty
         CHECK_VSCF(vscf_secp256r1_private_key_import_private_key((vscf_secp256r1_private_key_t *)*prvkey, prvkey_data),
                    "Unable to import private key");
         break;
+
+    case VS_KEYPAIR_EC_CURVE25519:
+        *prvkey = (vscf_impl_t *)vscf_curve25519_private_key_new();
+        CHECK_VSCF(
+                vscf_curve25519_private_key_import_private_key((vscf_curve25519_private_key_t *)*prvkey, prvkey_data),
+                "Unable to import private key");
+        break;
+
+    case VS_KEYPAIR_EC_ED25519:
+        *prvkey = (vscf_impl_t *)vscf_ed25519_private_key_new();
+        CHECK_VSCF(vscf_ed25519_private_key_import_private_key((vscf_ed25519_private_key_t *)*prvkey, prvkey_data),
+                   "Unable to import private key");
+        break;
+
+    case VS_KEYPAIR_RSA_2048:
+        *prvkey = (vscf_impl_t *)vscf_rsa_private_key_new();
+        CHECK_VSCF(vscf_rsa_private_key_import_private_key((vscf_rsa_private_key_t *)*prvkey, prvkey_data),
+                   "Unable to import private key");
+        break;
+
 
     default:
         assert(false && "Unsupported keypair type");
@@ -267,6 +293,27 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
         pubkey = (vscf_impl_t *)vscf_secp256r1_public_key_new();
         CHECK_VSCF(vscf_secp256r1_public_key_import_public_key((vscf_secp256r1_public_key_t *)pubkey,
                                                                vsc_data(public_key, public_key_sz)),
+                   "Unable to import public key");
+        break;
+
+    case VS_KEYPAIR_EC_CURVE25519:
+        pubkey = (vscf_impl_t *)vscf_curve25519_public_key_new();
+        CHECK_VSCF(vscf_curve25519_public_key_import_public_key((vscf_curve25519_public_key_t *)pubkey,
+                                                                vsc_data(public_key, public_key_sz)),
+                   "Unable to import public key");
+        break;
+
+    case VS_KEYPAIR_EC_ED25519:
+        pubkey = (vscf_impl_t *)vscf_ed25519_public_key_new();
+        CHECK_VSCF(vscf_ed25519_public_key_import_public_key((vscf_ed25519_public_key_t *)pubkey,
+                                                             vsc_data(public_key, public_key_sz)),
+                   "Unable to import public key");
+        break;
+
+    case VS_KEYPAIR_RSA_2048:
+        pubkey = (vscf_impl_t *)vscf_rsa_public_key_new();
+        CHECK_VSCF(vscf_rsa_public_key_import_public_key((vscf_rsa_public_key_t *)pubkey,
+                                                         vsc_data(public_key, public_key_sz)),
                    "Unable to import public key");
         break;
 
