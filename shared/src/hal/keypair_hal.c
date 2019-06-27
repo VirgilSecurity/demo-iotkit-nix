@@ -43,6 +43,12 @@
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
+#include <virgil/crypto/foundation/vscf_curve25519_private_key.h>
+#include <virgil/crypto/foundation/vscf_curve25519_public_key.h>
+#include <virgil/crypto/foundation/vscf_ed25519_private_key.h>
+#include <virgil/crypto/foundation/vscf_ed25519_public_key.h>
+#include <virgil/crypto/foundation/vscf_rsa_private_key.h>
+#include <virgil/crypto/foundation/vscf_rsa_public_key.h>
 #include <virgil/crypto/foundation/vscf_sha256.h>
 #include <virgil/crypto/foundation/vscf_sha384.h>
 #include <virgil/crypto/foundation/vscf_sha512.h>
@@ -77,6 +83,48 @@
 
 #define KEYPAIR_BUF_SZ ((KEYPAIR_BUF_KEYTYPE_SIZEOF) + ((MAX_KEY_SZ + KEYPAIR_BUF_KEYSZ_SIZEOF) * 2))
 
+#define ADD_KEYTYPE(BUF, KEYRPAIR_BUF, KEYPAIR_TYPE)                                                                   \
+    do {                                                                                                               \
+        (BUF)[KEYPAIR_BUF_KEYTYPE_OFF] = (KEYPAIR_TYPE);                                                               \
+        vsc_buffer_inc_used(&(KEYRPAIR_BUF), KEYPAIR_BUF_KEYTYPE_SIZEOF);                                              \
+    } while (0)
+
+#define ADD_PRVKEYSZ(BUF, KEYPAIR_BUF, KEYSZ)                                                                          \
+    do {                                                                                                               \
+        if ((KEYSZ) > MAX_KEY_SZ) {                                                                                    \
+            VS_LOG_ERROR("Too big private key : %d bytes. Maximum allowed size : %d", (KEYSZ), MAX_KEY_SZ);            \
+            goto terminate;                                                                                            \
+        }                                                                                                              \
+        (BUF)[KEYPAIR_BUF_PRVKEYSZ_OFF] = (KEYSZ);                                                                     \
+        vsc_buffer_inc_used(&(KEYPAIR_BUF), KEYPAIR_BUF_PRVKEYSZ_SIZEOF);                                              \
+    } while (0)
+
+#define LOG_PRVKEY(BUF)                                                                                                \
+    do {                                                                                                               \
+        VS_LOG_DEBUG("Private key size : %d", (BUF)[KEYPAIR_BUF_PRVKEYSZ_OFF]);                                        \
+        VS_LOG_HEX(                                                                                                    \
+                VS_LOGLEV_DEBUG, "Private key : ", (BUF) + KEYPAIR_BUF_PRVKEY_OFF, (BUF)[KEYPAIR_BUF_PRVKEYSZ_OFF]);   \
+    } while (0)
+
+#define ADD_PUBKEYSZ(BUF, KEYPAIR_BUF, KEYSZ)                                                                          \
+    do {                                                                                                               \
+        if ((KEYSZ) > MAX_KEY_SZ) {                                                                                    \
+            VS_LOG_ERROR("Too big public key : %d bytes. Maximum allowed size : %d", (KEYSZ), MAX_KEY_SZ);             \
+            goto terminate;                                                                                            \
+        }                                                                                                              \
+        (BUF)[KEYPAIR_BUF_PUBKEYSZ_OFF(BUF)] = (KEYSZ);                                                                \
+        vsc_buffer_inc_used(&(KEYPAIR_BUF), KEYPAIR_BUF_PUBKEYSZ_SIZEOF);                                              \
+    } while (0)
+
+#define LOG_PUBKEY(BUF)                                                                                                \
+    do {                                                                                                               \
+        VS_LOG_DEBUG("Public key size : %d", (BUF)[KEYPAIR_BUF_PUBKEYSZ_OFF(BUF)]);                                    \
+        VS_LOG_HEX(VS_LOGLEV_DEBUG,                                                                                    \
+                   "Public key : ",                                                                                    \
+                   (BUF) + KEYPAIR_BUF_PUBKEY_OFF(BUF),                                                                \
+                   (BUF)[KEYPAIR_BUF_PUBKEYSZ_OFF(BUF)]);                                                              \
+    } while (0)
+
 /********************************************************************************/
 static int
 vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
@@ -102,41 +150,27 @@ vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e ke
     vsc_buffer_init(&keypair_buf);
     vsc_buffer_use(&keypair_buf, buf, sizeof(buf));
 
-    buf[KEYPAIR_BUF_KEYTYPE_OFF] = keypair_type;
-    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_KEYTYPE_SIZEOF);
+    ADD_KEYTYPE(buf, keypair_buf, keypair_type);
 
     key_sz = vscf_secp256r1_private_key_exported_private_key_len(prvkey_ctx);
-    if (key_sz > MAX_KEY_SZ) {
-        VS_LOG_ERROR("Too big private key : %d bytes. Maximum allowed size : %d", key_sz, MAX_KEY_SZ);
-        goto terminate;
-    }
-    buf[KEYPAIR_BUF_PRVKEYSZ_OFF] = key_sz;
-    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_PRVKEYSZ_SIZEOF);
+    ADD_PRVKEYSZ(buf, keypair_buf, key_sz);
 
-    CHECK_VSCF(vscf_secp256r1_private_key_export_private_key(prvkey_ctx, &keypair_buf), "Unable to save private key");
+    CHECK_VSCF(vscf_secp256r1_private_key_export_private_key(prvkey_ctx, &keypair_buf), "Unable to export private key");
 
-    VS_LOG_DEBUG("Private key size : %d", key_sz);
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Private key : ", buf + KEYPAIR_BUF_PRVKEY_OFF, key_sz);
-
+    LOG_PRVKEY(buf);
 
     CHECK_MEM_ALLOC(pubkey_ctx =
                             (vscf_secp256r1_public_key_t *)vscf_secp256r1_private_key_extract_public_key(prvkey_ctx),
                     "Unable to generate public key memory");
 
     key_sz = vscf_secp256r1_public_key_exported_public_key_len(pubkey_ctx);
-    if (key_sz > MAX_KEY_SZ) {
-        VS_LOG_ERROR("Too big public key : %d bytes. Maximum allowed size : %d", key_sz, MAX_KEY_SZ);
-        goto terminate;
-    }
-    buf[KEYPAIR_BUF_PUBKEYSZ_OFF(buf)] = key_sz;
-    vsc_buffer_inc_used(&keypair_buf, KEYPAIR_BUF_PUBKEYSZ_SIZEOF);
+    ADD_PUBKEYSZ(buf, keypair_buf, key_sz);
 
     CHECK_VSCF(vscf_secp256r1_public_key_export_public_key(pubkey_ctx, &keypair_buf), "Unable to save public key");
 
     assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(&keypair_buf));
 
-    VS_LOG_DEBUG("Public key size : %d", key_sz);
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Public key : ", buf + KEYPAIR_BUF_PUBKEY_OFF(buf), key_sz);
+    LOG_PUBKEY(buf);
 
     CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
               "Unable to save keypair buffer to the slot %s",
@@ -157,11 +191,211 @@ terminate:
 }
 
 /********************************************************************************/
+static int
+vs_hsm_curve25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
+    vscf_curve25519_private_key_t *prvkey_ctx = NULL;
+    vscf_curve25519_public_key_t *pubkey_ctx = NULL;
+    vsc_buffer_t keypair_buf;
+    uint8_t buf[KEYPAIR_BUF_SZ] = {0};
+    uint8_t key_sz;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    VS_LOG_DEBUG(
+            "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
+
+    CHECK_MEM_ALLOC(prvkey_ctx = vscf_curve25519_private_key_new(),
+                    "Unable to allocate memory for slot %s",
+                    get_slot_name(slot));
+
+    CHECK_VSCF(vscf_curve25519_private_key_setup_defaults(prvkey_ctx),
+               "Unable to initialize defaults for private key class");
+
+    CHECK_VSCF(vscf_curve25519_private_key_generate_key(prvkey_ctx), "Unable to generate private key");
+
+    vsc_buffer_init(&keypair_buf);
+    vsc_buffer_use(&keypair_buf, buf, sizeof(buf));
+
+    ADD_KEYTYPE(buf, keypair_buf, keypair_type);
+
+    key_sz = vscf_curve25519_private_key_exported_private_key_len(prvkey_ctx);
+    ADD_PRVKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_curve25519_private_key_export_private_key(prvkey_ctx, &keypair_buf),
+               "Unable to export private key");
+
+    LOG_PRVKEY(buf);
+
+    CHECK_MEM_ALLOC(pubkey_ctx =
+                            (vscf_curve25519_public_key_t *)vscf_curve25519_private_key_extract_public_key(prvkey_ctx),
+                    "Unable to generate public key memory");
+
+    key_sz = vscf_curve25519_public_key_exported_public_key_len(pubkey_ctx);
+    ADD_PUBKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_curve25519_public_key_export_public_key(pubkey_ctx, &keypair_buf), "Unable to save public key");
+
+    assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(&keypair_buf));
+
+    LOG_PUBKEY(buf);
+
+    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+              "Unable to save keypair buffer to the slot %s",
+              get_slot_name(slot));
+
+    res = VS_HSM_ERR_OK;
+
+terminate:
+
+    if (prvkey_ctx) {
+        vscf_curve25519_private_key_delete(prvkey_ctx);
+    }
+    if (pubkey_ctx) {
+        vscf_curve25519_public_key_delete(pubkey_ctx);
+    }
+
+    return res;
+}
+
+/********************************************************************************/
+static int
+vs_hsm_ed25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
+    vscf_ed25519_private_key_t *prvkey_ctx = NULL;
+    vscf_ed25519_public_key_t *pubkey_ctx = NULL;
+    vsc_buffer_t keypair_buf;
+    uint8_t buf[KEYPAIR_BUF_SZ] = {0};
+    uint8_t key_sz;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    VS_LOG_DEBUG(
+            "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
+
+    CHECK_MEM_ALLOC(
+            prvkey_ctx = vscf_ed25519_private_key_new(), "Unable to allocate memory for slot %s", get_slot_name(slot));
+
+    CHECK_VSCF(vscf_ed25519_private_key_setup_defaults(prvkey_ctx),
+               "Unable to initialize defaults for private key class");
+
+    CHECK_VSCF(vscf_ed25519_private_key_generate_key(prvkey_ctx), "Unable to generate private key");
+
+    vsc_buffer_init(&keypair_buf);
+    vsc_buffer_use(&keypair_buf, buf, sizeof(buf));
+
+    ADD_KEYTYPE(buf, keypair_buf, keypair_type);
+
+    key_sz = vscf_ed25519_private_key_exported_private_key_len(prvkey_ctx);
+    ADD_PRVKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_ed25519_private_key_export_private_key(prvkey_ctx, &keypair_buf), "Unable to export private key");
+
+    LOG_PRVKEY(buf);
+
+    CHECK_MEM_ALLOC(pubkey_ctx = (vscf_ed25519_public_key_t *)vscf_ed25519_private_key_extract_public_key(prvkey_ctx),
+                    "Unable to generate public key memory");
+
+    key_sz = vscf_ed25519_public_key_exported_public_key_len(pubkey_ctx);
+    ADD_PUBKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_ed25519_public_key_export_public_key(pubkey_ctx, &keypair_buf), "Unable to save public key");
+
+    assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(&keypair_buf));
+
+    LOG_PUBKEY(buf);
+
+    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+              "Unable to save keypair buffer to the slot %s",
+              get_slot_name(slot));
+
+    res = VS_HSM_ERR_OK;
+
+terminate:
+
+    if (prvkey_ctx) {
+        vscf_ed25519_private_key_delete(prvkey_ctx);
+    }
+    if (pubkey_ctx) {
+        vscf_ed25519_public_key_delete(pubkey_ctx);
+    }
+
+    return res;
+}
+
+/********************************************************************************/
+static int
+vs_hsm_rsa_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
+    vscf_rsa_private_key_t *prvkey_ctx = NULL;
+    vscf_rsa_public_key_t *pubkey_ctx = NULL;
+    vsc_buffer_t keypair_buf;
+    uint8_t buf[KEYPAIR_BUF_SZ] = {0};
+    uint8_t key_sz;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    VS_LOG_DEBUG(
+            "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
+
+    CHECK_MEM_ALLOC(
+            prvkey_ctx = vscf_rsa_private_key_new(), "Unable to allocate memory for slot %s", get_slot_name(slot));
+
+    CHECK_VSCF(vscf_rsa_private_key_setup_defaults(prvkey_ctx), "Unable to initialize defaults for private key class");
+
+    CHECK_VSCF(vscf_rsa_private_key_generate_key(prvkey_ctx), "Unable to generate private key");
+
+    vsc_buffer_init(&keypair_buf);
+    vsc_buffer_use(&keypair_buf, buf, sizeof(buf));
+
+    ADD_KEYTYPE(buf, keypair_buf, keypair_type);
+
+    key_sz = vscf_rsa_private_key_exported_private_key_len(prvkey_ctx);
+    ADD_PRVKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_rsa_private_key_export_private_key(prvkey_ctx, &keypair_buf), "Unable to export private key");
+
+    LOG_PRVKEY(buf);
+
+    CHECK_MEM_ALLOC(pubkey_ctx = (vscf_rsa_public_key_t *)vscf_rsa_private_key_extract_public_key(prvkey_ctx),
+                    "Unable to generate public key memory");
+
+    key_sz = vscf_rsa_public_key_exported_public_key_len(pubkey_ctx);
+    ADD_PUBKEYSZ(buf, keypair_buf, key_sz);
+
+    CHECK_VSCF(vscf_rsa_public_key_export_public_key(pubkey_ctx, &keypair_buf), "Unable to save public key");
+
+    assert(KEYPAIR_BUF_PUBKEY_OFF(buf) + KEYPAIR_BUF_PUBKEY_SIZEOF(buf) == vsc_buffer_len(&keypair_buf));
+
+    LOG_PUBKEY(buf);
+
+    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+              "Unable to save keypair buffer to the slot %s",
+              get_slot_name(slot));
+
+    res = VS_HSM_ERR_OK;
+
+terminate:
+
+    if (prvkey_ctx) {
+        vscf_rsa_private_key_delete(prvkey_ctx);
+    }
+    if (pubkey_ctx) {
+        vscf_rsa_public_key_delete(pubkey_ctx);
+    }
+
+    return res;
+}
+
+/********************************************************************************/
 int
 vs_hsm_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
         return vs_hsm_secp256r1_keypair_create(slot, keypair_type);
+
+    case VS_KEYPAIR_EC_CURVE25519:
+        return vs_hsm_curve25519_keypair_create(slot, keypair_type);
+
+    case VS_KEYPAIR_EC_ED25519:
+        return vs_hsm_ed25519_keypair_create(slot, keypair_type);
+
+    case VS_KEYPAIR_RSA_2048:
+        return vs_hsm_rsa_keypair_create(slot, keypair_type);
 
     default:
         VS_LOG_ERROR("Unsupported keypair type %s", vs_hsm_keypair_type_descr(keypair_type));

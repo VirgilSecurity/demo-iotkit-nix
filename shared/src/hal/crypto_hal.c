@@ -99,8 +99,10 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
         return VS_HSM_ERR_NOT_IMPLEMENTED;
     }
 
-    VS_LOG_DEBUG("Hash size %d, type %s", vsc_buffer_len(&out_data), vs_hsm_hash_type_descr(hash_type));
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Hash : ", vsc_buffer_begin(&out_data), vsc_buffer_len(&out_data));
+    *hash_sz = vsc_buffer_len(&out_data);
+
+    VS_LOG_DEBUG("Hash size %d, type %s", *hash_sz, vs_hsm_hash_type_descr(hash_type));
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Hash : ", hash, *hash_sz);
 
     return VS_HSM_ERR_OK;
 }
