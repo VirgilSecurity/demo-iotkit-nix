@@ -206,6 +206,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     uint16_t hash_sz;
     vsc_buffer_t sign_data;
     vs_hsm_keypair_type_e keypair_type;
+    uint16_t required_sign_sz;
     int res = VS_HSM_ERR_CRYPTO;
 
     NOT_ZERO(hash);
@@ -214,13 +215,21 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     NOT_ZERO(signature_sz);
 
     vsc_buffer_init(&sign_data);
-    vsc_buffer_use(&sign_data, signature, signature_buf_sz);
 
     CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
 
     CHECK_HSM(_load_prvkey(key_slot, &prvkey, &keypair_type),
               "Unable to load private key from slot %s",
               get_slot_name((key_slot)));
+
+    required_sign_sz = vscf_sign_hash_signature_len(prvkey);
+
+    CHECK_BOOL(signature_buf_sz >= required_sign_sz,
+               "Signature buffer sized %d is less that required size %d",
+               signature_buf_sz,
+               required_sign_sz);
+
+    vsc_buffer_use(&sign_data, signature, required_sign_sz);
 
     CHECK_VSCF(vscf_sign_hash(prvkey, vsc_data(hash, hash_sz), hash_id, &sign_data), "Unable to sign data");
 
