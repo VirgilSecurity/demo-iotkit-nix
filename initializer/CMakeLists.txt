@@ -84,8 +84,7 @@ target_link_libraries (${IOT_GW_INITIALIZER}
 		logger
 		hsm
 		virgil-iot-sdk-tests
-# TODO : temporary disabled
-#		converters
+		converters
 		)
 
 #

@@ -43,8 +43,7 @@
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
-//#include <virgil/iot/converters/crypto_format_converters.h>
-#include "crypto_format_converters.h"
+#include <virgil/iot/converters/crypto_format_converters.h>
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
