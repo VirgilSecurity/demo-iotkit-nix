@@ -32,10 +32,9 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-// TODO : to remove this file when virgil-iot-sdk/converters will be used
-
 #include <assert.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 #include "private/helpers.h"
@@ -51,6 +50,7 @@
 #include <virgil/crypto/foundation/vscf_curve25519_public_key.h>
 #include <virgil/crypto/foundation/vscf_ed25519_private_key.h>
 #include <virgil/crypto/foundation/vscf_ed25519_public_key.h>
+#include <virgil/crypto/foundation/vscf_ctr_drbg.h>
 #include <virgil/crypto/foundation/vscf_rsa_private_key.h>
 #include <virgil/crypto/foundation/vscf_rsa_public_key.h>
 #include <virgil/crypto/foundation/vscf_sha256.h>
@@ -58,9 +58,11 @@
 #include <virgil/crypto/foundation/vscf_sha512.h>
 #include <virgil/crypto/foundation/vscf_sign_hash.h>
 #include <virgil/crypto/foundation/vscf_verify_hash.h>
+#include <virgil/crypto/foundation/vscf_random.h>
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
+#include <mbedtls/ctr_drbg.h>
 
 /********************************************************************************/
 int
@@ -74,6 +76,7 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
     vsc_buffer_t out_data;
 
     in_data = vsc_data(data, data_sz);
+
     vsc_buffer_init(&out_data);
     vsc_buffer_use(&out_data, hash, hash_buf_sz);
 
@@ -214,8 +217,6 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     NOT_ZERO(signature_buf_sz);
     NOT_ZERO(signature_sz);
 
-    vsc_buffer_init(&sign_data);
-
     CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
 
     CHECK_HSM(_load_prvkey(key_slot, &prvkey, &keypair_type),
@@ -229,6 +230,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
                signature_buf_sz,
                required_sign_sz);
 
+    vsc_buffer_init(&sign_data);
     vsc_buffer_use(&sign_data, signature, required_sign_sz);
 
     CHECK_VSCF(vscf_sign_hash(prvkey, vsc_data(hash, hash_sz), hash_id, &sign_data), "Unable to sign data");
@@ -390,9 +392,49 @@ vs_hsm_hkdf(vs_hsm_hash_type_e hash_type,
 }
 
 /********************************************************************************/
+static vscf_impl_t *random_impl = NULL;
+
+static void
+destroy_random_impl() {
+    vscf_ctr_drbg_delete((vscf_ctr_drbg_t *)random_impl);
+}
+
+/********************************************************************************/
 int
 vs_hsm_random(uint8_t *output, uint16_t output_sz) {
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    int res = VS_HSM_ERR_CRYPTO;
+    vsc_buffer_t buf;
+    uint16_t cur_off;
+    uint16_t cur_size;
+
+    vsc_buffer_init(&buf);
+    vsc_buffer_use(&buf, output, output_sz);
+
+    if (!random_impl) {
+        CHECK_MEM_ALLOC(random_impl = (vscf_impl_t *)vscf_ctr_drbg_new(),
+                        "Unable to allocate random implementation context");
+
+        atexit(destroy_random_impl);
+
+        CHECK_VSCF(vscf_ctr_drbg_setup_defaults((vscf_ctr_drbg_t *)random_impl),
+                   "Unable to initialize random number generator");
+    }
+
+    for (cur_off = 0; cur_off < output_sz; cur_off += MBEDTLS_CTR_DRBG_MAX_REQUEST) {
+        cur_size = output_sz - cur_off;
+
+        if (cur_size > MBEDTLS_CTR_DRBG_MAX_REQUEST) {
+            cur_size = MBEDTLS_CTR_DRBG_MAX_REQUEST;
+        }
+
+        CHECK_VSCF(vscf_random(random_impl, cur_size, &buf), "Unable to generate random sequence");
+    }
+
+    res = VS_HSM_ERR_OK;
+
+terminate:
+
+    return res;
 }
 
 /********************************************************************************/
