@@ -38,15 +38,15 @@ cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 #	Define variables
 #
 set (IOT_GW_INITIALIZER virgil-iot-gateway-initializer)
+set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
 
 #
 #	Source files
 #
 set (GW_INITIALIZER_SRC
 		${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-# TODO : temporary disabled
-#		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp_initializer.c
-#		${CMAKE_CURRENT_SOURCE_DIR}/src/sdmp/prvs_implementation.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp_initializer.c
+		${CMAKE_CURRENT_SOURCE_DIR}/src/sdmp/prvs_implementation.c
 		)
 
 #
@@ -81,10 +81,6 @@ target_link_libraries (${IOT_GW_INITIALIZER}
 		sdmp
 		secbox
 		rpi_gw
-		logger
-		hsm
-		virgil-iot-sdk-tests
-		converters
 		)
 
 #

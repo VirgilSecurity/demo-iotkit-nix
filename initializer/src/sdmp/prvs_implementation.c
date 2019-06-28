@@ -122,10 +122,10 @@ vs_prvs_load_data() {
 static int
 vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     int res = 0;
-//    vs_secbox_element_info_t sign_secbox = {.id = VS_SECBOX_ELEMENT_SGN, .index = 0};
-//    vs_secbox_element_info_t own_pubkey_secbox = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY,
-//                                                  .index = vscf_alg_id_SECP256R1};
-//    uint16_t sign_sz = 0;
+    vs_secbox_element_info_t sign_secbox = {.id = VS_SECBOX_ELEMENT_SGN, .index = 0};
+    vs_secbox_element_info_t own_pubkey_secbox = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY,
+                                                  .index = vscf_alg_id_SECP256R1};
+    uint16_t sign_sz = 0;
     uint16_t pubkey_sz = 0;
 
     vs_sdmp_mac_addr(0, &device_info->mac);
@@ -135,10 +135,10 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     memset(&device_info->udid_of_device[ETH_ADDR_LEN], 0x03, SERIAL_SIZE - ETH_ADDR_LEN);
 
     // Load signature and public key
-//    if (0 != vs_secbox_load(&own_pubkey_secbox, device_info->own_key.pubkey, PUBKEY_MAX_SZ, &pubkey_sz) ||
-//        0 != vs_secbox_load(&sign_secbox, (uint8_t *)&device_info->signature, buf_sz, &sign_sz)) {
-//        res = -1;
-//    }
+    if (0 != vs_secbox_load(&own_pubkey_secbox, device_info->own_key.pubkey, PUBKEY_MAX_SZ, &pubkey_sz) ||
+        0 != vs_secbox_load(&sign_secbox, (uint8_t *)&device_info->signature, buf_sz, &sign_sz)) {
+        res = -1;
+    }
     device_info->own_key.pubkey_sz = (uint8_t)pubkey_sz;
 
     return res;
