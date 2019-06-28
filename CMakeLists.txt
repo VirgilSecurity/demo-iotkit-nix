@@ -118,7 +118,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
 #
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
 
-# Unit tests
-#if (ENABLE_TESTING)
-#    TODO: Add tests
-#endif (ENABLE_TESTING)
+#
+#   Unit tests
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
