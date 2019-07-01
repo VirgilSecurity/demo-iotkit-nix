@@ -44,7 +44,7 @@ main(int argc, char *argv[]){
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
 
-    res = virgil_iot_sdk_tests();
+    res = vs_tests_checks(true);
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
