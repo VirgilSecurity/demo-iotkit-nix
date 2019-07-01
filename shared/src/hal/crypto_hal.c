@@ -74,11 +74,7 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    uint16_t *hash_sz) {
     vsc_data_t in_data;
     vsc_buffer_t out_data;
-
-    in_data = vsc_data(data, data_sz);
-
-    vsc_buffer_init(&out_data);
-    vsc_buffer_use(&out_data, hash, hash_buf_sz);
+    int res = VS_HSM_ERR_CRYPTO;
 
     NOT_ZERO(data);
     NOT_ZERO(data_sz);
@@ -87,6 +83,11 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
     NOT_ZERO(hash_sz);
 
     VS_LOG_DEBUG("Generate hash %s for data size %d", vs_hsm_hash_type_descr(hash_type), data_sz);
+
+    in_data = vsc_data(data, data_sz);
+
+    vsc_buffer_init(&out_data);
+    vsc_buffer_use(&out_data, hash, hash_buf_sz);
 
     switch (hash_type) {
     case VS_HASH_SHA_256:
@@ -104,7 +105,7 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
     default:
         assert(false && "Unsupported hash type");
         VS_LOG_ERROR("Unsupported hash type");
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        goto terminate;
     }
 
     *hash_sz = vsc_buffer_len(&out_data);
@@ -112,16 +113,27 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
     VS_LOG_DEBUG("Hash size %d, type %s", *hash_sz, vs_hsm_hash_type_descr(hash_type));
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Hash : ", hash, *hash_sz);
 
-    return VS_HSM_ERR_OK;
+    res = VS_HSM_ERR_OK;
+
+terminate:
+
+    if (VS_HSM_ERR_OK != res) {
+        vsc_buffer_cleanup(&out_data);
+    }
+
+    return res;
 }
 
 /********************************************************************************/
 static int
 _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_type_e *keypair_type) {
-    uint8_t prvkey_buf[MAX_KEY_SZ] = {0};
+    uint8_t prvkey_buf[MAX_KEY_SZ];
     uint16_t prvkey_buf_sz = sizeof(prvkey_buf);
     vsc_data_t prvkey_data;
     int res = VS_HSM_ERR_CRYPTO;
+
+    NOT_ZERO(prvkey);
+    NOT_ZERO(keypair_type);
 
     CHECK_HSM(vs_hsm_keypair_get_prvkey(key_slot, prvkey_buf, prvkey_buf_sz, &prvkey_buf_sz, keypair_type),
               "Unable to load private key data from slot %s",
@@ -173,6 +185,7 @@ terminate:
 /********************************************************************************/
 static bool
 _set_hsm_data(vs_hsm_hash_type_e hash_type, vscf_alg_id_t *hash_id, uint16_t *hash_sz) {
+
     switch (hash_type) {
     case VS_HASH_SHA_256:
         *hash_id = vscf_alg_id_SHA256;
@@ -205,11 +218,11 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
                   uint16_t signature_buf_sz,
                   uint16_t *signature_sz) {
     vscf_impl_t *prvkey = NULL;
-    vscf_alg_id_t hash_id;
-    uint16_t hash_sz;
+    vscf_alg_id_t hash_id = vscf_alg_id_NONE;
+    uint16_t hash_sz = 0;
     vsc_buffer_t sign_data;
-    vs_hsm_keypair_type_e keypair_type;
-    uint16_t required_sign_sz;
+    vs_hsm_keypair_type_e keypair_type = VS_KEYPAIR_INVALID;
+    uint16_t required_sign_sz = 0;
     int res = VS_HSM_ERR_CRYPTO;
 
     NOT_ZERO(hash);
@@ -217,20 +230,22 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     NOT_ZERO(signature_buf_sz);
     NOT_ZERO(signature_sz);
 
+    vsc_buffer_init(&sign_data);
+
     CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
 
     CHECK_HSM(_load_prvkey(key_slot, &prvkey, &keypair_type),
-              "Unable to load private key from slot %s",
+              "Unable to load private key from slot %d (%s)",
+              key_slot,
               get_slot_name((key_slot)));
 
     required_sign_sz = vscf_sign_hash_signature_len(prvkey);
 
     CHECK_BOOL(signature_buf_sz >= required_sign_sz,
-               "Signature buffer sized %d is less that required size %d",
+               "Signature buffer size %d is less that required size %d",
                signature_buf_sz,
                required_sign_sz);
 
-    vsc_buffer_init(&sign_data);
     vsc_buffer_use(&sign_data, signature, required_sign_sz);
 
     CHECK_VSCF(vscf_sign_hash(prvkey, vsc_data(hash, hash_sz), hash_id, &sign_data), "Unable to sign data");
@@ -245,8 +260,8 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
 
     *signature_sz = vsc_buffer_len(&sign_data);
 
-    VS_LOG_DEBUG("INT Signature size : %d bytes", *signature_sz);
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "INT Signature : ", vsc_buffer_begin(&sign_data), *signature_sz);
+    VS_LOG_DEBUG("Internal signature size : %d bytes", *signature_sz);
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Internal signature : ", vsc_buffer_begin(&sign_data), *signature_sz);
 
     CHECK_BOOL(vs_converters_mbedtls_sign_to_raw(keypair_type,
                                                  vsc_buffer_begin(&sign_data),
@@ -256,12 +271,16 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
                                                  signature_sz),
                "Unable to convert Virgil signature format to the raw one");
 
-    VS_LOG_DEBUG("Signature size : %d bytes", *signature_sz);
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Signature : ", signature, *signature_sz);
+    VS_LOG_DEBUG("Output signature size : %d bytes", *signature_sz);
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Output signature : ", signature, *signature_sz);
 
     res = VS_HSM_ERR_OK;
 
 terminate:
+
+    if (VS_HSM_ERR_OK != res) {
+        vsc_buffer_cleanup(&sign_data);
+    }
 
     if (prvkey) {
         vscf_impl_destroy(&prvkey);
@@ -279,11 +298,12 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
                     const uint8_t *hash,
                     const uint8_t *signature,
                     uint16_t signature_sz) {
-    uint8_t int_sign[256];
+#define MAX_INT_SIGN_SIZE 256
+    uint8_t int_sign[MAX_INT_SIGN_SIZE];
     uint16_t int_sign_sz = sizeof(int_sign);
     vscf_impl_t *pubkey = NULL;
-    vscf_alg_id_t hash_id;
-    uint16_t hash_sz;
+    vscf_alg_id_t hash_id = vscf_alg_id_NONE;
+    uint16_t hash_sz = 0;
     int res = VS_HSM_ERR_CRYPTO;
 
     NOT_ZERO(public_key);
@@ -296,8 +316,9 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
                        keypair_type, signature, signature_sz, int_sign, int_sign_sz, &int_sign_sz),
                "Unable to convert Virgil signature format to the raw one");
 
-    VS_LOG_DEBUG("INT Signature size : %d bytes", int_sign_sz);
-    VS_LOG_HEX(VS_LOGLEV_DEBUG, "INT Signature : ", int_sign, int_sign_sz);
+    VS_LOG_DEBUG("Internal signature size : %d bytes", int_sign_sz);
+    VS_LOG_HEX(VS_LOGLEV_DEBUG, "Internal signature : ", int_sign, int_sign_sz);
+
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
         pubkey = (vscf_impl_t *)vscf_secp256r1_public_key_new();
@@ -348,6 +369,8 @@ terminate:
     }
 
     return res;
+
+#undef MAX_INT_SIGN_SIZE
 }
 
 /********************************************************************************/
@@ -403,12 +426,12 @@ destroy_random_impl() {
 int
 vs_hsm_random(uint8_t *output, uint16_t output_sz) {
     int res = VS_HSM_ERR_CRYPTO;
-    vsc_buffer_t buf;
-    uint16_t cur_off;
-    uint16_t cur_size;
+    vsc_buffer_t out_buf;
+    uint16_t cur_off = 0;
+    uint16_t cur_size = 0;
 
-    vsc_buffer_init(&buf);
-    vsc_buffer_use(&buf, output, output_sz);
+    vsc_buffer_init(&out_buf);
+    vsc_buffer_use(&out_buf, output, output_sz);
 
     if (!random_impl) {
         CHECK_MEM_ALLOC(random_impl = (vscf_impl_t *)vscf_ctr_drbg_new(),
@@ -427,12 +450,16 @@ vs_hsm_random(uint8_t *output, uint16_t output_sz) {
             cur_size = MBEDTLS_CTR_DRBG_MAX_REQUEST;
         }
 
-        CHECK_VSCF(vscf_random(random_impl, cur_size, &buf), "Unable to generate random sequence");
+        CHECK_VSCF(vscf_random(random_impl, cur_size, &out_buf), "Unable to generate random sequence");
     }
 
     res = VS_HSM_ERR_OK;
 
 terminate:
+
+    if (VS_HSM_ERR_OK != res) {
+        vsc_buffer_cleanup(&out_buf);
+    }
 
     return res;
 }
