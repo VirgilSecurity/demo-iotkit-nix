@@ -54,12 +54,22 @@ set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
 #
 target_sources(virgil-iot-gateway-initializer
 		PRIVATE
+		# Headers
+		include/virgil/iot/initializer/communication/sdmp_initializer.h
+		include/virgil/iot/initializer/sdmp/prvs_implementation.h
+
+		# Sources
 		src/main.c
 		src/communication/sdmp_initializer.c
 		src/sdmp/prvs_implementation.c
+
+		# TODO : need to move to the correct place or merge to some other file
+		src/iot_pkt_api.h
+		src/iot_plc_api.h
+		src/sim_plc.h
+		src/sim_plc.c
+
 		)
-
-
 
 #
 #   -Wall -Werror
@@ -86,7 +96,7 @@ target_include_directories(virgil-iot-gateway-initializer
 #
 #	Link libraries
 #
-target_link_libraries (${IOT_GW_INITIALIZER}
+target_link_libraries (virgil-iot-gateway-initializer
 		foundation
 		sdmp
 		secbox

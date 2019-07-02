@@ -32,26 +32,12 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#ifndef _IOT_RPI_SIM_PLC_H
+#define _IOT_RPI_SIM_PLC_H
 
-#include <virgil/iot/initializer/communication/sdmp_initializer.h>
-#include <virgil/iot/initializer/sdmp/prvs_implementation.h>
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/PRVS.h>
+#include <arpa/inet.h>
 
-#include <unistd.h>
+void
+vs_plc_sim_set_ip(struct in_addr address);
 
-/******************************************************************************/
-int
-vs_sdmp_comm_start(const vs_netif_t *netif) {
-
-    if (0 != vs_sdmp_init(netif)) {
-        return -1;
-    }
-
-    if (0 != vs_sdmp_register_service(vs_sdmp_prvs_service())) {
-        return -1;
-    }
-
-    return vs_sdmp_prvs_configure_hal(vs_prvs_impl());
-}
-
+#endif // _IOT_RPI_SIM_PLC_H
