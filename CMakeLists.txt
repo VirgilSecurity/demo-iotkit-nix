@@ -45,11 +45,6 @@ list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #
 #   Clang format
 #
-set(VSC_MULTI_THREADING OFF)
-set(VSCF_MULTI_THREADING OFF)
-set(VSCR_MULTI_THREADING OFF)
-set(VSCP_MULTI_THREADING OFF)
-set(VSCE_MULTI_THREADING OFF)
 include(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 
 #
@@ -60,11 +55,6 @@ project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C Go)
 # ---------------------------------------------------------------------------
 #   Settings
 # ---------------------------------------------------------------------------
-
-#
-#   Enable C11 globaly
-#
-set(CMAKE_C_STANDARD 11)
 
 #
 #   Enable/Disable simulator
