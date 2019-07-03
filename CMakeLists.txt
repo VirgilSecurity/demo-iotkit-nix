@@ -57,6 +57,11 @@ project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C Go)
 # ---------------------------------------------------------------------------
 
 #
+#   Enable C11 globaly
+#
+set(CMAKE_C_STANDARD 11)
+
+#
 #   Enable/Disable simulator
 #
 option(GATEWAY_SIMULATOR "On/Off code for simulator." ON)
