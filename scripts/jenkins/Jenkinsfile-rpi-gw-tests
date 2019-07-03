@@ -1,0 +1,217 @@
+// Function
+def success() {
+    currentBuild.result = "SUCCESS"
+}
+
+def unstable() {
+    currentBuild.result = "UNSTABLE"
+}
+
+def failure() {
+    currentBuild.result = "FAILURE"
+}
+
+def ConcatState(Stage,State) {
+   SUMMARY_STATE="${SUMMARY_STATE}  STAGE: ${Stage} - ${State}\n"
+}
+
+def mailNotification() {
+    step([$class: 'Mailer',
+    notifyEveryUnstableBuild: true,
+    recipients: "root@localhost",
+    sendToIndividuals: true])
+}
+
+def clearContentUnix() {
+    cleanWs()
+}
+
+def archiveArtifacts(pattern) {
+    step([$class: 'ArtifactArchiver', artifacts: pattern, fingerprint: true, onlyIfSuccessful: false])
+}
+
+def DiscordSetHook() {
+   if ( currentBuild.result == "SUCCESS" ) {
+     return "discord-hook"
+   } else {
+     return "iot-tests-fails"
+   }
+   
+}
+
+
+pipeline  {
+   agent { node { label "${BUILD_HOST}"} }
+   environment {
+       LAST_STAGE_NAME = ""
+       SUMMARY_STATE="PROJECT: ${currentBuild.fullDisplayName}\n COMMENT: ${BUILD_COMMENT}\n\n"
+
+       CONTAINER_NAME = "jenkins-fc29-${env.JOB_NAME}-${env.BUILD_NUMBER}"
+       CONTAINER_IMAGE = "1609-hub.virgilsecurity.com:8443/iotl/fedora29-devel"
+   }
+   stages {
+         stage('Grab SCM') {
+           steps {
+             script {
+                 LAST_STAGE_NAME="${STAGE_NAME}"
+                 if ("${CLEAN_BUILD}" == 'true') {
+                     clearContentUnix()
+                 }
+                 checkout scm
+                 ConcatState(LAST_STAGE_NAME,"OK BRANCH:[${BRANCH_SELECTOR}]")
+             }
+           }
+   }
+
+         stage('Prepare Docker container') {
+           steps {
+             script {
+                 LAST_STAGE_NAME="${STAGE_NAME}"
+                 sh "sudo docker pull ${CONTAINER_IMAGE}"
+                 sh "sudo docker run -d --rm --cap-add SYS_PTRACE \
+                     --name ${CONTAINER_NAME} \
+                     -e BUILD_UID=\$(id -u) \
+                     -e BUILD_GID=\$(id -g) \
+                     -v ${workspace}/:/home/jenkins/iotl \
+                     ${CONTAINER_IMAGE}"
+                 echo 'Waiting creating user Jenkins in container'
+                 sh "sudo docker exec ${CONTAINER_NAME} bash -c \'/usr/local/bin/started.sh\'"
+                 sh "mkdir -p artifacts"
+                 ConcatState(LAST_STAGE_NAME,"OK")
+             }
+           }
+         }
+
+         stage('Static analyze CPPCHECK') {
+            steps {
+               script {       
+                  LAST_STAGE_NAME="${STAGE_NAME}"
+                  if ( STATIC_ANALYZE == "true" ) {
+                     try {
+                        sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
+                           ./scripts/analyze/cpp-check.sh 2>&1 | tee artifacts/cppcheck.log; exit \${PIPESTATUS[0]}\'"
+                     }
+                     catch(any) {
+                       unstable()
+                       ConcatState(LAST_STAGE_NAME,"UNSTABLE")
+                       return
+                     }
+                     ConcatState(LAST_STAGE_NAME,"OK")
+                  } else  {
+                     ConcatState(LAST_STAGE_NAME,"SKIPPED")
+                  } 
+               }   
+            }  
+         }
+
+         stage('Static analyze PVS-Studio') {
+            steps {
+               script {       
+                  LAST_STAGE_NAME="${STAGE_NAME}"
+                  if ( STATIC_ANALYZE_PVS == "true" ) {
+                     try {
+                        sh "sudo docker exec -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
+                            ./scripts/analyze/pvs-check.sh 2>&1 | tee artifacts/pvs.log; exit \${PIPESTATUS[0]}\'"
+                     }
+                     catch(any) {
+                       unstable()
+                       ConcatState(LAST_STAGE_NAME,"UNSTABLE")
+                       return
+                     }
+                     ConcatState(LAST_STAGE_NAME,"OK")
+                  } else  {
+                     ConcatState(LAST_STAGE_NAME,"SKIPPED")
+                  } 
+               }
+            }
+         }
+
+         stage('Build rpi-gw-tests') {
+            steps {
+                script {
+                    LAST_STAGE_NAME="${STAGE_NAME}"
+                      sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
+                      scripts/jenkins/build-rpi-gw-tests.sh 2>&1 | tee artifacts/build-linux.log; exit \${PIPESTATUS[0]}\'"
+                      sh "mkdir -p artifacts &&\
+                          cp -fp cmake-build-debug/tests/rpi_gw_tests artifacts/ &&\
+                          cp -fp cmake-build-debug/shared/librpi_gw.a artifacts/"
+                    ConcatState(LAST_STAGE_NAME,"OK")
+                }
+            }
+         }
+
+         stage('Run rpi-gw-tests') {
+            steps {
+               script {
+                  LAST_STAGE_NAME="${STAGE_NAME}"
+                  if ( RUN_IOTL_TESTS == "true" ) {
+                     try {
+                         if ( RUN_IN_VALGRIND == "true" ) { LAST_STAGE_NAME="${LAST_STAGE_NAME} (In Valgrind)" }
+                         sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
+                             export RUN_IN_VALGRIND=${RUN_IN_VALGRIND} &&\
+                             scripts/jenkins/run-rpi-gw-tests.sh ${RUN_TESTS_COUNT} 2>&1 | tee artifacts/rpi_gw_test.log; exit \${PIPESTATUS[0]} \'"
+                     }
+                     catch(any) {
+                       unstable()
+                       ConcatState(LAST_STAGE_NAME,"UNSTABLE")
+                       return
+                     }
+                     ConcatState(LAST_STAGE_NAME,"OK")
+                   } else {
+                      ConcatState(LAST_STAGE_NAME,"SKIPPED")
+                   } 
+               }
+            }
+         }
+
+         stage('Archive artifacts') {
+            steps {
+                script {
+                  LAST_STAGE_NAME="${STAGE_NAME}"                
+                  writeFile file: 'artifacts/summary.log', text: "${SUMMARY_STATE}"
+                  archiveArtifacts('artifacts/**/*')
+                  ConcatState(LAST_STAGE_NAME,"OK")
+                }
+            }
+        }
+   }
+
+   post {
+      always {
+          script {
+             if ( DISKORD_NOTIFY == "true" ) {
+                try {
+                  withCredentials([string(credentialsId: DiscordSetHook(), variable: 'WEBHOOK')]) {
+                     discordSend description: SUMMARY_STATE,
+                              footer: 'Job state: ' + currentBuild.currentResult,
+                              link: env.BUILD_URL,
+                              result: currentBuild.currentResult,
+                              title: JOB_NAME,
+                              webhookURL: WEBHOOK
+                  }
+                }
+                catch(any) { }
+             }
+          }
+          sh "sudo docker rm -f ${CONTAINER_NAME} || true"
+          sh "sudo docker volume prune -f || true"
+          echo "#---- SUMMARY RESULTS OF TESTS ---------"
+          echo "# ${SUMMARY_STATE}"
+          echo "#---------------------------------------"
+      }
+      success {
+          echo 'POST SUCCESS'
+      }
+      unstable {
+          echo 'POST UNSTABLE'
+        }
+      failure {
+          echo 'POST FAILURE'
+          ConcatState(LAST_STAGE_NAME,"FAILURE")
+      }
+      changed {
+          echo 'POST CHANGED'
+      }
+   }
+
+}
