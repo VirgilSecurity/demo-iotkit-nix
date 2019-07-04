@@ -115,6 +115,11 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shared)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
 
 #
+#   aws-sdk
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
+
+#
 #   Application
 #
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
