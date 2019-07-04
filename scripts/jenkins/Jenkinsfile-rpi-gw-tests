@@ -54,9 +54,7 @@ pipeline  {
            steps {
              script {
                  LAST_STAGE_NAME="${STAGE_NAME}"
-                 if ("${CLEAN_BUILD}" == 'true') {
-                     clearContentUnix()
-                 }
+                 clearContentUnix()
                  checkout scm
                  ConcatState(LAST_STAGE_NAME,"OK BRANCH:[${BRANCH_SELECTOR}]")
              }
@@ -121,7 +119,7 @@ pipeline  {
                      ConcatState(LAST_STAGE_NAME,"OK")
                   } else  {
                      ConcatState(LAST_STAGE_NAME,"SKIPPED")
-                  } 
+                  }
                }
             }
          }
@@ -132,8 +130,7 @@ pipeline  {
                     LAST_STAGE_NAME="${STAGE_NAME}"
                       sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
                       scripts/jenkins/build-rpi-gw-tests.sh 2>&1 | tee artifacts/build-linux.log; exit \${PIPESTATUS[0]}\'"
-                      sh "mkdir -p artifacts &&\
-                          cp -fp cmake-build-debug/tests/rpi_gw_tests artifacts/ &&\
+                      sh "cp -fp cmake-build-debug/tests/rpi_gw_tests artifacts/ &&\
                           cp -fp cmake-build-debug/shared/librpi_gw.a artifacts/"
                     ConcatState(LAST_STAGE_NAME,"OK")
                 }
@@ -143,55 +140,46 @@ pipeline  {
          stage('Run rpi-gw-tests') {
             steps {
                script {
-                  LAST_STAGE_NAME="${STAGE_NAME}"
-                  if ( RUN_IOTL_TESTS == "true" ) {
-                     try {
-                         if ( RUN_IN_VALGRIND == "true" ) { LAST_STAGE_NAME="${LAST_STAGE_NAME} (In Valgrind)" }
-                         sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
-                             export RUN_IN_VALGRIND=${RUN_IN_VALGRIND} &&\
-                             scripts/jenkins/run-rpi-gw-tests.sh ${RUN_TESTS_COUNT} 2>&1 | tee artifacts/rpi_gw_test.log; exit \${PIPESTATUS[0]} \'"
-                     }
-                     catch(any) {
-                       unstable()
-                       ConcatState(LAST_STAGE_NAME,"UNSTABLE")
-                       return
-                     }
-                     ConcatState(LAST_STAGE_NAME,"OK")
-                   } else {
-                      ConcatState(LAST_STAGE_NAME,"SKIPPED")
-                   } 
+                   LAST_STAGE_NAME="${STAGE_NAME}"
+                   try {
+                       if ( RUN_IN_VALGRIND == "true" ) { LAST_STAGE_NAME="${LAST_STAGE_NAME} (In Valgrind)" }
+                       sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
+                           export RUN_IN_VALGRIND=${RUN_IN_VALGRIND} &&\
+                           scripts/jenkins/run-rpi-gw-tests.sh ${RUN_TESTS_COUNT} 2>&1 | tee artifacts/rpi_gw_test.log; exit \${PIPESTATUS[0]} \'"
+                   }
+                   catch(any) {
+                     unstable()
+                     ConcatState(LAST_STAGE_NAME,"UNSTABLE")
+                     return
+                   }
+                   ConcatState(LAST_STAGE_NAME,"OK")
                }
             }
          }
-
-         stage('Archive artifacts') {
-            steps {
-                script {
-                  LAST_STAGE_NAME="${STAGE_NAME}"                
-                  writeFile file: 'artifacts/summary.log', text: "${SUMMARY_STATE}"
-                  archiveArtifacts('artifacts/**/*')
-                  ConcatState(LAST_STAGE_NAME,"OK")
-                }
-            }
-        }
    }
 
    post {
       always {
           script {
-             if ( DISKORD_NOTIFY == "true" ) {
-                try {
-                  withCredentials([string(credentialsId: DiscordSetHook(), variable: 'WEBHOOK')]) {
-                     discordSend description: SUMMARY_STATE,
-                              footer: 'Job state: ' + currentBuild.currentResult,
-                              link: env.BUILD_URL,
-                              result: currentBuild.currentResult,
-                              title: JOB_NAME,
-                              webhookURL: WEBHOOK
-                  }
-                }
-                catch(any) { }
-             }
+              archiveArtifacts('artifacts/**/*')
+              // Append fail status to result message
+              if ( currentBuild.currentResult == "FAILURE" ) {
+                  ConcatState(LAST_STAGE_NAME, currentBuild.currentResult)
+              }
+              // Send Discord notification
+              if ( DISKORD_NOTIFY == "true" ) {
+                 try {
+                   withCredentials([string(credentialsId: DiscordSetHook(), variable: 'WEBHOOK')]) {
+                      discordSend description: SUMMARY_STATE,
+                               footer: 'Job state: ' + currentBuild.currentResult,
+                               link: env.BUILD_URL,
+                               result: currentBuild.currentResult,
+                               title: JOB_NAME,
+                               webhookURL: WEBHOOK
+                   }
+                 }
+                 catch(any) { }
+              }
           }
           sh "sudo docker rm -f ${CONTAINER_NAME} || true"
           sh "sudo docker volume prune -f || true"
@@ -207,7 +195,6 @@ pipeline  {
         }
       failure {
           echo 'POST FAILURE'
-          ConcatState(LAST_STAGE_NAME,"FAILURE")
       }
       changed {
           echo 'POST CHANGED'
