@@ -225,7 +225,7 @@ msg_bin_get_credentials() {
 
     IOT_INFO("------------------------- LOAD MESSAGE BIN CREDENTIALS -------------------------");
 
-    uint16_t answer_size = 8192;
+    size_t answer_size = HTTPS_INPUT_BUFFER_SIZE;
     char *answer = (char *)malloc(answer_size);
     if (!answer) {
         IOT_ERROR("ALLOCATION FAIL in message bin credentials\r\n");

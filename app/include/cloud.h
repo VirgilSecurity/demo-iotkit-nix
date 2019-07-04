@@ -55,14 +55,14 @@
 #define CLOUD_GENERATE_AUTHORIZATION_FAIL -8
 
 #define MESSAGE_BIN_BROKER_URL ""
-#define CLOUD_HOST ""
+#define CLOUD_HOST "https://things-dev.virgilsecurity.com"
 #define THING_EP "thing"
-#define AWS_ID "/%s/aws"
-#define MQTT_ID "/%s/mqtt"
+#define AWS_ID "aws"
+#define MQTT_ID "mqtt"
 
 int16_t
-cloud_get_gateway_iot(char *out_answer, uint16_t *in_out_answer_len);
+cloud_get_gateway_iot(char *out_answer, size_t *in_out_answer_len);
 int16_t
-cloud_get_message_bin_credentials(char *out_answer, uint16_t *in_out_answer_len);
+cloud_get_message_bin_credentials(char *out_answer, size_t *in_out_answer_len);
 
 #endif /* GATEWAY_CLOUD_H_ */
