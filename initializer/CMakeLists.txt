@@ -100,7 +100,7 @@ target_link_libraries (virgil-iot-gateway-initializer
 		foundation
 		sdmp
 		secbox
-		rpi_gw
+		rpi_gw_shared
 		logger
 		)
 

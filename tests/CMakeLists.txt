@@ -51,6 +51,6 @@ target_compile_options(rpi_gw_tests
 
 target_link_libraries(rpi_gw_tests
 		PRIVATE
-		rpi_gw
+		rpi_gw_shared
 		virgil-iot-sdk-tests
 		logger)

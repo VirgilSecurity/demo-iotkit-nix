@@ -36,7 +36,7 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 
-set(RPI_GW_LIB rpi_gw)
+set(RPI_GW_LIB rpi_gw_shared)
 
 
 #
