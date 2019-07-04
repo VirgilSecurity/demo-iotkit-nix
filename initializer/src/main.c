@@ -71,7 +71,7 @@ app_crypto_entry() {
 
 static bool
 _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
-    int values[6];
+    unsigned int values[6];
     int i;
 
     if (6 ==

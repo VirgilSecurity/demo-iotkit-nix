@@ -72,15 +72,17 @@
 
 static vs_secbox_hal_impl_t _secbox_gateway = {.save = 0, .load = 0, .del = 0, .init = 0};
 
-///******************************************************************************/
-//#define ASN1_CHK_ADD(g, f)    \
-//    do {                      \
-//        if ((res_sz = f) < 0) \
-//            return (false);   \
-//        else                  \
-//            g += res_sz;      \
-//    } while (0)
-//
+/******************************************************************************
+#define ASN1_CHK_ADD(g, f)    \
+    do {                      \
+        if ((res_sz = f) < 0) \
+            return (false);   \
+        else                  \
+            g += res_sz;      \
+    } while (0)
+*/
+
+///******************************************************************************
 // static bool
 //_mbedtls_sign_to_virgil(uint8_t hash_type,
 //    uint8_t* mbedtls_sign,

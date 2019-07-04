@@ -26,7 +26,7 @@ mkdir -p cmake-build-jenkins
 cd ./cmake-build-jenkins && cmake -DVIRGIL_IOT_MCU_BUILD=OFF $@ "../"
 check_error
 echo "------------- Build rpi_gw_tests -------------------------------------"
-make rpi_gw_tests -j 1
+make rpi_gw_tests -j 4
 check_error
 echo "----------------------------------------------------------------------"
 echo "################# FINISH RPI GW TESTS BUILDING #######################"

@@ -728,7 +728,7 @@ void
 vPortFindTicksPerSecond(void) {
     /* Needs to be reasonably high for accuracy. */
     unsigned long ulTicksPerSecond = sysconf(_SC_CLK_TCK);
-    printf("Timer Resolution for Run TimeStats is %ld ticks per second.\n", ulTicksPerSecond);
+    printf("Timer Resolution for Run TimeStats is %lu ticks per second.\n", ulTicksPerSecond);
 }
 /*-----------------------------------------------------------*/
 
