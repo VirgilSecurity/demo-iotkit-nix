@@ -25,9 +25,9 @@ echo "----------------------------------------------------------------------"
 echo "############# CHECK WITH PVS-Studio###################################"
 echo "----------------------------------------------------------------------"
 
-rm -rf cmake-build-debug
-mkdir -p cmake-build-debug
-cd ./cmake-build-debug && cmake -DIOTELIC_MCU_BUILD=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=On "../"
+rm -rf cmake-build-jenkins
+mkdir -p cmake-build-jenkins
+cd ./cmake-build-jenkins && cmake -DVIRGIL_IOT_MCU_BUILD=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=On "../"
 pvs-studio-analyzer analyze -o PVS.dat  -j4 \
                -e "../ext"
 

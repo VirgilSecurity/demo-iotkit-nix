@@ -130,8 +130,8 @@ pipeline  {
                     LAST_STAGE_NAME="${STAGE_NAME}"
                       sh "sudo docker exec  -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
                       scripts/jenkins/build-rpi-gw-tests.sh 2>&1 | tee artifacts/build-linux.log; exit \${PIPESTATUS[0]}\'"
-                      sh "cp -fp cmake-build-debug/tests/rpi_gw_tests artifacts/ &&\
-                          cp -fp cmake-build-debug/shared/librpi_gw.a artifacts/"
+                      sh "cp -fp cmake-build-jenkins/tests/rpi_gw_tests artifacts/ &&\
+                          cp -fp cmake-build-jenkins/shared/librpi_gw.a artifacts/"
                     ConcatState(LAST_STAGE_NAME,"OK")
                 }
             }
