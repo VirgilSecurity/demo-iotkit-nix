@@ -35,6 +35,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/trust_list/trust_list.h>
 #include "secbox_impl/gateway_secbox_impl.h"
 
 /********************************************************************************/
@@ -46,6 +47,9 @@ main(int argc, char *argv[]){
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
+
+    // Prepare TL storage
+    vs_tl_init_storage();
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
 

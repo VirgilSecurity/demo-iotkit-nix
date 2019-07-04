@@ -131,12 +131,8 @@ vs_read_file_data(const char *folder, const char *file_name, const uint8_t *data
 
     FILE *fp = fopen(file_path, "rb");
     if (fp) {
-        fseek(fp, 0, SEEK_END);
-        long file_sz = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-
-        if (buf_sz >= file_sz && (1 == fread((void *)data, (size_t)file_sz, 1, fp))) {
-            *data_sz = (size_t)file_sz;
+        if (1 == fread((void *)data, (size_t)buf_sz, 1, fp)) {
+            *data_sz = (size_t)buf_sz;
             result = true;
         }
 
@@ -172,7 +168,7 @@ prepare_keystorage_folder(char folder[FILENAME_MAX]) {
 
     snprintf(folder,
              FILENAME_MAX,
-             "%s/%x:%x:%x:%x:%x:%x",
+             "%s/%02x_%02x_%02x_%02x_%02x_%02x",
              KEYSTORAGE_DIR,
              mac_addr.bytes[0],
              mac_addr.bytes[1],

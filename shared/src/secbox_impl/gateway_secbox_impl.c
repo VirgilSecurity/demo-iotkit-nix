@@ -68,7 +68,7 @@ vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in
     char filename[FILENAME_MAX];
     prepare_keystorage_folder(folder);
 
-    snprintf(filename, sizeof(filename), "%u_%u", element_info->id, element_info->index);
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
     return write_keystorage_file(folder, filename, in_data, data_sz) ? GATEWAY_OK : GATEWAY_ERROR;
 }
 
@@ -85,7 +85,7 @@ vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data
     char filename[FILENAME_MAX];
     prepare_keystorage_folder(folder);
 
-    snprintf(filename, sizeof(filename), "%u_%u", element_info->id, element_info->index);
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
     // TODO: RETURN REAL SIZE OF READ DATA
     if (!read_keystorage_file(folder, filename, out_data, data_sz, &out_sz)) {
