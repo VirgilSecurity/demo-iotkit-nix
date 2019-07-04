@@ -163,272 +163,47 @@ vs_read_file_data(const char *folder, const char *file_name, const uint8_t *data
 //}
 
 /******************************************************************************/
-// void prepare_keystorage_folder(char folder[FILENAME_MAX])
-//{
-//
-//    vs_mac_addr_t mac_addr;
-//
-//    vs_hal_netif_plc()->mac_addr(&mac_addr);
-//
-//    snprintf(folder,
-//        FILENAME_MAX,
-//        "%s/%x:%x:%x:%x:%x:%x",
-//        KEYSTORAGE_DIR,
-//        mac_addr.bytes[0],
-//        mac_addr.bytes[1],
-//        mac_addr.bytes[2],
-//        mac_addr.bytes[3],
-//        mac_addr.bytes[4],
-//        mac_addr.bytes[5]);
-//}
+void
+prepare_keystorage_folder(char folder[FILENAME_MAX]) {
+
+    vs_mac_addr_t mac_addr;
+
+    vs_hal_netif_plc()->mac_addr(&mac_addr);
+
+    snprintf(folder,
+             FILENAME_MAX,
+             "%s/%x:%x:%x:%x:%x:%x",
+             KEYSTORAGE_DIR,
+             mac_addr.bytes[0],
+             mac_addr.bytes[1],
+             mac_addr.bytes[2],
+             mac_addr.bytes[3],
+             mac_addr.bytes[4],
+             mac_addr.bytes[5]);
+}
 
 /******************************************************************************/
-// bool write_keystorage_file(const char* folder, const char* file_name, const uint8_t* data, size_t data_sz)
-//{
-//    return _write_file_data(folder, file_name, data, data_sz);
-//}
+bool
+write_keystorage_file(const char *folder, const char *file_name, const uint8_t *data, size_t data_sz) {
+    return vs_write_file_data(folder, file_name, data, data_sz);
+}
 
 /******************************************************************************/
-// bool read_keystorage_file(const char* folder, const char* file_name, uint8_t* out_data, size_t buf_sz, size_t*
-// out_sz)
-//{
-//    if (!folder || !file_name || !out_data)
-//        return false;
-//
-//    bool result = false;
-//    *out_sz = 0;
-//
-//    if (_file_is_exist(folder, file_name)) {
-//        if (_read_file_data(folder, file_name, (uint8_t*)out_data, buf_sz, out_sz)) {
-//
-//            result = true;
-//        }
-//    }
-//    return result;
-//}
-//
-///******************************************************************************/
-// bool write_tl_header_file(tl_context_t* ctx, const trust_list_header_t* tl_header)
-//{
-//    char folder[FILENAME_MAX];
-//    char filename[FILENAME_MAX];
-//
-//    if (!tl_header) {
-//        return false;
-//    }
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s",
-//        TL_HEADER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    return _write_file_data(folder, filename, (uint8_t*)tl_header, sizeof(trust_list_header_t));
-//}
+bool
+read_keystorage_file(const char *folder, const char *file_name, uint8_t *out_data, size_t buf_sz, size_t *out_sz) {
+    if (!folder || !file_name || !out_data)
+        return false;
+
+    bool result = false;
+    *out_sz = 0;
+
+    if (vs_file_is_exist(folder, file_name)) {
+        if (vs_read_file_data(folder, file_name, (uint8_t *)out_data, buf_sz, out_sz)) {
+
+            result = true;
+        }
+    }
+    return result;
+}
 
 /******************************************************************************/
-// bool read_tl_header_file(tl_context_t* ctx, trust_list_header_t* tl_header)
-//{
-//    char folder[FILENAME_MAX];
-//    char filename[FILENAME_MAX];
-//
-//    if (!tl_header) {
-//        return false;
-//    }
-//
-//    bool result = false;
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s",
-//        TL_HEADER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    if (!_file_is_exist(folder, filename)) {
-//        memset(tl_header, 0xFF, sizeof(trust_list_header_t));
-//
-//        if (!_write_file_data(folder, filename, (uint8_t*)tl_header, sizeof(trust_list_header_t))) {
-//            return false;
-//        }
-//    } else {
-//        size_t data_sz;
-//
-//        if (_read_file_data(folder, filename, (uint8_t*)tl_header, sizeof(trust_list_header_t), &data_sz) && data_sz
-//        == sizeof(trust_list_header_t)) {
-//            result = true;
-//        }
-//    }
-//    return result;
-//}
-
-/******************************************************************************/
-// bool write_tl_key_file(tl_context_t* ctx, size_t key_id, const trust_list_pub_key_t* key)
-//{
-//    char filename[FILENAME_MAX];
-//    char folder[FILENAME_MAX];
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s_%u",
-//        TL_KEY_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type),
-//        (uint32_t)key_id);
-//
-//    return _write_file_data(folder, filename, (uint8_t*)key, sizeof(trust_list_pub_key_t));
-//}
-
-/******************************************************************************/
-// bool read_tl_key_file(tl_context_t* ctx, size_t key_id, trust_list_pub_key_t* key)
-//{
-//    char filename[FILENAME_MAX];
-//    char folder[FILENAME_MAX];
-//
-//    if (!key) {
-//        return false;
-//    }
-//
-//    bool result = false;
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s_%u",
-//        TL_KEY_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type),
-//        (uint32_t)key_id);
-//
-//    if (!_file_is_exist(folder, filename)) {
-//        memset(key, 0xFF, sizeof(trust_list_pub_key_t));
-//
-//        if (!_write_file_data(folder, filename, (uint8_t*)key, sizeof(trust_list_pub_key_t))) {
-//            return false;
-//        }
-//    } else {
-//        size_t data_sz;
-//
-//        if (_read_file_data(folder, filename, (uint8_t*)key, sizeof(trust_list_pub_key_t), &data_sz) && data_sz ==
-//        sizeof(trust_list_pub_key_t)) {
-//            result = true;
-//        }
-//    }
-//    return result;
-//}
-
-/******************************************************************************/
-// bool remove_keystorage_tl_header_file(tl_context_t* ctx)
-//{
-//    char folder[FILENAME_MAX];
-//    char file_path[FILENAME_MAX];
-//
-//    prepare_keystorage_folder(folder);
-//    int res = snprintf(file_path,
-//        sizeof(file_path),
-//        "%s/%s_%s",
-//        folder,
-//        TL_HEADER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    if (res < 0 || res >= sizeof(file_path) || remove(file_path) < 0) {
-//        return false;
-//    }
-//
-//    return true;
-//}
-//
-///******************************************************************************/
-// bool remove_keystorage_tl_key_file(tl_context_t* ctx, tl_key_handle handle)
-//{
-//    char folder[FILENAME_MAX];
-//    char file_path[FILENAME_MAX];
-//
-//    prepare_keystorage_folder(folder);
-//    int res = snprintf(file_path,
-//        sizeof(file_path),
-//        "%s/%s_%s_%u",
-//        folder,
-//        TL_KEY_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type),
-//        (uint32_t)handle);
-//
-//    if (res < 0 || res >= sizeof(file_path) || remove(file_path) < 0) {
-//        return false;
-//    }
-//
-//    return true;
-//}
-//
-///******************************************************************************/
-// bool remove_keystorage_tl_footer_file(tl_context_t* ctx)
-//{
-//    char folder[FILENAME_MAX];
-//    char file_path[FILENAME_MAX];
-//
-//    prepare_keystorage_folder(folder);
-//    int res = snprintf(file_path,
-//        sizeof(file_path),
-//        "%s/%s_%s",
-//        folder,
-//        TL_FOOTER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    if (res < 0 || res >= sizeof(file_path) || remove(file_path) < 0) {
-//        return false;
-//    }
-//
-//    return true;
-//}
-//
-///******************************************************************************/
-// bool write_tl_footer_file(tl_context_t* ctx, const trust_list_footer_t* footer)
-//{
-//    char folder[FILENAME_MAX];
-//    char filename[FILENAME_MAX];
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s",
-//        TL_FOOTER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    return _write_file_data(folder, filename, (uint8_t*)footer, sizeof(trust_list_footer_t));
-//}
-//
-///******************************************************************************/
-// bool read_tl_footer_file(tl_context_t* ctx, trust_list_footer_t* footer)
-//{
-//    if (!footer) {
-//        return false;
-//    }
-//
-//    char folder[FILENAME_MAX];
-//    char filename[FILENAME_MAX];
-//
-//    bool result = false;
-//
-//    prepare_keystorage_folder(folder);
-//    snprintf(filename,
-//        sizeof(filename),
-//        "%s_%s",
-//        TL_FOOTER_FILENAME_PREFIX,
-//        _storage_type_to_str(ctx->storage.storage_type));
-//
-//    if (!_file_is_exist(folder, filename)) {
-//        memset(footer, 0xFF, sizeof(trust_list_footer_t));
-//
-//        if (!_write_file_data(folder, filename, (uint8_t*)footer, sizeof(trust_list_footer_t))) {
-//            return false;
-//        }
-//    } else {
-//        size_t data_sz;
-//
-//        if (_read_file_data(folder, filename, (uint8_t*)footer, sizeof(trust_list_footer_t), &data_sz) && data_sz ==
-//        sizeof(trust_list_footer_t)) {
-//            result = true;
-//        }
-//    }
-//    return result;
-//}

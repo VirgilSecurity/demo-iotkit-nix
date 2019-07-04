@@ -36,8 +36,6 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 
-set(RPI_GW_LIB rpi_gw)
-
 
 #
 #   Source code
@@ -56,27 +54,28 @@ set(RPI_GW_SRC
 #
 #   RaspberryPi gateway library
 #
-add_library(${RPI_GW_LIB}
+add_library(rpi_gw
 		${RPI_GW_SRC}
 		)
 
-target_link_libraries(${RPI_GW_LIB}
+target_link_libraries(rpi_gw
 		hsm
 		logger
 		foundation
 		converters
+		sdmp
 		)
 #
 #   -Wall -Werror
 #
-set_target_properties(${RPI_GW_LIB} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set_target_properties(rpi_gw PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
 
 #
 #   Common include directories
 #
 
 set (VIRGIL_SDK_DIR "${CMAKE_SOURCE_DIR}/ext/virgil-iot-sdk")
-target_include_directories(${RPI_GW_LIB}
+target_include_directories(rpi_gw
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 		${VIRGIL_SDK_DIR}/protocols/sdmp/include
@@ -84,8 +83,16 @@ target_include_directories(${RPI_GW_LIB}
 		)
 
 #
+#	Definitions
+#
+target_compile_definitions(rpi_gw
+		PUBLIC
+		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
+		)
+
+#
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(${RPI_GW_LIB})
+	add_clangformat(rpi_gw)
 endif()
