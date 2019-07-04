@@ -38,6 +38,8 @@ project(rpi_gw_tests VERSION 0.1.0 LANGUAGES C)
 
 add_executable(rpi_gw_tests)
 
+set_target_properties(rpi_gw_tests PROPERTIES C_STANDARD "99")
+
 target_sources(rpi_gw_tests
 		PRIVATE
 		main.c)

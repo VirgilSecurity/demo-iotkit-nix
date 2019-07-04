@@ -56,6 +56,8 @@ add_executable(${IOT_GW_INITIALIZER}
 		${GW_INITIALIZER_SRC}
 		)
 
+set_target_properties(virgil-iot-gateway-initializer PROPERTIES C_STANDARD "99")
+
 #
 #   -Wall -Werror
 #

@@ -60,6 +60,8 @@ add_library(${RPI_GW_LIB}
 		${RPI_GW_SRC}
 		)
 
+set_target_properties(rpi_gw PROPERTIES C_STANDARD "99")
+
 target_link_libraries(${RPI_GW_LIB}
 		hsm
 		logger
