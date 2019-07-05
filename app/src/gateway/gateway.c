@@ -44,8 +44,6 @@
 #include "upd_http_retrieval_thread.h"
 #include "event_group_bit_flags.h"
 
-#include <virgil/iot/logger/logger.h>
-
 static gtwy_t _gtwy;
 
 static bool is_threads_started = false;
@@ -81,8 +79,6 @@ get_gateway_ctx(void) {
 /******************************************************************************/
 static void
 gateway_task(void *pvParameters) {
-
-    vs_logger_init(VS_LOGLEV_DEBUG);
 
     start_message_bin_thread();
     start_upd_http_retrieval_thread();

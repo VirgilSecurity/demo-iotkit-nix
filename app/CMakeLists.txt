@@ -90,9 +90,16 @@ target_include_directories(virgil-iot-gateway-app
 #
 #	Link libraries
 #
+if(UNIX AND NOT APPLE)
+	target_link_libraries(virgil-iot-gateway-app
+			-Wl,--whole-archive rpi_gw_shared -Wl,--no-whole-archive
+			)
+else()
+	target_link_libraries(virgil-iot-gateway-app rpi_gw_shared)
+endif()
+
 target_link_libraries (virgil-iot-gateway-app
 		curl
-		rpi_gw_shared
 		freertos
 		aws-mqtt
 		)

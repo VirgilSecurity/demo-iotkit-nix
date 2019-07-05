@@ -44,7 +44,6 @@ add_library(rpi_gw_shared
 		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
 		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
@@ -60,6 +59,7 @@ target_link_libraries(rpi_gw_shared
 		provision
 		sdmp
 		secbox
+		trust_list
 		${CMAKE_THREAD_LIBS_INIT}
 		)
 #
@@ -73,14 +73,6 @@ set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno
 target_include_directories(rpi_gw_shared
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		)
-
-#
-#	Definitions
-#
-target_compile_definitions(rpi_gw_shared
-		PUBLIC
-		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
 		)
 
 #
