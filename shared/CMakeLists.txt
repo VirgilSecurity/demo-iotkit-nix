@@ -36,34 +36,30 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 
-
-#
-#   Source code
-#
-set(RPI_GW_SRC
-		src/base64/base64.c
-		src/communication/gateway_netif_plc.c
-		src/secbox_impl/gateway_secbox_impl.c
-		src/helpers/file-system.c
-		src/hal/crypto_hal.c
-		src/hal/file_io_hal.c
-		src/hal/keypair_hal.c
-		src/hal/hal.c
-		)
-
 #
 #   RaspberryPi gateway library
 #
 add_library(rpi_gw
-		${RPI_GW_SRC}
+		# Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
+		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
 		)
 
+find_package (Threads)
 target_link_libraries(rpi_gw
+		converters
 		hsm
 		logger
 		foundation
-		converters
 		sdmp
+		secbox
+		${CMAKE_THREAD_LIBS_INIT}
 		)
 #
 #   -Wall -Werror
@@ -73,13 +69,9 @@ set_target_properties(rpi_gw PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multic
 #
 #   Common include directories
 #
-
-set (VIRGIL_SDK_DIR "${CMAKE_SOURCE_DIR}/ext/virgil-iot-sdk")
 target_include_directories(rpi_gw
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${VIRGIL_SDK_DIR}/protocols/sdmp/include
-		${VIRGIL_SDK_DIR}/secbox/include
 		)
 
 #

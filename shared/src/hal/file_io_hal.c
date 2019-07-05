@@ -138,7 +138,9 @@ _write_file_data(const char *file_name, const void *data, uint16_t data_sz) {
         goto terminate;
     }
 
-    snprintf(file_path, sizeof(file_path), "%s/%s", base_dir, file_name);
+    if (snprintf(file_path, sizeof(file_path), "%s/%s", base_dir, file_name) < 0) {
+        return false;
+    }
     VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
 
     fp = fopen(file_path, "wb");
@@ -190,7 +192,9 @@ _read_file_data(const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t 
         VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
         goto terminate;
     }
-    snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, file_name);
+    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, file_name) < 0) {
+        return false;
+    }
 
     fp = fopen(file_path, "rb");
 
