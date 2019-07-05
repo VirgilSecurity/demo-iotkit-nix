@@ -332,3 +332,11 @@ int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
     return _read_file_data(get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
+
+/******************************************************************************/
+int
+vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
+    return 0;
+}
+
+/******************************************************************************/
