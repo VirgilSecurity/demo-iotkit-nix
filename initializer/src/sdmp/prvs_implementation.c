@@ -43,7 +43,7 @@
 
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 
-#include <secbox.h>
+#include <virgil/iot/secbox/secbox.h>
 
 #define VS_SECBOX_ELEMENT_PBR 0
 #define VS_SECBOX_ELEMENT_PBA 1
@@ -55,7 +55,7 @@
 #define VS_SECBOX_ELEMENT_TLF 8
 #define VS_SECBOX_ELEMENT_GET_OWN_PUBKEY 5
 #define SERIAL_SIZE 100
-
+#if 0
 /******************************************************************************/
 static int
 vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {
@@ -66,7 +66,7 @@ vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {
 
 /******************************************************************************/
 static int
-vs_prvs_save_data(vs_sdmp_prvs_element_t element_id, const uint8_t *data, uint16_t data_sz) {
+vs_prvs_save_data(vs_sdmp_prvs_element_e element_id, const uint8_t *data, uint16_t data_sz) {
     vs_secbox_element_info_t info;
 
     switch (element_id) {
@@ -147,16 +147,15 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
 /******************************************************************************/
 static int
 vs_prvs_finalize_storage(vs_sdmp_pubkey_t *asav_response) {
-//    vs_secbox_element_info_t el = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY, .index = vscf_alg_id_SECP256R1};
-//    uint16_t pubkey_sz;
+    vs_secbox_element_info_t el = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY, .index = vscf_alg_id_SECP256R1};
+    uint16_t pubkey_sz;
 
-//    if (0 != vs_secbox_load(&el, asav_response->pubkey, PUBKEY_MAX_SZ, &pubkey_sz) || pubkey_sz > UINT8_MAX) {
-//        return -1;
-//    }
+    if (0 != vs_secbox_load(&el, asav_response->pubkey, PUBKEY_MAX_SZ, &pubkey_sz) || pubkey_sz > UINT8_MAX) {
+        return -1;
+    }
 
     return 0;
 }
-
 /******************************************************************************/
 static int
 vs_prvs_start_save_tl(const uint8_t *data, uint16_t data_sz) {
@@ -196,14 +195,14 @@ vs_prvs_sign_data(const uint8_t *data, uint16_t data_sz, uint8_t *signature, uin
 //    vs_secbox_sign_info_t info = {.data_is_hash = true, .hash_type = vscf_alg_id_SHA256};
     return 0;
 }
-
+#endif
 /******************************************************************************/
 vs_sdmp_prvs_impl_t
 vs_prvs_impl() {
     vs_sdmp_prvs_impl_t res;
 
     memset(&res, 0, sizeof(res));
-
+#if 0
     res.dnid_func = vs_prvs_dnid;
     res.save_data_func = vs_prvs_save_data;
     res.load_data_func = vs_prvs_load_data;
@@ -213,6 +212,6 @@ vs_prvs_impl() {
     res.save_tl_part_func = vs_prvs_save_tl_part;
     res.finalize_tl_func = vs_prvs_finalize_tl;
     res.sign_data_func = vs_prvs_sign_data;
-
+#endif
     return res;
 }
