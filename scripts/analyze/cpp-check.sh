@@ -27,6 +27,7 @@ echo "############# CHECK WITH CPPCHECK ####################################"
 echo "----------------------------------------------------------------------"
 cppcheck --enable=warning,information --inline-suppr --error-exitcode=128 --report-progress -q -D DEBUGV \
                 -i"ext" \
+                -i"app/src/json" \
                 "app" \
                 "initializer" \
                 "shared" \
