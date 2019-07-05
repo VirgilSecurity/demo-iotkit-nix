@@ -69,7 +69,9 @@ static int _plc_sock = -1;
 static pthread_t receive_thread;
 static uint8_t _sim_mac_addr[6] = {2, 2, 2, 2, 2, 2};
 
-#define PLC_SIM_ADDR "127.0.0.1"
+static bool _plc_sim_ip_ready = false;
+static struct in_addr _plc_sim_ip;
+
 #define PLC_SIM_PORT 3333
 
 #define PLC_RX_BUF_SZ (2048)
@@ -117,13 +119,19 @@ static int
 _plc_connect() {
     struct sockaddr_in server;
 
+    // Check is present IP of PLC bus simulator
+    if (!_plc_sim_ip_ready) {
+        printf("ERROR: IP of PLC bus simulator is not present\n");
+        return -1;
+    }
+
     // Create socket
     _plc_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (_plc_sock == -1) {
         printf("Could not create socket\n");
     }
 
-    server.sin_addr.s_addr = inet_addr(PLC_SIM_ADDR);
+    server.sin_addr = _plc_sim_ip;
     server.sin_family = AF_INET;
     server.sin_port = htons(PLC_SIM_PORT);
 
@@ -225,6 +233,13 @@ vs_hal_netif_plc() {
 void
 vs_hal_netif_plc_force_mac(vs_mac_addr_t mac_addr) {
     memcpy(_sim_mac_addr, mac_addr.bytes, 6);
+}
+
+/******************************************************************************/
+void
+vs_plc_sim_set_ip(struct in_addr address) {
+    memcpy(&_plc_sim_ip, &address, sizeof(_plc_sim_ip));
+    _plc_sim_ip_ready = true;
 }
 
 /******************************************************************************/

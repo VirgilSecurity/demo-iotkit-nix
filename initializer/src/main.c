@@ -144,10 +144,10 @@ main(int argc, char *argv[]) {
         // Prepare secbox
         vs_secbox_configure_hal(vs_secbox_gateway());
 
-        // Get PLC Network interface
-#if 0
+        // Set IP of PLC simulator
         vs_plc_sim_set_ip(plc_sim_addr);
-#endif
+
+        // Get PLC Network interface
         plc_netif = vs_hal_netif_plc();
 
         // Prepare TL storage
