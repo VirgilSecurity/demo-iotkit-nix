@@ -34,6 +34,9 @@
 
 #include <virgil/iot/initializer/sdmp/prvs_implementation.h>
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/hsm/hsm_interface.h>
+#include <virgil/iot/hsm/hsm_helpers.h>
+#include <stdlib-config.h>
 
 #include <virgil/crypto/foundation/vscf_key_provider.h>
 #include <virgil/crypto/foundation/vscf_private_key.h>
@@ -55,7 +58,7 @@
 #define VS_SECBOX_ELEMENT_TLF 8
 #define VS_SECBOX_ELEMENT_GET_OWN_PUBKEY 5
 #define SERIAL_SIZE 100
-#if 0
+
 /******************************************************************************/
 static int
 vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {
@@ -66,152 +69,56 @@ vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {
 
 /******************************************************************************/
 static int
-vs_prvs_save_data(vs_sdmp_prvs_element_e element_id, const uint8_t *data, uint16_t data_sz) {
-    vs_secbox_element_info_t info;
-
-    switch (element_id) {
-    case VS_PRVS_PBR1:
-        info.id = VS_SECBOX_ELEMENT_PBR;
-        info.index = 0;
-        break;
-    case VS_PRVS_PBR2:
-        info.id = VS_SECBOX_ELEMENT_PBR;
-        info.index = 1;
-        break;
-    case VS_PRVS_PBA1:
-        info.id = VS_SECBOX_ELEMENT_PBA;
-        info.index = 0;
-        break;
-    case VS_PRVS_PBA2:
-        info.id = VS_SECBOX_ELEMENT_PBA;
-        info.index = 1;
-        break;
-    case VS_PRVS_PBT1:
-        info.id = VS_SECBOX_ELEMENT_PBT;
-        info.index = 0;
-        break;
-    case VS_PRVS_PBT2:
-        info.id = VS_SECBOX_ELEMENT_PBT;
-        info.index = 1;
-        break;
-    case VS_PRVS_PBF1:
-        info.id = VS_SECBOX_ELEMENT_PBF;
-        info.index = 0;
-        break;
-    case VS_PRVS_PBF2:
-        info.id = VS_SECBOX_ELEMENT_PBF;
-        info.index = 1;
-        break;
-    case VS_PRVS_SGNP:
-        info.id = VS_SECBOX_ELEMENT_SGN;
-        info.index = 1;
-        break;
-    default:
-        return -1;
-    }
-    return vs_secbox_save(&info, data, data_sz);
-}
-
-/******************************************************************************/
-static int
-vs_prvs_load_data() {
-    return -1;
-}
-
-/******************************************************************************/
-static int
 vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
-    int res = 0;
-    vs_secbox_element_info_t sign_secbox = {.id = VS_SECBOX_ELEMENT_SGN, .index = 0};
-    vs_secbox_element_info_t own_pubkey_secbox = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY,
-                                                  .index = vscf_alg_id_SECP256R1};
+    uint16_t key_sz = 0;
+    vs_hsm_keypair_type_e ec_type;
+    vs_pubkey_t *own_pubkey;
     uint16_t sign_sz = 0;
-    uint16_t pubkey_sz = 0;
+    vs_sign_t *sign;
 
+    VS_IOT_ASSERT(device_info);
+
+    own_pubkey = (vs_pubkey_t *)device_info->data;
     vs_sdmp_mac_addr(0, &device_info->mac);
-    device_info->manufacturer = 0xfedcba98;
-    device_info->model = 0x87654321;
-    memcpy(device_info->udid_of_device, device_info->mac.bytes, ETH_ADDR_LEN);
-    memset(&device_info->udid_of_device[ETH_ADDR_LEN], 0x03, SERIAL_SIZE - ETH_ADDR_LEN);
+    device_info->manufacturer = 0x89abcdef;
+    device_info->model = 0x12345678;
+    VS_IOT_MEMCPY(device_info->udid_of_device, device_info->mac.bytes, ETH_ADDR_LEN);
+    VS_IOT_MEMSET(&device_info->udid_of_device[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
 
-    // Load signature and public key
-    if (0 != vs_secbox_load(&own_pubkey_secbox, device_info->own_key.pubkey, PUBKEY_MAX_SZ, &pubkey_sz) ||
-        0 != vs_secbox_load(&sign_secbox, (uint8_t *)&device_info->signature, buf_sz, &sign_sz)) {
-        res = -1;
-    }
-    device_info->own_key.pubkey_sz = (uint8_t)pubkey_sz;
-
-    return res;
-}
-
-/******************************************************************************/
-static int
-vs_prvs_finalize_storage(vs_sdmp_pubkey_t *asav_response) {
-    vs_secbox_element_info_t el = {.id = VS_SECBOX_ELEMENT_GET_OWN_PUBKEY, .index = vscf_alg_id_SECP256R1};
-    uint16_t pubkey_sz;
-
-    if (0 != vs_secbox_load(&el, asav_response->pubkey, PUBKEY_MAX_SZ, &pubkey_sz) || pubkey_sz > UINT8_MAX) {
+    // Fill own public key
+    if (VS_HSM_ERR_OK !=
+        vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type)) {
         return -1;
     }
 
+    own_pubkey->key_type = VS_KEY_IOT_DEVICE;
+    own_pubkey->ec_type = ec_type;
+    device_info->data_sz = key_sz + sizeof(vs_pubkey_t);
+    sign = (vs_sign_t *)((uint8_t *)own_pubkey + key_sz + sizeof(vs_pubkey_t));
+
+    buf_sz -= device_info->data_sz;
+
+    // Load signature
+    if (0 != vs_hsm_slot_load(SIGNATURE_SLOT, (uint8_t *)sign, buf_sz, &sign_sz)) {
+        return -1;
+    }
+
+    device_info->data_sz += sign_sz;
+
     return 0;
 }
-/******************************************************************************/
-static int
-vs_prvs_start_save_tl(const uint8_t *data, uint16_t data_sz) {
-    vs_secbox_element_info_t info;
 
-    info.id = VS_SECBOX_ELEMENT_TLH;
-    info.index = 0;
-
-    return vs_secbox_save(&info, data, data_sz);
-}
-
-/******************************************************************************/
-static int
-vs_prvs_save_tl_part(const uint8_t *data, uint16_t data_sz) {
-    vs_secbox_element_info_t info;
-
-    info.id = VS_SECBOX_ELEMENT_TLC;
-    info.index = 0;
-
-    return vs_secbox_save(&info, data, data_sz);
-}
-
-/******************************************************************************/
-static int
-vs_prvs_finalize_tl(const uint8_t *data, uint16_t data_sz) {
-    vs_secbox_element_info_t info;
-
-    info.id = VS_SECBOX_ELEMENT_TLF;
-    info.index = 0;
-
-    return vs_secbox_save(&info, data, data_sz);
-}
-
-/******************************************************************************/
-static int
-vs_prvs_sign_data(const uint8_t *data, uint16_t data_sz, uint8_t *signature, uint16_t buf_sz, uint16_t *signature_sz) {
-//    vs_secbox_sign_info_t info = {.data_is_hash = true, .hash_type = vscf_alg_id_SHA256};
-    return 0;
-}
-#endif
 /******************************************************************************/
 vs_sdmp_prvs_impl_t
 vs_prvs_impl() {
     vs_sdmp_prvs_impl_t res;
 
     memset(&res, 0, sizeof(res));
-#if 0
+
     res.dnid_func = vs_prvs_dnid;
-    res.save_data_func = vs_prvs_save_data;
-    res.load_data_func = vs_prvs_load_data;
     res.device_info_func = vs_prvs_device_info;
-    res.finalize_storage_func = vs_prvs_finalize_storage;
-    res.start_save_tl_func = vs_prvs_start_save_tl;
-    res.save_tl_part_func = vs_prvs_save_tl_part;
-    res.finalize_tl_func = vs_prvs_finalize_tl;
-    res.sign_data_func = vs_prvs_sign_data;
-#endif
+    res.wait_func = NULL;
+    res.stop_wait_func = NULL;
+
     return res;
 }

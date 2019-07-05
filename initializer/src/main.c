@@ -34,41 +34,21 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 #include <virgil/crypto/common/vsc_buffer.h>
 
 #include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/secbox/secbox.h>
-#include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
-//#include "iotelic/keystorage_tl.h"
-
+#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/hsm/hsm_interface.h>
 
+#include "communication/gateway_netif_plc.h"
+#include "secbox_impl/gateway_secbox_impl.h"
+
 /******************************************************************************/
-uint32_t
-app_crypto_entry() {
-    uint32_t ret = 0;
-    const vs_netif_t *plc_netif = NULL;
-
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
-
-    // Get PLC Network interface
-    plc_netif = vs_hal_netif_plc();
-
-//    init_keystorage_tl();
-
-    // Start SDMP protocol over PLC interface
-    vs_sdmp_comm_start(plc_netif);
-
-    sleep(300);
-
-    return ret;
-}
-/******************************************************************************/
-
 static bool
 _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
     unsigned int values[6];
@@ -87,20 +67,101 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
+static char *
+_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
+    size_t pos;
+
+    if (!(argv && shortname && *shortname && longname && *longname)) {
+        return NULL;
+    }
+
+    for (pos = 0; pos < argc; ++pos) {
+        if (!strcmp(argv[pos], shortname) && (pos + 1) < argc)
+            return argv[pos + 1];
+        if (!strcmp(argv[pos], longname) && (pos + 1) < argc)
+            return argv[pos + 1];
+    }
+
+    return NULL;
+}
+
+/******************************************************************************/
+static bool
+_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr) {
+    static const char *PLC_SIM_ADDRESS_SHORT = "-a";
+    static const char *PLC_SIM_ADDRESS_FULL = "--address";
+    static const char *MAC_SHORT = "-m";
+    static const char *MAC_FULL = "--mac";
+    char *mac_str;
+    char *plc_sim_addr_str;
+
+    if (!argv || !argc || !plc_sim_addr || !forced_mac_addr) {
+        printf("Wrong input parameters.");
+        return false;
+    }
+
+    mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+    plc_sim_addr_str = _get_commandline_arg(argc, argv, PLC_SIM_ADDRESS_SHORT, PLC_SIM_ADDRESS_FULL);
+
+    // Check input parameters
+    if (!mac_str || !plc_sim_addr_str) {
+        printf("usage: virgil-iot-mcu-initializer %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
+               PLC_SIM_ADDRESS_SHORT,
+               PLC_SIM_ADDRESS_FULL,
+               MAC_SHORT,
+               MAC_FULL);
+        return false;
+    }
+
+    if (!inet_aton(plc_sim_addr_str, plc_sim_addr)) {
+        printf("Incorrect PLC simulator IP address \"%s\" was specified", plc_sim_addr_str);
+        return false;
+    }
+
+    if (!_read_mac_address(mac_str, forced_mac_addr)) {
+        printf("Incorrect forced MAC address \"%s\" was specified", mac_str);
+        return false;
+    }
+
+    return true;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
+    struct in_addr plc_sim_addr;
+    const vs_netif_t *plc_netif = NULL;
+
+    vs_logger_init(VS_LOGLEV_DEBUG);
+    VS_LOG_INFO("Start gateway initializer");
+
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
 
-    if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
+    if (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
+
+        // Prepare secbox
+        vs_secbox_configure_hal(vs_secbox_gateway());
+
+        // Set IP of PLC simulator
+        vs_plc_sim_set_ip(plc_sim_addr);
+
+        // Get PLC Network interface
+        plc_netif = vs_hal_netif_plc();
+
+        // Prepare TL storage
+        vs_tl_init_storage();
+
+        // Start SDMP protocol over PLC interface
+        vs_sdmp_comm_start(plc_netif);
+
+        sleep(300);
     } else {
-        printf("\nERROR: need to set MAC address of simulated device\n\n");
+        VS_LOG_ERROR("Need to set MAC address of simulated device");
         return -1;
     }
 
-    // Start app
-    app_crypto_entry();
     return 0;
 }
 

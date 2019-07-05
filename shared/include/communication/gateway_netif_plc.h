@@ -36,6 +36,7 @@
 #define KUNLUN_HAL_NETIF_PLC_H
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <arpa/inet.h>
 
 typedef struct _iot_pkt {
     uint8_t *head;
@@ -62,5 +63,8 @@ vs_hal_netif_plc();
 
 void
 vs_hal_netif_plc_force_mac(vs_mac_addr_t mac_addr);
+
+void
+vs_plc_sim_set_ip(struct in_addr address);
 
 #endif // KUNLUN_HAL_NETIF_PLC_H
