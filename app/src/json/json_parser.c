@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "gateway_macro.h"
-#include "json/json_parser.h"
+#include <json/json_parser.h>
 
 #ifndef JSMN_PARENT_LINKS
 #error JSON Parser requires JSMN_PARENT_LINKS

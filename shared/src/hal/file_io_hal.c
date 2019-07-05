@@ -42,14 +42,191 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <secbox_impl/file-system.h>
 
 #include <virgil/iot/hsm/hsm_structs.h>
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 
+static char base_dir[FILENAME_MAX] = {0};
 static const char *directory = "slots";
+static bool initialized = false;
+
+#define CHECK_SNPRINTF(BUF, FORMAT, ...)                                                                               \
+    do {                                                                                                               \
+        int snprintf_res;                                                                                              \
+        if ((snprintf_res = snprintf((BUF), sizeof(BUF), (FORMAT), ##__VA_ARGS__)) <= 0) {                             \
+            VS_LOG_ERROR("snprintf error result %d. errno = %d (%s)", snprintf_res, errno, strerror(errno));           \
+            goto terminate;                                                                                            \
+        }                                                                                                              \
+    } while (0)
+
+#define UNIX_CALL(OPERATION)                                                                                           \
+    do {                                                                                                               \
+        if (OPERATION) {                                                                                               \
+            VS_LOG_ERROR("Unix call " #OPERATION " error. errno = %d (%s)", errno, strerror(errno));                   \
+            goto terminate;                                                                                            \
+        }                                                                                                              \
+    } while (0)
+
+/******************************************************************************/
+static bool
+_init_fio(void) {
+    struct passwd *pwd = NULL;
+    char tmp[FILENAME_MAX];
+    char *p = NULL;
+    size_t len;
+
+    pwd = getpwuid(getuid());
+    CHECK_SNPRINTF(base_dir, "%s/%s", pwd->pw_dir, directory);
+
+    VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
+
+    strcpy(tmp, base_dir);
+    len = strlen(tmp);
+
+    if (tmp[len - 1] == '/') {
+        tmp[len - 1] = 0;
+    }
+
+    for (p = tmp + 1; *p; p++)
+        if (*p == '/') {
+            *p = 0;
+            if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO) && errno != EEXIST) {
+                VS_LOG_ERROR(
+                        "mkdir call for %s path has not been successful. errno = %d (%s)", tmp, errno, strerror(errno));
+                goto terminate;
+            }
+            *p = '/';
+        }
+
+    if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO) && errno != EEXIST) {
+        VS_LOG_ERROR("mkdir call for %s path has not been successful. errno = %d (%s)", tmp, errno, strerror(errno));
+        goto terminate;
+    }
+
+    initialized = true;
+
+terminate:
+
+    return initialized;
+}
+
+/******************************************************************************/
+static bool
+_write_file_data(const char *file_name, const void *data, uint16_t data_sz) {
+    char file_path[FILENAME_MAX];
+    DIR *d = NULL;
+    FILE *fp = NULL;
+    bool res = false;
+
+    NOT_ZERO(file_name);
+    NOT_ZERO(data);
+    NOT_ZERO(data_sz);
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        goto terminate;
+    }
+
+    d = opendir(base_dir);
+
+    if (d) {
+        closedir(d);
+    } else {
+        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
+        goto terminate;
+    }
+
+    if (snprintf(file_path, sizeof(file_path), "%s/%s", base_dir, file_name) < 0) {
+        return false;
+    }
+    VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
+
+    fp = fopen(file_path, "wb");
+
+    if (fp) {
+        if (1 != fwrite(data, data_sz, 1, fp)) {
+            VS_LOG_ERROR("Unable to write %d bytes to the file %s. errno = %d (%s)",
+                         data_sz,
+                         file_path,
+                         errno,
+                         strerror(errno));
+        }
+    } else {
+        VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
+    }
+
+    res = true;
+
+terminate:
+
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
+}
+
+/******************************************************************************/
+static bool
+_read_file_data(const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
+    char file_path[FILENAME_MAX];
+    DIR *d = NULL;
+    FILE *fp = NULL;
+    bool res = false;
+
+    NOT_ZERO(file_name);
+    NOT_ZERO(data);
+    NOT_ZERO(read_sz);
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        goto terminate;
+    }
+    d = opendir(base_dir);
+
+    if (d) {
+        closedir(d);
+    } else {
+        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
+        goto terminate;
+    }
+    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, file_name) < 0) {
+        return false;
+    }
+
+    fp = fopen(file_path, "rb");
+
+    if (fp) {
+        UNIX_CALL(fseek(fp, 0L, SEEK_END));
+        *read_sz = ftell(fp);
+        rewind(fp);
+
+        VS_LOG_DEBUG("Read file '%s', %d bytes", file_path, (int)*read_sz);
+
+        if (!*read_sz) {
+            VS_LOG_ERROR("File %s is empty", file_path);
+        } else if (buf_sz < *read_sz) {
+            VS_LOG_ERROR("File %s size is %d, buffer size %d is not enough", file_path, *read_sz, buf_sz);
+        } else if (1 == fread((void *)data, *read_sz, 1, fp)) {
+            res = true;
+        } else {
+            VS_LOG_ERROR("Unable to read %d bytes from %s", *read_sz, file_path);
+        }
+
+    } else {
+        VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
+    }
+
+terminate:
+
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
+}
 
 /******************************************************************************/
 const char *
@@ -147,11 +324,11 @@ get_slot_name(vs_iot_hsm_slot_e slot) {
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return write_file(directory, get_slot_name(slot), data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return _write_file_data(get_slot_name(slot), data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
 
 /********************************************************************************/
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    return read_file(directory, get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return _read_file_data(get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }

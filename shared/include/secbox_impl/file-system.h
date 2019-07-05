@@ -17,19 +17,11 @@
 
 #define OWN_PRIVATE_KEY_FILENAME "own_priv_key"
 void
-prepare_keystorage_folder(char *folder);
-
+prepare_keystorage_folder(char folder[FILENAME_MAX]);
 bool
-write_keystorage_file(const char *folder, const char *file_name, const uint8_t *data, uint16_t data_sz);
-
+write_keystorage_file(const char *folder, const char *file_name, const uint8_t *data, size_t data_sz);
 bool
-read_keystorage_file(const char *folder, const char *file_name, uint8_t *buf, uint16_t buf_sz, uint16_t *out_sz);
-
-bool
-write_file(const char *basedir, const char *filename, const void *data, uint16_t data_sz);
-
-bool
-read_file(const char *basedir, const char *filename, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz);
+read_keystorage_file(const char *folder, const char *file_name, uint8_t *buf, size_t buf_sz, size_t *out_sz);
 
 //bool
 //write_tl_header_file(tl_context_t *ctx, const trust_list_header_t *tl_header);

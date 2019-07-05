@@ -34,9 +34,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
-
 #include <virgil/iot/secbox/secbox.h>
 
 #include "gateway_macro.h"
@@ -44,72 +42,56 @@
 
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz);
+
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz);
+
 static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info);
+
 static int
-vs_secbox_gateway_init(void);
+vs_secbox_gateway_init();
 
 static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
                                                .load = vs_secbox_gateway_load,
                                                .del = vs_secbox_gateway_del,
                                                .init = vs_secbox_gateway_init};
 
-static char folder[FILENAME_MAX];
-
-/******************************************************************************/
-static int
-vs_secbox_gateway_init(void) {
-
-    prepare_keystorage_folder(folder);
-
-    return GATEWAY_OK;
-}
-
-/******************************************************************************/
-static void
-_make_path(char *filename, uint16_t filename_sz, vs_secbox_element_info_t *element_info) {
-    assert(filename);
-    assert(filename_sz);
-    assert(element_info);
-
-    snprintf(
-            filename, filename_sz, "%04X-%04X-%04X", element_info->storage_type, element_info->id, element_info->index);
-}
-
 /******************************************************************************/
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    int res;
-    char filename[FILENAME_MAX];
-
     assert(element_info);
     assert(in_data);
-    assert(data_sz);
 
-    _make_path(filename, sizeof(filename), element_info);
+    // prepare folder
+    char folder[FILENAME_MAX];
+    char filename[FILENAME_MAX];
+    prepare_keystorage_folder(folder);
 
-    res = write_keystorage_file(folder, filename, in_data, data_sz) ? GATEWAY_OK : GATEWAY_ERROR;
-
-    return res;
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
+    return write_keystorage_file(folder, filename, in_data, data_sz) ? GATEWAY_OK : GATEWAY_ERROR;
 }
 
 /******************************************************************************/
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz) {
-    char filename[FILENAME_MAX];
-    int res;
-
     assert(element_info);
     assert(out_data);
-    assert(data_sz);
 
-    _make_path(filename, sizeof(filename), element_info);
+    size_t out_sz;
 
-    res = read_keystorage_file(folder, filename, out_data, data_sz, &data_sz) ? GATEWAY_OK : GATEWAY_ERROR;
+    // prepare folder
+    char folder[FILENAME_MAX];
+    char filename[FILENAME_MAX];
+    prepare_keystorage_folder(folder);
 
-    return res;
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
+
+    // TODO: RETURN REAL SIZE OF READ DATA
+    if (!read_keystorage_file(folder, filename, out_data, data_sz, &out_sz)) {
+        return GATEWAY_ERROR;
+    }
+    return GATEWAY_OK;
 }
 
 /******************************************************************************/
@@ -117,7 +99,13 @@ static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
     assert(element_info);
 
-    return GATEWAY_ERROR;
+    return -1;
+}
+
+/******************************************************************************/
+static int
+vs_secbox_gateway_init() {
+    return GATEWAY_OK;
 }
 
 /******************************************************************************/

@@ -90,11 +90,23 @@ endif()
 #
 #   Virgil crypto C
 #
+#
+#   Virgil crypto
+#
+set(ENABLE_TESTING OFF CACHE BOOL "On/Off integration tests." FORCE)
+set(VIRGIL_C_TESTING OFF CACHE BOOL "On/Off C library integration tests." FORCE)
+set(VIRGIL_LIB_PYTHIA OFF CACHE BOOL "Build 'pythia' library" FORCE)
+set(VIRGIL_LIB_RATCHET OFF CACHE BOOL "Build 'ratchet' library" FORCE)
+set(VIRGIL_LIB_PHE OFF CACHE BOOL "Build 'phe' library" FORCE)
+set(VIRGIL_INSTALL_HDRS  OFF CACHE BOOL "Install headers" FORCE)
+set(VIRGIL_INSTALL_LIBS  OFF CACHE BOOL "Install libraries" FORCE)
+set(VIRGIL_INSTALL_CMAKE OFF CACHE BOOL "Install CMake configuration files" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-crypto-c)
 
 #
 #   Virgil IoT SDK
 #
+set(VIRGIL_IOT_MCU_BUILD OFF CACHE BOOL "Turn off MCU build" FORCE)
 set(VIRGIL_IOT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk CACHE STRING "Path to the Virgil IoT SDK")
 set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/rpi CACHE STRING "Path to the Virgil IoT SDK configuration")
 add_subdirectory(${VIRGIL_IOT_DIRECTORY})

@@ -36,57 +36,56 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 
-set(RPI_GW_LIB rpi_gw_shared)
-
-
-#
-#   Source code
-#
-set(RPI_GW_SRC
-		src/base64/base64.c
-		src/communication/gateway_netif_plc.c
-		src/secbox_impl/gateway_secbox_impl.c
-		src/helpers/file-system.c
-		src/hal/crypto_hal.c
-		src/hal/file_io_hal.c
-		src/hal/keypair_hal.c
-		src/hal/hal.c
-		)
-
 #
 #   RaspberryPi gateway library
 #
-add_library(${RPI_GW_LIB}
-		${RPI_GW_SRC}
+add_library(rpi_gw_shared
+		# Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
+		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
 		)
 
-target_link_libraries(${RPI_GW_LIB}
+find_package (Threads)
+target_link_libraries(rpi_gw_shared
+		converters
 		hsm
 		logger
 		foundation
 		provision
-		converters
+		sdmp
+		secbox
+		${CMAKE_THREAD_LIBS_INIT}
 		)
 #
 #   -Wall -Werror
 #
-set_target_properties(${RPI_GW_LIB} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
 
 #
 #   Common include directories
 #
-
-set (VIRGIL_SDK_DIR "${CMAKE_SOURCE_DIR}/ext/virgil-iot-sdk")
-target_include_directories(${RPI_GW_LIB}
+target_include_directories(rpi_gw_shared
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${VIRGIL_SDK_DIR}/protocols/sdmp/include
-		${VIRGIL_SDK_DIR}/secbox/include
+		)
+
+#
+#	Definitions
+#
+target_compile_definitions(rpi_gw_shared
+		PUBLIC
+		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
 		)
 
 #
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(${RPI_GW_LIB})
+	add_clangformat(rpi_gw_shared)
 endif()
