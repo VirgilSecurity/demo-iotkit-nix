@@ -64,6 +64,7 @@ target_link_libraries(${RPI_GW_LIB}
 		hsm
 		logger
 		foundation
+		provision
 		converters
 		)
 #

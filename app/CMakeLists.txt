@@ -92,7 +92,6 @@ target_include_directories(virgil-iot-gateway-app
 #
 target_link_libraries (virgil-iot-gateway-app
 		curl
-		foundation
 		sdmp
 		secbox
 		rpi_gw_shared
