@@ -57,6 +57,8 @@
 #include "cloud.h"
 #include "https.h"
 
+#include <virgil/iot/logger/logger.h>
+
 #define NUM_TOKENS 300
 
 #define MB_QUEUE_SZ 10
@@ -92,10 +94,10 @@ _group_callback(AWS_IoT_Client *client,
                 void *pData) {
     uint8_t *p = (uint8_t *)params->payload;
     p[params->payloadLen] = 0;
-    IOT_INFO("[MB] Message from topic %s", topic);
-    IOT_INFO("[MB] _group_callback params->payloadLen=%d, params->payload=%s", (int)params->payloadLen, p);
+    VS_LOG_DEBUG("[MB] Message from topic %s", topic);
+    VS_LOG_DEBUG("[MB] _group_callback params->payloadLen=%d, params->payload=%s", (int)params->payloadLen, p);
     if (params->payloadLen > UINT16_MAX) {
-        IOT_ERROR("[MB] Topic message is too big");
+        VS_LOG_ERROR("[MB] Topic message is too big");
         return;
     }
     message_bin_process_command(topic, p, (uint16_t)params->payloadLen);
@@ -167,7 +169,7 @@ mb_mqtt_set_active() {
 /*************************************************************************/
 void
 mb_mqtt_task(void *pvParameters) {
-    IOT_INFO("message bin thread started");
+    VS_LOG_DEBUG("message bin thread started");
 
     while (true) {
         if (!mb_mqtt_provision_is_present()) {
@@ -223,12 +225,12 @@ msg_bin_get_credentials() {
 
     mb_mqtt_ctx_free();
 
-    IOT_INFO("------------------------- LOAD MESSAGE BIN CREDENTIALS -------------------------");
+    VS_LOG_DEBUG("------------------------- LOAD MESSAGE BIN CREDENTIALS -------------------------");
 
     size_t answer_size = HTTPS_INPUT_BUFFER_SIZE;
     char *answer = (char *)malloc(answer_size);
     if (!answer) {
-        IOT_ERROR("ALLOCATION FAIL in message bin credentials\r\n");
+        VS_LOG_ERROR("ALLOCATION FAIL in message bin credentials\r\n");
         // TODO: What should we do here ?
         while (1)
             ;
@@ -245,7 +247,7 @@ msg_bin_get_credentials() {
         int len;
         /*----login----*/
         if (json_get_val_str_len(&jobj, "login", &len) != GATEWAY_OK || len < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
             goto clean;
         }
         ++len;
@@ -253,7 +255,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "login", _mb_mqtt_context.login, len);
         /*----password----*/
         if (json_get_val_str_len(&jobj, "password", &len) != GATEWAY_OK || len < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [password]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [password]");
             goto clean;
         }
         ++len;
@@ -261,7 +263,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "password", _mb_mqtt_context.password, len);
         /*----client_id----*/
         if (json_get_val_str_len(&jobj, "client_id", &len) != GATEWAY_OK || len < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [client_id]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [client_id]");
             goto clean;
         }
         ++len;
@@ -269,7 +271,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "client_id", _mb_mqtt_context.client_id, len);
         /*----certificate----*/
         if (json_get_val_str_len(&jobj, "certificate", &len) != GATEWAY_OK || len < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [certificate]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [certificate]");
             goto clean;
         }
         ++len;
@@ -281,7 +283,7 @@ msg_bin_get_credentials() {
 
         if (0 >= decode_len) {
             vPortFree(tmp);
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
             goto clean;
         }
 
@@ -292,7 +294,7 @@ msg_bin_get_credentials() {
 
         /*----private_key----*/
         if (json_get_val_str_len(&jobj, "private_key", &len) != GATEWAY_OK || len < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [private_key]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [private_key]");
             goto clean;
         }
         ++len;
@@ -303,7 +305,7 @@ msg_bin_get_credentials() {
 
         if (0 >= decode_len) {
             vPortFree(tmp);
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
             goto clean;
         }
 
@@ -315,13 +317,13 @@ msg_bin_get_credentials() {
         /*----available_topics----*/
         int topic_count;
         if (json_get_array_object(&jobj, "available_topics", &topic_count) != GATEWAY_OK || topic_count < 0) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [available_topics]");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [available_topics]");
             goto clean;
         }
         _mb_mqtt_context.topic_list.topic_count = (size_t)topic_count;
 
         if (0 == _mb_mqtt_context.topic_list.topic_count) {
-            IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] is empty!");
+            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] is empty!");
             goto clean;
         } else {
             uint16_t i, total_topic_names_len = 0;
@@ -334,7 +336,7 @@ msg_bin_get_credentials() {
                 json_array_get_str_len(&jobj, i, &len);
 
                 if (len + 1 > UINT16_MAX) {
-                    IOT_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
+                    VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
                     goto clean;
                 }
 
@@ -392,14 +394,14 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 
     if (GATEWAY_OK == status) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
-            IOT_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
+            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
             vPortFree(fw_url);
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
         }
 
     } else {
-        IOT_INFO("[MB] Error parse firmware manifest status = %d\n", status);
+        VS_LOG_INFO("[MB] Error parse firmware manifest status = %d\n", status);
         vPortFree(fw_url);
     }
 }
@@ -414,14 +416,14 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     if (GATEWAY_OK == status) {
 
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
-            IOT_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
+            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
             vPortFree(tl_url);
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
         }
 
     } else {
-        IOT_INFO("[MB] Error parse tl manifest status = %d\n", status);
+        VS_LOG_INFO("[MB] Error parse tl manifest status = %d\n", status);
         vPortFree(tl_url);
     }
 }
