@@ -12,14 +12,9 @@ set(AWS_MQTT_PLATFORM  "${AWS_MQTT_ROOT}/platform/linux")
 # Include and build external libraries
 include (${CMAKE_CURRENT_LIST_DIR}/../virgil-iot-sdk/cmake/virgil_depends.cmake)
 
-virgil_depends (
-        PACKAGE_NAME "MbedTLS"
-        CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libs_ext/mbedtls"
-        CMAKE_ARGS "${MBEDTLS_CMAKE_ARGS}"
-)
 virgil_find_package (MbedTLS 2.4)
 
-add_library(aws-mqtt)
+add_library(aws-mqtt SHARED)
 
 #
 #   aws-mqtt core sources
@@ -36,8 +31,8 @@ target_sources(aws-mqtt
         )
 
 target_link_libraries(aws-mqtt
-        mbedtls::mbedcrypto
-        mbedtls::ed25519
+        mbedtls::mbedtls
+        mbedtls::mbedx509
         )
 
 target_include_directories (aws-mqtt

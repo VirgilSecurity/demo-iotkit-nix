@@ -122,7 +122,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
 #
 #   Application
 #
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
 
 #
 #   Unit tests
