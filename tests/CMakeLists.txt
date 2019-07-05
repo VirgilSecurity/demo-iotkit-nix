@@ -32,59 +32,31 @@
 #
 #   Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 
-project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
+project(rpi_gw_tests VERSION 0.1.0 LANGUAGES C)
 
-#
-#   RaspberryPi gateway library
-#
-add_library(rpi_gw
-		# Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
-		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
+add_executable(rpi_gw_tests)
+
+target_sources(rpi_gw_tests
+		PRIVATE
+		main.c)
+
+target_compile_options(rpi_gw_tests
+		PRIVATE
+		-Wall
+		-Werror
+		-Wno-multichar
 		)
 
-find_package (Threads)
-target_link_libraries(rpi_gw
-		converters
-		hsm
-		logger
-		foundation
-		sdmp
-		secbox
-		${CMAKE_THREAD_LIBS_INIT}
-		)
-#
-#   -Wall -Werror
-#
-set_target_properties(rpi_gw PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
-
-#
-#   Common include directories
-#
-target_include_directories(rpi_gw
-		PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		)
-
-#
-#	Definitions
-#
-target_compile_definitions(rpi_gw
-		PUBLIC
-		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
-		)
-
-#
-# Format code
-#
-if(COMMAND add_clangformat)
-	add_clangformat(rpi_gw)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(rpi_gw_tests
+			-Wl,--whole-archive rpi_gw -Wl,--no-whole-archive
+			)
+else()
+	target_link_libraries(rpi_gw_tests rpi_gw)
 endif()
+
+target_link_libraries(rpi_gw_tests
+		virgil-iot-sdk-tests
+		)

@@ -34,57 +34,38 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
+project(freertos VERSION 0.1.0 LANGUAGES C)
+
+# ---------------------------------------------------------------------------
+#   Pure FreeRTOS library
+# ---------------------------------------------------------------------------
+
+set(FREERTOS_LIB freertos)
 
 #
-#   RaspberryPi gateway library
+# file folders
 #
-add_library(rpi_gw
-		# Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
-		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
-		)
-
-find_package (Threads)
-target_link_libraries(rpi_gw
-		converters
-		hsm
-		logger
-		foundation
-		sdmp
-		secbox
-		${CMAKE_THREAD_LIBS_INIT}
-		)
-#
-#   -Wall -Werror
-#
-set_target_properties(rpi_gw PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set(FREERTOS_ROOT     "${CMAKE_CURRENT_SOURCE_DIR}/freertos/FreeRTOS")
+set(FREERTOS_SOURCE   "${FREERTOS_ROOT}/Source")
+set(FREERTOS_INCLUDE  "${FREERTOS_ROOT}/Source/include")
 
 #
-#   Common include directories
+#   Freertos core sources
 #
-target_include_directories(rpi_gw
-		PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		)
+set(FREERTOS_LIB_SOURCE_FILES
+        "${FREERTOS_SOURCE}/tasks.c"
+        "${FREERTOS_SOURCE}/timers.c"
+        "${FREERTOS_SOURCE}/list.c"
+        "${FREERTOS_SOURCE}/queue.c"
+        "${FREERTOS_SOURCE}/event_groups.c"
+        "${FREERTOS_SOURCE}/stream_buffer.c"
+        "${FREERTOS_SOURCE}/croutine.c"
+        "${FREERTOS_SOURCE}/portable/MemMang/heap_3.c"
+        )
 
-#
-#	Definitions
-#
-target_compile_definitions(rpi_gw
-		PUBLIC
-		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
-		)
+add_library(${FREERTOS_LIB}
+        ${FREERTOS_LIB_SOURCE_FILES}
+        )
 
-#
-# Format code
-#
-if(COMMAND add_clangformat)
-	add_clangformat(rpi_gw)
-endif()
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_INCLUDE})
+target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_SOURCE})

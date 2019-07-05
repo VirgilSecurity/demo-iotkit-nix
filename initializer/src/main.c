@@ -36,13 +36,15 @@
 #include <unistd.h>
 
 #include <virgil/crypto/common/vsc_buffer.h>
-#include <virgil/crypto/foundation/vscf_iotelic_sha256.h>
 
 #include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/secbox/secbox.h>
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
-#include "iotelic/keystorage_tl.h"
+//#include "iotelic/keystorage_tl.h"
+
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/hsm/hsm_interface.h>
 
 /******************************************************************************/
 uint32_t
@@ -56,7 +58,7 @@ app_crypto_entry() {
     // Get PLC Network interface
     plc_netif = vs_hal_netif_plc();
 
-    init_keystorage_tl();
+//    init_keystorage_tl();
 
     // Start SDMP protocol over PLC interface
     vs_sdmp_comm_start(plc_netif);
@@ -69,7 +71,7 @@ app_crypto_entry() {
 
 static bool
 _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
-    int values[6];
+    unsigned int values[6];
     int i;
 
     if (6 ==
