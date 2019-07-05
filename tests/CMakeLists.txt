@@ -49,8 +49,14 @@ target_compile_options(rpi_gw_tests
 		-Wno-multichar
 		)
 
+if(UNIX AND NOT APPLE)
+	target_link_libraries(rpi_gw_tests
+			-Wl,--whole-archive rpi_gw -Wl,--no-whole-archive
+			)
+else()
+	target_link_libraries(rpi_gw_tests rpi_gw)
+endif()
+
 target_link_libraries(rpi_gw_tests
-		PRIVATE
-		-Wl,--whole-archive rpi_gw -Wl,--no-whole-archive
 		virgil-iot-sdk-tests
 		)
