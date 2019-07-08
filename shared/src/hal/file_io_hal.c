@@ -380,3 +380,11 @@ int
 read_trustlist_file(const char *file_name, uint8_t *out_data, size_t buf_sz, uint16_t *out_sz) {
     return _read_file_data(tl_dir, file_name, out_data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
+
+/******************************************************************************/
+int
+vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
+    return 0;
+}
+
+/******************************************************************************/

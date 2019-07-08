@@ -60,7 +60,7 @@ static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
 /******************************************************************************/
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    //TODO: need to remove asserts
+    // TODO: need to remove asserts
     assert(element_info);
     assert(in_data);
 
@@ -91,9 +91,10 @@ static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
     assert(element_info);
 
-    //TODO: Need to implement
+    // TODO: Need to implement
     return -1;
 }
+
 
 /******************************************************************************/
 static int
