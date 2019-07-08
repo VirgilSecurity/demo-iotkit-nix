@@ -135,9 +135,38 @@ terminate:
 
 /******************************************************************************/
 static bool
+_check_fio_and_path(const char *folder, const char *file_name, char file_path[FILENAME_MAX]) {
+    DIR *d = NULL;
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        return false;
+    }
+
+    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
+        return false;
+    }
+
+    d = opendir(file_path);
+
+    if (d) {
+        closedir(d);
+    } else {
+        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
+        return false;
+    }
+
+    if (snprintf(file_path, FILENAME_MAX, "%s/%s", file_path, file_name) < 0) {
+        return false;
+    }
+    return true;
+}
+
+
+/******************************************************************************/
+static bool
 _write_file_data(const char *folder, const char *file_name, const void *data, uint16_t data_sz) {
     char file_path[FILENAME_MAX];
-    DIR *d = NULL;
     FILE *fp = NULL;
     bool res = false;
 
@@ -148,25 +177,13 @@ _write_file_data(const char *folder, const char *file_name, const void *data, ui
 
     if (!initialized && !_init_fio()) {
         VS_LOG_ERROR("Unable to initialize file I/O operations");
-        goto terminate;
-    }
-
-    if (snprintf(file_path, sizeof(file_path), "%s/%s", base_dir, folder) < 0) {
         return false;
     }
 
-    d = opendir(file_path);
-
-    if (d) {
-        closedir(d);
-    } else {
-        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
-        goto terminate;
-    }
-
-    if (snprintf(file_path, sizeof(file_path), "%s/%s", file_path, file_name) < 0) {
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
     }
+
     VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
 
     fp = fopen(file_path, "wb");
@@ -198,7 +215,6 @@ terminate:
 static bool
 _read_file_data(const char *folder, const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
     char file_path[FILENAME_MAX];
-    DIR *d = NULL;
     FILE *fp = NULL;
     bool res = false;
 
@@ -207,26 +223,8 @@ _read_file_data(const char *folder, const char *file_name, uint8_t *data, uint16
     NOT_ZERO(data);
     NOT_ZERO(read_sz);
 
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
         goto terminate;
-    }
-
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
-        return false;
-    }
-
-    d = opendir(file_path);
-
-    if (d) {
-        closedir(d);
-    } else {
-        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
-        goto terminate;
-    }
-
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", file_path, file_name) < 0) {
-        return false;
     }
 
     fp = fopen(file_path, "rb");
@@ -262,6 +260,25 @@ terminate:
     }
 
     return res;
+}
+
+/******************************************************************************/
+static bool
+_remove_file_data(const char *folder, const char *file_name) {
+    char file_path[FILENAME_MAX];
+
+    if (!folder || !file_name) {
+        VS_LOG_ERROR("Zero arguments");
+        return false;
+    }
+
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
+        return false;
+    }
+
+    remove(file_path);
+
+    return true;
 }
 
 /******************************************************************************/
@@ -383,8 +400,14 @@ read_trustlist_file(const char *file_name, uint8_t *out_data, size_t buf_sz, uin
 
 /******************************************************************************/
 int
+delete_trustlist_file(const char *file_name) {
+    return _remove_file_data(tl_dir, file_name) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+}
+
+/******************************************************************************/
+int
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return 0;
+    return _remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/

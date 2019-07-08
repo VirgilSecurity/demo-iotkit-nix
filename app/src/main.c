@@ -90,9 +90,6 @@ main(int argc, char *argv[]) {
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
 
-    //Prepare trust list storage
-    vs_tl_init_storage();
-
     // Get PLC Network interface
     plc_netif = vs_hal_netif_plc();
 

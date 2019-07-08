@@ -62,13 +62,6 @@ target_sources(virgil-iot-gateway-initializer
 		src/main.c
 		src/communication/sdmp_initializer.c
 		src/sdmp/prvs_implementation.c
-
-		# TODO : need to move to the correct place or merge to some other file
-		src/iot_pkt_api.h
-		src/iot_plc_api.h
-		src/sim_plc.h
-		src/sim_plc.c
-
 		)
 
 #

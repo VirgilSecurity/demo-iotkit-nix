@@ -36,6 +36,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/trust_list/trust_list.h>
 
 #include "gateway_macro.h"
 #include "secbox_impl/file_io_hal.h"
@@ -91,14 +92,18 @@ static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
     assert(element_info);
 
-    // TODO: Need to implement
-    return -1;
+    char filename[FILENAME_MAX];
+
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
+
+    return delete_trustlist_file(filename);
 }
 
 
 /******************************************************************************/
 static int
 vs_secbox_gateway_init() {
+    vs_tl_init_storage();
     return GATEWAY_OK;
 }
 
