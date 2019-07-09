@@ -54,7 +54,7 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
     size_t chunksize = size * nmemb;
     resp_buff_t *resp = (resp_buff_t *)userdata;
 
-    if (resp->used_size + chunksize > resp->buff_sz) {
+    if (NULL == resp->buff || resp->used_size + chunksize > resp->buff_sz) {
         return 0;
     }
     memcpy(&(resp->buff[resp->used_size]), contents, chunksize);

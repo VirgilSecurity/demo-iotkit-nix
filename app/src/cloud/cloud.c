@@ -55,6 +55,9 @@
 #include "json/json_generator.h"
 #include "json/json_parser.h"
 
+#include "crypto/asn1_cryptogram.h"
+#include <virgil/iot/hsm/hsm_interface.h>
+
 #define MAX_EP_SIZE (256)
 
 /******************************************************************************/
@@ -90,6 +93,65 @@ _get_serial_number_in_hex_str(char _out_str[SERIAL_SIZE * 2 + 1]) {
 }
 
 /******************************************************************************/
+uint8_t
+remove_padding_size(uint8_t * data, size_t data_sz) {
+    uint8_t i, padding_val;
+
+    padding_val = data[data_sz - 1];
+
+    if (padding_val < 2 || padding_val > 15 || data_sz < padding_val) return 0;
+
+    for (i = 0; i < padding_val; ++i) {
+        if (data[data_sz - 1 - i] != padding_val) {
+            return 0;
+        }
+    }
+
+    return padding_val;
+}
+
+#define ATCA_SHA384_DIGEST_SIZE 48
+#define KDF2_CEIL(x,y) (1 + ((x - 1) / y))
+#define MAX_KDF_IN 100
+/******************************************************************************/
+//bool
+//_kdf2_sha384(const uint8_t *  input, size_t inlen, uint8_t * output, size_t olen) {
+//    size_t counter = 1;
+//    size_t counter_len;
+//    uint8_t buf[MAX_KDF_IN + 5];
+//    uint8_t hash[ATCA_SHA384_DIGEST_SIZE];
+//    uint8_t hash_len = ATCA_SHA384_DIGEST_SIZE;
+//    size_t olen_actual = 0;
+//    uint8_t counter_string[4];
+//    uint16_t hash_sz;
+//
+//    // Get KDF parameters
+//    counter_len = KDF2_CEIL(olen, hash_len);
+//
+//    // Start hashing
+//    for(; counter <= counter_len; ++counter) {
+//        counter_string[0] = (uint8_t)((counter >> 24) & 255);
+//        counter_string[1] = (uint8_t)((counter >> 16) & 255);
+//        counter_string[2] = (uint8_t)((counter >> 8)) & 255;
+//        counter_string[3] = (uint8_t)(counter & 255);
+//
+//        memcpy(buf, input, inlen);
+//        memcpy(&buf[inlen], counter_string, 4);
+//
+//        if (olen_actual + hash_len <= olen) {
+//            vs_hsm_hash_create(VS_HASH_SHA_384, (const unsigned char *)buf,inlen + 4, (unsigned char *)(output + olen_actual), olen, &hash_sz);
+//            olen_actual += hash_len;
+//        } else {
+//            vs_hsm_hash_create(VS_HASH_SHA_384, (const unsigned char *)buf,inlen + 4, (unsigned char *)hash, sizeof(hash), &hash_sz);
+//            memcpy(output + olen_actual, hash, olen - olen_actual);
+//            olen_actual = olen;
+//        }
+//    }
+//
+//    return true;
+//}
+
+/******************************************************************************/
 static bool
 _crypto_decrypt_sha384_aes256(const uint8_t *recipient_id,
                               size_t recipient_id_sz,
@@ -100,8 +162,61 @@ _crypto_decrypt_sha384_aes256(const uint8_t *recipient_id,
                               uint8_t *decrypted_data,
                               size_t buf_sz,
                               size_t *decrypted_data_sz) {
-    // TODO: please implement me or change to something else
-    return false;
+    uint8_t decrypted_key[48];
+    uint8_t * encrypted_data;
+    size_t encrypted_data_sz;
+
+//    uint8_t pre_master_key[32];
+//    uint8_t master_key[80];
+
+    uint8_t * public_key;
+    uint8_t * iv_key;
+    uint8_t * encrypted_key;
+    uint8_t * mac_data;
+    uint8_t * iv_data;
+
+    if (!virgil_cryptogram_parse_low_level_sha384_aes256(cryptogram, cryptogram_sz,
+                                                         recipient_id, recipient_id_sz,
+                                                         &public_key,
+                                                         &iv_key,
+                                                         &encrypted_key,
+                                                         &mac_data,
+                                                         &iv_data,
+                                                         &encrypted_data,
+                                                         &encrypted_data_sz)) {
+        return false;
+    }
+
+//    if (!_dh(public_key, pre_master_key)
+//        || !_kdf2_sha384(pre_master_key,
+//                                  32,
+//                                  master_key,
+//                                  sizeof(master_key))) {
+//        return false;
+//    }
+
+    memcpy(decrypted_key, encrypted_key, 48);
+//    aes256_cbc_decrypt(master_key,
+//                       iv_key,
+//                       decrypted_key,
+//                       48);
+
+    if (buf_sz < encrypted_data_sz) {
+        return false;
+    }
+
+    *decrypted_data_sz = encrypted_data_sz - 16;
+
+//    aes256_gcm_ad(decrypted_key,
+//                  iv_data,
+//                  encrypted_data,
+//                  encrypted_data_sz - 16,
+//                  decrypted_data,
+//                  &encrypted_data[encrypted_data_sz - 16]);
+
+    *decrypted_data_sz -= remove_padding_size(decrypted_data, *decrypted_data_sz);
+
+    return true;
 }
 
 /******************************************************************************/

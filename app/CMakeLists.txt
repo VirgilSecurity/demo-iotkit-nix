@@ -67,6 +67,7 @@ target_sources(virgil-iot-gateway-app
 		src/update/fw_upgrade.c
 		src/update/tl_update.c
 		src/update/upd_http_retrieval_thread.c
+		src/crypto/asn1_cryptogram.c
 		)
 
 #
