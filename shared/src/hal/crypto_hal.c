@@ -62,6 +62,7 @@
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
+#include <virgil/crypto/foundation/vscf_kdf2.h>
 #include <mbedtls/ctr_drbg.h>
 
 /********************************************************************************/
@@ -396,7 +397,41 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
            uint8_t *output,
            uint16_t output_sz) {
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    vscf_kdf2_t *kdf2;
+    vscf_impl_t *hash_impl;
+    vsc_buffer_t out_buf;
+
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+    if (kdf_type != VS_KDF_2) {
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    kdf2 = vscf_kdf2_new();
+
+    switch (hash_type) {
+    case VS_HASH_SHA_256:
+        hash_impl = vscf_sha256_impl(vscf_sha256_new());
+        break;
+
+    case VS_HASH_SHA_384:
+        hash_impl = vscf_sha384_impl(vscf_sha384_new());
+        break;
+
+    case VS_HASH_SHA_512:
+        hash_impl = vscf_sha512_impl(vscf_sha512_new());
+        break;
+    default:
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    vsc_buffer_init(&out_buf);
+    vsc_buffer_use(&out_buf, output, output_sz);
+    vscf_kdf2_take_hash(kdf2, hash_impl);
+    vscf_kdf2_derive(kdf2, vsc_data(input, input_sz), output_sz, &out_buf);
+
+    vscf_kdf2_delete(kdf2);
+    return VS_HSM_ERR_OK;
 }
 
 /********************************************************************************/
