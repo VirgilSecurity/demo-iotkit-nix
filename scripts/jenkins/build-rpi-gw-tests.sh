@@ -21,9 +21,9 @@ echo "----------------------------------------------------------------------"
 echo "################# BUILDING RPI GW TESTS ##############################"
 echo "----------------------------------------------------------------------"
 echo "------------- Preparing for build ------------------------------------"
-rm -rf cmake-build-jenkins
-mkdir -p cmake-build-jenkins
-cd ./cmake-build-jenkins && cmake -DVIRGIL_IOT_MCU_BUILD=OFF $@ "../"
+rm -rf cmake-build-debug
+mkdir -p cmake-build-debug
+cd ./cmake-build-debug && cmake -DVIRGIL_IOT_MCU_BUILD=OFF $@ "../"
 check_error
 echo "------------- Build rpi_gw_tests -------------------------------------"
 make rpi_gw_tests -j 4
