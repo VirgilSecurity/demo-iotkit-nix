@@ -32,22 +32,10 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <assert.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdio.h>
+#ifndef IOT_RPI_GATEWAY_HAL_H
+#define IOT_RPI_GATEWAY_HAL_H
 
 void
-vs_iot_assert(int exp) {
-    assert(exp);
-}
+vs_hal_get_udid(uint8_t udid[32]);
 
-void
-vs_global_hal_msleep(size_t msec) {
-    usleep(msec * 1000);
-}
-
-bool
-vs_logger_output_hal(const char *msg) {
-    return printf("%s", msg) != 0;
-}
+#endif //IOT_RPI_GATEWAY_HAL_H

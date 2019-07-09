@@ -32,70 +32,40 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
-#include <string.h>
+#include <assert.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <stdbool.h>
-#include <time.h>
+#include <stdio.h>
 
-#include "platform_os.h"
-#include "gateway.h"
-#include "gateway_macro.h"
-#include "message_bin.h"
-#include "upd_http_retrieval_thread.h"
-#include "event_group_bit_flags.h"
-#include "gateway_hal.h"
-
-static gtwy_t _gtwy;
-
-static bool is_threads_started = false;
-static xTaskHandle gateway_starter_thread;
-static const uint16_t starter_thread_stack_size = 10 * 1024;
-
-xQueueHandle *upd_event_queue;
+#include <virgil/iot/protocols/sdmp.h>
+#include <stdlib-config.h>
 
 /******************************************************************************/
-gtwy_t *
-init_gateway_ctx(vs_mac_addr_t *mac_addr) {
-    memset(&_gtwy, 0x00, sizeof(_gtwy));
-
-    vs_hal_get_udid(_gtwy.udid_of_device);
-
-    _gtwy.shared_event_group = xEventGroupCreate();
-    _gtwy.incoming_data_event_group = xEventGroupCreate();
-    _gtwy.firmware_event_group = xEventGroupCreate();
-
-    _gtwy.firmware_semaphore = xSemaphoreCreateMutex();
-    _gtwy.tl_semaphore = xSemaphoreCreateMutex();
-
-    return &_gtwy;
-}
-
-/******************************************************************************/
-gtwy_t *
-get_gateway_ctx(void) {
-    return &_gtwy;
-}
-
-/******************************************************************************/
-static void
-gateway_task(void *pvParameters) {
-
-    start_message_bin_thread();
-    start_upd_http_retrieval_thread();
-
-    while (true) {
-        int32_t thread_sleep = 1000 / portTICK_RATE_MS;
-        // TODO: Main loop will be here
-        xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
-    }
+void
+vs_iot_assert(int exp) {
+    assert(exp);
 }
 
 /******************************************************************************/
 void
-start_gateway_threads(void) {
-    if (!is_threads_started) {
-        is_threads_started = true;
-        xTaskCreate(gateway_task, "sdmp", starter_thread_stack_size, 0, OS_PRIO_2, &gateway_starter_thread);
-        vTaskStartScheduler();
-    }
+vs_global_hal_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
+
+/******************************************************************************/
+bool
+vs_logger_output_hal(const char *msg) {
+    return printf("%s", msg) != 0;
+}
+
+/******************************************************************************/
+void
+vs_hal_get_udid(uint8_t udid[32]) {
+    vs_mac_addr_t mac;
+    vs_sdmp_mac_addr(0, &mac);
+
+    // TODO: Need to use real serial
+    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
+    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
 }

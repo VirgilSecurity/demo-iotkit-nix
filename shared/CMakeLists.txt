@@ -47,7 +47,7 @@ add_library(rpi_gw_shared
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_hal.c
 		)
 
 find_package (Threads)
