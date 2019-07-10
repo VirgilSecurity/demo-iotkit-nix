@@ -282,6 +282,19 @@ _remove_file_data(const char *folder, const char *file_name) {
 }
 
 /******************************************************************************/
+bool
+get_keystorage_base_dir(char dir[FILENAME_MAX]) {
+    struct passwd *pwd = NULL;
+
+    pwd = getpwuid(getuid());
+
+    if (snprintf(dir, FILENAME_MAX, "%s/%s", pwd->pw_dir, main_storage_dir) <= 0) {
+        return false;
+    }
+    return true;
+}
+
+/******************************************************************************/
 const char *
 get_slot_name(vs_iot_hsm_slot_e slot) {
     switch (slot) {

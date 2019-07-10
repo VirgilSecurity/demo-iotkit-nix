@@ -45,24 +45,6 @@
 
 #define MAX_KEY_SZ  (128)
 
-#define ASN1_CHK_ADD(g, f)                                                                                             \
-    do {                                                                                                               \
-        if ((res_sz = f) < 0)                                                                                          \
-            return (false);                                                                                            \
-        else                                                                                                           \
-            g += res_sz;                                                                                               \
-    } while (0)
-
-#define MBEDTLS_CHECK(COMMAND, RESCODE)                                                                                \
-    do {                                                                                                               \
-        mbedtls_res = (COMMAND);                                                                                       \
-        if (mbedtls_res < 0) {                                                                                         \
-            VS_LOG_ERROR("Crypto error : %d", mbedtls_res);\
-            res = (RESCODE);                                              \
-            goto terminate;                                               \
-        }                                                                                                              \
-    } while (0)
-
 #define CHECK_BOOL(OPERATION, DESCRIPTION, ...)                                                                        \
     do {                                                                                                               \
         if (!(OPERATION)) {                                                                      \

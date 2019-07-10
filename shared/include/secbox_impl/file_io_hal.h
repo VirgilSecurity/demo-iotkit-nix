@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+bool
+get_keystorage_base_dir(char dir[FILENAME_MAX]);
 int
 write_trustlist_file(const char *file_name, const uint8_t *data, uint16_t data_sz);
 int
