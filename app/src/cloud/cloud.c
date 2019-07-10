@@ -57,6 +57,7 @@
 
 #include "crypto/asn1_cryptogram.h"
 #include <virgil/iot/hsm/hsm_interface.h>
+#include <virgil/iot/logger/logger.h>
 
 #define MAX_EP_SIZE (256)
 
@@ -224,6 +225,7 @@ static int16_t
 _decrypt_answer(char *out_answer, size_t *in_out_answer_len) {
     jobj_t jobj;
     size_t buf_size = *in_out_answer_len;
+
     if (json_parse_start(&jobj, out_answer, buf_size) != GATEWAY_OK)
         return CLOUD_ANSWER_JSON_FAIL;
 

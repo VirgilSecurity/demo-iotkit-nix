@@ -60,6 +60,7 @@
 #include <virgil/crypto/foundation/vscf_verify_hash.h>
 #include <virgil/crypto/foundation/vscf_random.h>
 #include <virgil/crypto/foundation/vscf_compute_shared_key.h>
+#include <virgil/crypto/foundation/vscf_aes256_gcm.h>
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
@@ -537,7 +538,41 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
                    uint8_t *tag,
                    uint16_t tag_len) {
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    vsc_buffer_t *out_buf = NULL;
+    vsc_buffer_t tag_buf;
+    vscf_aes256_gcm_t *aes256_gcm = NULL;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    NOT_ZERO(key);
+    NOT_ZERO(iv);
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+    NOT_ZERO(tag);
+
+    if (VS_AES_GCM != aes_type) {
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    aes256_gcm = vscf_aes256_gcm_new();
+
+    out_buf = vsc_buffer_new_with_capacity(vscf_aes256_gcm_encrypted_len(aes256_gcm, buf_len));
+    vsc_buffer_init(&tag_buf);
+    vsc_buffer_use(&tag_buf, tag, tag_len);
+
+
+    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_bitlen / 8));
+    vscf_aes256_gcm_set_nonce(aes256_gcm, vsc_data(iv, iv_len));
+
+    if (vscf_status_SUCCESS ==
+        vscf_aes256_gcm_auth_encrypt(aes256_gcm, vsc_data(input, buf_len), vsc_data(add, add_len), out_buf, &tag_buf)) {
+        res = VS_HSM_ERR_OK;
+        memcpy(output, vsc_buffer_bytes(out_buf), buf_len);
+    }
+
+    vscf_aes256_gcm_delete(aes256_gcm);
+    vsc_buffer_delete(out_buf);
+
+    return res;
 }
 
 /********************************************************************************/
@@ -573,7 +608,38 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
                         const uint8_t *tag,
                         uint16_t tag_len) {
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    vsc_buffer_t *out_buf = NULL;
+    vscf_aes256_gcm_t *aes256_gcm = NULL;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    NOT_ZERO(key);
+    NOT_ZERO(iv);
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+    NOT_ZERO(tag);
+
+    if (VS_AES_GCM != aes_type) {
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    aes256_gcm = vscf_aes256_gcm_new();
+
+    out_buf = vsc_buffer_new_with_capacity(vscf_aes256_gcm_auth_decrypted_len(aes256_gcm, buf_len));
+
+    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_bitlen / 8));
+    vscf_aes256_gcm_set_nonce(aes256_gcm, vsc_data(iv, iv_len));
+
+    if (vscf_status_SUCCESS ==
+        vscf_aes256_gcm_auth_decrypt(
+                aes256_gcm, vsc_data(input, buf_len), vsc_data(add, add_len), vsc_data(tag, tag_len), out_buf)) {
+        res = VS_HSM_ERR_OK;
+        memcpy(output, vsc_buffer_bytes(out_buf), buf_len);
+    }
+
+    vscf_aes256_gcm_delete(aes256_gcm);
+    vsc_buffer_delete(out_buf);
+
+    return res;
 }
 
 /********************************************************************************/
