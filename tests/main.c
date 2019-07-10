@@ -37,6 +37,7 @@
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include "secbox_impl/gateway_secbox_impl.h"
+#include <virgil/crypto/foundation/vscf_assert.h>
 
 #include "secbox_impl/file_io_hal.h"
 #include <sys/stat.h>
@@ -119,11 +120,18 @@ _remove_keystorage_dir() {
 }
 
 /********************************************************************************/
+static void
+_assert_handler_fn (const char *message, const char *file, int line){
+    VS_LOG_ERROR("%s %s %u", message, file, line);
+}
+
+/********************************************************************************/
 int
 main(int argc, char *argv[]){
     int res = 0;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
+    vscf_assert_change_handler(_assert_handler_fn);
 
     _remove_keystorage_dir();
 

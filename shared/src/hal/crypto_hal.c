@@ -59,6 +59,7 @@
 #include <virgil/crypto/foundation/vscf_sign_hash.h>
 #include <virgil/crypto/foundation/vscf_verify_hash.h>
 #include <virgil/crypto/foundation/vscf_random.h>
+#include <virgil/crypto/foundation/vscf_compute_shared_key.h>
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
@@ -144,26 +145,26 @@ _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_ty
 
     switch (*keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
-        *prvkey = (vscf_impl_t *)vscf_secp256r1_private_key_new();
+        *prvkey = vscf_secp256r1_private_key_impl(vscf_secp256r1_private_key_new());
         CHECK_VSCF(vscf_secp256r1_private_key_import_private_key((vscf_secp256r1_private_key_t *)*prvkey, prvkey_data),
                    "Unable to import private key");
         break;
 
     case VS_KEYPAIR_EC_CURVE25519:
-        *prvkey = (vscf_impl_t *)vscf_curve25519_private_key_new();
+        *prvkey = vscf_curve25519_private_key_impl(vscf_curve25519_private_key_new());
         CHECK_VSCF(
                 vscf_curve25519_private_key_import_private_key((vscf_curve25519_private_key_t *)*prvkey, prvkey_data),
                 "Unable to import private key");
         break;
 
     case VS_KEYPAIR_EC_ED25519:
-        *prvkey = (vscf_impl_t *)vscf_ed25519_private_key_new();
+        *prvkey = vscf_ed25519_private_key_impl(vscf_ed25519_private_key_new());
         CHECK_VSCF(vscf_ed25519_private_key_import_private_key((vscf_ed25519_private_key_t *)*prvkey, prvkey_data),
                    "Unable to import private key");
         break;
 
     case VS_KEYPAIR_RSA_2048:
-        *prvkey = (vscf_impl_t *)vscf_rsa_private_key_new();
+        *prvkey = vscf_rsa_private_key_impl(vscf_rsa_private_key_new());
         CHECK_VSCF(vscf_rsa_private_key_import_private_key((vscf_rsa_private_key_t *)*prvkey, prvkey_data),
                    "Unable to import private key");
         break;
@@ -184,27 +185,80 @@ terminate:
 }
 
 /********************************************************************************/
+static int
+_create_pubkey_ctx(vs_hsm_keypair_type_e keypair_type,
+                   const uint8_t *public_key,
+                   uint16_t public_key_sz,
+                   vscf_impl_t **pubkey) {
+
+    *pubkey = NULL;
+    int res = VS_HSM_ERR_OK;
+
+    switch (keypair_type) {
+    case VS_KEYPAIR_EC_SECP256R1:
+        *pubkey = vscf_secp256r1_public_key_impl(vscf_secp256r1_public_key_new());
+        if (vscf_status_SUCCESS != vscf_secp256r1_public_key_import_public_key((vscf_secp256r1_public_key_t *)*pubkey,
+                                                                               vsc_data(public_key, public_key_sz))) {
+            res = VS_HSM_ERR_CRYPTO;
+            VS_LOG_ERROR("Unable to import public key");
+        }
+        break;
+
+    case VS_KEYPAIR_EC_CURVE25519:
+        *pubkey = vscf_curve25519_public_key_impl(vscf_curve25519_public_key_new());
+        if (vscf_status_SUCCESS != vscf_curve25519_public_key_import_public_key((vscf_curve25519_public_key_t *)*pubkey,
+                                                                                vsc_data(public_key, public_key_sz))) {
+            res = VS_HSM_ERR_CRYPTO;
+            VS_LOG_ERROR("Unable to import public key");
+        }
+        break;
+
+    case VS_KEYPAIR_EC_ED25519:
+        *pubkey = vscf_ed25519_public_key_impl(vscf_ed25519_public_key_new());
+        if (vscf_status_SUCCESS != vscf_ed25519_public_key_import_public_key((vscf_ed25519_public_key_t *)*pubkey,
+                                                                             vsc_data(public_key, public_key_sz))) {
+            res = VS_HSM_ERR_CRYPTO;
+            VS_LOG_ERROR("Unable to import public key");
+        }
+        break;
+
+    case VS_KEYPAIR_RSA_2048:
+        *pubkey = vscf_rsa_public_key_impl(vscf_rsa_public_key_new());
+        if (vscf_status_SUCCESS != vscf_rsa_public_key_import_public_key((vscf_rsa_public_key_t *)*pubkey,
+                                                                         vsc_data(public_key, public_key_sz))) {
+            res = VS_HSM_ERR_CRYPTO;
+            VS_LOG_ERROR("Unable to import public key");
+        }
+        break;
+
+    default:
+        VS_LOG_ERROR("Unsupported keypair type %d (%s)", keypair_type, vs_hsm_keypair_type_descr(keypair_type));
+        res = VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    return res;
+}
+
+/********************************************************************************/
 static bool
-_set_hsm_data(vs_hsm_hash_type_e hash_type, vscf_alg_id_t *hash_id, uint16_t *hash_sz) {
+_set_hash_info(vs_hsm_hash_type_e hash_type, vscf_alg_id_t *hash_id, uint16_t *hash_sz) {
+
+    *hash_sz = (uint16_t)vs_hsm_get_hash_len(hash_type);
 
     switch (hash_type) {
     case VS_HASH_SHA_256:
         *hash_id = vscf_alg_id_SHA256;
-        *hash_sz = 256 / 8;
         return true;
 
     case VS_HASH_SHA_384:
         *hash_id = vscf_alg_id_SHA384;
-        *hash_sz = 384 / 8;
         return true;
 
     case VS_HASH_SHA_512:
         *hash_id = vscf_alg_id_SHA512;
-        *hash_sz = 512 / 8;
         return true;
 
     default:
-        assert(false && "Unsupported hash type");
         VS_LOG_ERROR("Unsupported hash type %d", hash_type);
         return false;
     }
@@ -233,7 +287,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
 
     vsc_buffer_init(&sign_data);
 
-    CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
+    CHECK_BOOL(_set_hash_info(hash_type, &hash_id, &hash_sz), "Unable to set hash info");
 
     CHECK_HSM(_load_prvkey(key_slot, &prvkey, &keypair_type),
               "Unable to load private key from slot %d (%s)",
@@ -320,43 +374,14 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
     VS_LOG_DEBUG("Internal signature size : %d bytes", int_sign_sz);
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Internal signature : ", int_sign, int_sign_sz);
 
-    switch (keypair_type) {
-    case VS_KEYPAIR_EC_SECP256R1:
-        pubkey = (vscf_impl_t *)vscf_secp256r1_public_key_new();
-        CHECK_VSCF(vscf_secp256r1_public_key_import_public_key((vscf_secp256r1_public_key_t *)pubkey,
-                                                               vsc_data(public_key, public_key_sz)),
-                   "Unable to import public key");
-        break;
-
-    case VS_KEYPAIR_EC_CURVE25519:
-        pubkey = (vscf_impl_t *)vscf_curve25519_public_key_new();
-        CHECK_VSCF(vscf_curve25519_public_key_import_public_key((vscf_curve25519_public_key_t *)pubkey,
-                                                                vsc_data(public_key, public_key_sz)),
-                   "Unable to import public key");
-        break;
-
-    case VS_KEYPAIR_EC_ED25519:
-        pubkey = (vscf_impl_t *)vscf_ed25519_public_key_new();
-        CHECK_VSCF(vscf_ed25519_public_key_import_public_key((vscf_ed25519_public_key_t *)pubkey,
-                                                             vsc_data(public_key, public_key_sz)),
-                   "Unable to import public key");
-        break;
-
-    case VS_KEYPAIR_RSA_2048:
-        pubkey = (vscf_impl_t *)vscf_rsa_public_key_new();
-        CHECK_VSCF(vscf_rsa_public_key_import_public_key((vscf_rsa_public_key_t *)pubkey,
-                                                         vsc_data(public_key, public_key_sz)),
-                   "Unable to import public key");
-        break;
-
-    default:
-        assert(false && "Unsupported keypair type");
-        VS_LOG_ERROR("Unsupported keypair type %d (%s)", keypair_type, vs_hsm_keypair_type_descr(keypair_type));
-        res = VS_HSM_ERR_NOT_IMPLEMENTED;
+    res = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
+    if (VS_HSM_ERR_OK != res) {
         goto terminate;
     }
 
-    CHECK_BOOL(_set_hsm_data(hash_type, &hash_id, &hash_sz), "Unable to set hash data");
+    res = VS_HSM_ERR_CRYPTO;
+
+    CHECK_BOOL(_set_hash_info(hash_type, &hash_id, &hash_sz), "Unable to set hash info");
 
     CHECK_BOOL(vscf_verify_hash(pubkey, vsc_data(hash, hash_sz), hash_id, vsc_data(int_sign, int_sign_sz)),
                "Unable to verify signature");
@@ -365,9 +390,7 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
 
 terminate:
 
-    if (pubkey) {
-        vscf_impl_destroy(&pubkey);
-    }
+    vscf_impl_delete(pubkey);
 
     return res;
 
@@ -562,6 +585,41 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
             uint8_t *shared_secret,
             uint16_t buf_sz,
             uint16_t *shared_secret_sz) {
+    vscf_impl_t *prvkey = NULL;
+    vscf_impl_t *pubkey = NULL;
+    vsc_buffer_t out_buf;
+    size_t required_sz;
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    int res;
+
+    NOT_ZERO(public_key);
+    NOT_ZERO(shared_secret);
+    NOT_ZERO(shared_secret_sz);
+
+    CHECK_HSM(_load_prvkey(slot, &prvkey, &keypair_type),
+              "Unable to load private key from slot %d (%s)",
+              slot,
+              get_slot_name((slot)));
+
+    if ((required_sz = vscf_compute_shared_key_shared_key_len(prvkey)) > buf_sz) {
+        VS_LOG_ERROR("Output buffer too small");
+        res = VS_HSM_ERR_INVAL;
+        goto terminate;
+    }
+    *shared_secret_sz = (uint16_t)required_sz;
+
+    vsc_buffer_init(&out_buf);
+    vsc_buffer_use(&out_buf, shared_secret, buf_sz);
+
+    res = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
+
+    if (VS_HSM_ERR_OK == res) {
+        res = (vscf_status_SUCCESS == vscf_compute_shared_key(prvkey, pubkey, &out_buf)) ? VS_HSM_ERR_OK
+                                                                                         : VS_HSM_ERR_CRYPTO;
+    }
+
+terminate:
+    vscf_impl_delete(prvkey);
+    vscf_impl_delete(pubkey);
+    return res;
 }
