@@ -61,6 +61,7 @@
 #include <virgil/crypto/foundation/vscf_random.h>
 #include <virgil/crypto/foundation/vscf_compute_shared_key.h>
 #include <virgil/crypto/foundation/vscf_aes256_gcm.h>
+#include <virgil/crypto/foundation/vscf_aes256_cbc.h>
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
@@ -524,35 +525,29 @@ terminate:
 }
 
 /********************************************************************************/
-int
-vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
-                   const uint8_t *key,
-                   uint16_t key_bitlen,
-                   const uint8_t *iv,
-                   uint16_t iv_len,
-                   const uint8_t *add,
-                   uint16_t add_len,
-                   uint16_t buf_len,
-                   const uint8_t *input,
-                   uint8_t *output,
-                   uint8_t *tag,
-                   uint16_t tag_len) {
-
+static int
+_aes_gcm_encrypt(const uint8_t *key,
+                 uint16_t key_bitlen,
+                 const uint8_t *iv,
+                 uint16_t iv_len,
+                 const uint8_t *add,
+                 uint16_t add_len,
+                 uint16_t buf_len,
+                 const uint8_t *input,
+                 uint8_t *output,
+                 uint8_t *tag,
+                 uint16_t tag_len) {
     uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vsc_buffer_t tag_buf;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
     int res = VS_HSM_ERR_CRYPTO;
 
-    NOT_ZERO(key);
-    NOT_ZERO(iv);
-    NOT_ZERO(input);
-    NOT_ZERO(output);
     NOT_ZERO(tag);
 
     key_len = key_bitlen / 8;
 
-    if (VS_AES_GCM != aes_type || key_len != vscf_aes256_gcm_KEY_LEN) {
+    if (key_len != vscf_aes256_gcm_KEY_LEN) {
         return VS_HSM_ERR_NOT_IMPLEMENTED;
     }
 
@@ -579,6 +574,114 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
 }
 
 /********************************************************************************/
+static int
+_aes_cbc_encrypt(const uint8_t *key,
+                 uint16_t key_bitlen,
+                 const uint8_t *iv,
+                 uint16_t iv_len,
+                 uint16_t buf_len,
+                 const uint8_t *input,
+                 uint8_t *output) {
+
+    uint16_t key_len;
+    vsc_buffer_t *out_buf = NULL;
+    vscf_aes256_cbc_t *aes256_cbc = NULL;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    key_len = key_bitlen / 8;
+
+    if (key_len != vscf_aes256_gcm_KEY_LEN) {
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    aes256_cbc = vscf_aes256_cbc_new();
+
+    out_buf = vsc_buffer_new_with_capacity(vscf_aes256_cbc_encrypted_len(aes256_cbc, buf_len));
+
+    vscf_aes256_cbc_set_key(aes256_cbc, vsc_data(key, key_len));
+    vscf_aes256_cbc_set_nonce(aes256_cbc, vsc_data(iv, iv_len));
+
+    if (vscf_status_SUCCESS == vscf_aes256_cbc_encrypt(aes256_cbc, vsc_data(input, buf_len), out_buf)) {
+        res = VS_HSM_ERR_OK;
+        memcpy(output, vsc_buffer_bytes(out_buf), vsc_buffer_len(out_buf));
+    }
+
+    vscf_aes256_cbc_delete(aes256_cbc);
+    vsc_buffer_delete(out_buf);
+    return res;
+}
+
+/********************************************************************************/
+int
+vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
+                   const uint8_t *key,
+                   uint16_t key_bitlen,
+                   const uint8_t *iv,
+                   uint16_t iv_len,
+                   const uint8_t *add,
+                   uint16_t add_len,
+                   uint16_t buf_len,
+                   const uint8_t *input,
+                   uint8_t *output,
+                   uint8_t *tag,
+                   uint16_t tag_len) {
+
+    NOT_ZERO(key);
+    NOT_ZERO(iv);
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+
+    switch (aes_type) {
+    case VS_AES_GCM:
+        return _aes_gcm_encrypt(key, key_bitlen, iv, iv_len, add, add_len, buf_len, input, output, tag, tag_len);
+    case VS_AES_CBC:
+        return _aes_cbc_encrypt(key, key_bitlen, iv, iv_len, buf_len, input, output);
+    default:
+        break;
+    }
+    return VS_HSM_ERR_NOT_IMPLEMENTED;
+}
+
+/********************************************************************************/
+static int
+_aes_cbc_decrypt(const uint8_t *key,
+                 uint16_t key_bitlen,
+                 const uint8_t *iv,
+                 uint16_t iv_len,
+                 uint16_t buf_len,
+                 const uint8_t *input,
+                 uint8_t *output) {
+    uint16_t key_len;
+    vsc_buffer_t *out_buf = NULL;
+    vscf_aes256_cbc_t *aes256_cbc = NULL;
+    int res = VS_HSM_ERR_CRYPTO;
+
+    key_len = key_bitlen / 8;
+
+    if (key_len != vscf_aes256_gcm_KEY_LEN) {
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    aes256_cbc = vscf_aes256_cbc_new();
+
+    out_buf = vsc_buffer_new_with_capacity(vscf_aes256_cbc_decrypted_len(aes256_cbc, buf_len));
+
+    vscf_aes256_cbc_set_key(aes256_cbc, vsc_data(key, key_len));
+    vscf_aes256_cbc_set_nonce(aes256_cbc, vsc_data(iv, iv_len));
+
+    if (vscf_status_SUCCESS == vscf_aes256_cbc_decrypt(aes256_cbc, vsc_data(input, buf_len), out_buf)) {
+        res = VS_HSM_ERR_OK;
+        memcpy(output, vsc_buffer_bytes(out_buf), vsc_buffer_len(out_buf));
+    }
+
+    vscf_aes256_cbc_delete(aes256_cbc);
+    vsc_buffer_delete(out_buf);
+
+    return res;
+}
+
+
+/********************************************************************************/
 int
 vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
                    const uint8_t *key,
@@ -592,6 +695,18 @@ vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
                    uint8_t *output,
                    uint8_t *tag,
                    uint16_t tag_len) {
+
+    NOT_ZERO(key);
+    NOT_ZERO(iv);
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+
+    switch (aes_type) {
+    case VS_AES_CBC:
+        return _aes_cbc_decrypt(key, key_bitlen, iv, iv_len, buf_len, input, output);
+    default:
+        break;
+    }
 
     return VS_HSM_ERR_NOT_IMPLEMENTED;
 }
