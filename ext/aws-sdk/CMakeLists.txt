@@ -21,6 +21,12 @@ add_library(aws-mqtt SHARED)
 #
 file (GLOB_RECURSE AWS_MQTT_LIST_SRC "${AWS_MQTT_SOURCE}/*.c")
 
+target_compile_definitions(aws-mqtt
+        PUBLIC
+        -DJSMN_PARENT_LINKS
+        -DJSMN_STRICT
+        )
+
 target_sources(aws-mqtt
         PRIVATE
         ${AWS_MQTT_LIST_SRC}

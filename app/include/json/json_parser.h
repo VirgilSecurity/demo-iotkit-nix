@@ -121,8 +121,6 @@
 #define __JSON_PARSER_H__
 
 #define MOD_JSON 7
-#define JSMN_PARENT_LINKS
-#define JSMN_STRICT
 
 #include <stdbool.h>
 #include "jsmn.h"
