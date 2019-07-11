@@ -140,7 +140,7 @@ _virgil_pubkey_to_tiny_no_copy(const uint8_t *virgil_public_key, size_t virgil_p
         if (key_sz > 66 || key_sz < 64)
             return false;
 
-        *public_key = (uint8_t *)&key[key_sz - 64];
+        *public_key = (uint8_t *)&key[key_sz - 65];
         return true;
     }
 

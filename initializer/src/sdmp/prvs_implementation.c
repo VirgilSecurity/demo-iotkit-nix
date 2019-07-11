@@ -50,17 +50,6 @@
 
 #include <gateway_hal.h>
 
-#define VS_SECBOX_ELEMENT_PBR 0
-#define VS_SECBOX_ELEMENT_PBA 1
-#define VS_SECBOX_ELEMENT_PBT 2
-#define VS_SECBOX_ELEMENT_PBF 3
-#define VS_SECBOX_ELEMENT_SGN 4
-#define VS_SECBOX_ELEMENT_TLH 6
-#define VS_SECBOX_ELEMENT_TLC 7
-#define VS_SECBOX_ELEMENT_TLF 8
-#define VS_SECBOX_ELEMENT_GET_OWN_PUBKEY 5
-#define SERIAL_SIZE 100
-
 /******************************************************************************/
 static int
 vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {

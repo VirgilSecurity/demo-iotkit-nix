@@ -44,17 +44,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-bool virgil_cryptogram_parse_low_level_sha384_aes256(const uint8_t * cryptg_encrypted_data, size_t cryptg_encrypted_data_sz,
-													 const uint8_t * recipient_id, size_t recipient_id_sz,
-													 uint8_t ** public_key,
-													 uint8_t ** iv_key,
-													 uint8_t ** encrypted_key,
-													 uint8_t ** mac_data,
-													 uint8_t ** iv_data,
-													 uint8_t ** encrypted_data,
-													 size_t * encrypted_data_sz);
+bool
+virgil_cryptogram_parse_low_level_sha384_aes256(const uint8_t *cryptg_encrypted_data,
+                                                size_t cryptg_encrypted_data_sz,
+                                                uint8_t **public_key,
+                                                uint8_t **iv_key,
+                                                uint8_t **encrypted_key,
+                                                uint8_t **mac_data,
+                                                uint8_t **iv_data,
+                                                uint8_t **encrypted_data,
+                                                size_t *encrypted_data_sz);
 #ifdef __cplusplus
 }
 #endif
 
-#endif //GATEWAY_ASN1_CRYPTOGRAM_H
+#endif // GATEWAY_ASN1_CRYPTOGRAM_H

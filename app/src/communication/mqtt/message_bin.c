@@ -228,7 +228,7 @@ msg_bin_get_credentials() {
     VS_LOG_DEBUG("------------------------- LOAD MESSAGE BIN CREDENTIALS -------------------------");
 
     size_t answer_size = HTTPS_INPUT_BUFFER_SIZE;
-    char *answer = (char *)malloc(answer_size);
+    char *answer = (char *)pvPortMalloc(answer_size);
     if (!answer) {
         VS_LOG_ERROR("ALLOCATION FAIL in message bin credentials\r\n");
         // TODO: What should we do here ?
@@ -239,19 +239,22 @@ msg_bin_get_credentials() {
 
     if (HTTPS_RET_CODE_OK == cloud_get_message_bin_credentials(answer, &answer_size)) {
         jobj_t jobj;
+        int len;
 
         _mb_mqtt_context.host = MESSAGE_BIN_BROKER_URL; /*host*/
         _mb_mqtt_context.port = MSG_BIN_MQTT_PORT;      /*port*/
 
-        json_parse_start(&jobj, answer, answer_size);
-        int len;
+        if (json_parse_start(&jobj, answer, answer_size) != GATEWAY_OK) {
+            goto clean;
+        }
+
         /*----login----*/
         if (json_get_val_str_len(&jobj, "login", &len) != GATEWAY_OK || len < 0) {
             VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
             goto clean;
         }
         ++len;
-        _mb_mqtt_context.login = (char *)malloc((size_t)len);
+        _mb_mqtt_context.login = (char *)pvPortMalloc((size_t)len);
         json_get_val_str(&jobj, "login", _mb_mqtt_context.login, len);
         /*----password----*/
         if (json_get_val_str_len(&jobj, "password", &len) != GATEWAY_OK || len < 0) {
@@ -259,7 +262,7 @@ msg_bin_get_credentials() {
             goto clean;
         }
         ++len;
-        _mb_mqtt_context.password = (char *)malloc((size_t)len);
+        _mb_mqtt_context.password = (char *)pvPortMalloc((size_t)len);
         json_get_val_str(&jobj, "password", _mb_mqtt_context.password, len);
         /*----client_id----*/
         if (json_get_val_str_len(&jobj, "client_id", &len) != GATEWAY_OK || len < 0) {
@@ -267,7 +270,7 @@ msg_bin_get_credentials() {
             goto clean;
         }
         ++len;
-        _mb_mqtt_context.client_id = (char *)malloc((size_t)len);
+        _mb_mqtt_context.client_id = (char *)pvPortMalloc((size_t)len);
         json_get_val_str(&jobj, "client_id", _mb_mqtt_context.client_id, len);
         /*----certificate----*/
         if (json_get_val_str_len(&jobj, "certificate", &len) != GATEWAY_OK || len < 0) {
@@ -276,7 +279,7 @@ msg_bin_get_credentials() {
         }
         ++len;
 
-        char *tmp = (char *)malloc((size_t)len);
+        char *tmp = (char *)pvPortMalloc((size_t)len);
         json_get_val_str(&jobj, "certificate", tmp, len);
 
         int decode_len = base64decode_len(tmp, len);
@@ -287,7 +290,7 @@ msg_bin_get_credentials() {
             goto clean;
         }
 
-        _mb_mqtt_context.cert = (char *)malloc((size_t)decode_len);
+        _mb_mqtt_context.cert = (char *)pvPortMalloc((size_t)decode_len);
 
         base64decode(tmp, len, (uint8_t *)_mb_mqtt_context.cert, &decode_len);
         vPortFree(tmp);
@@ -298,7 +301,7 @@ msg_bin_get_credentials() {
             goto clean;
         }
         ++len;
-        tmp = (char *)malloc((size_t)len);
+        tmp = (char *)pvPortMalloc((size_t)len);
         json_get_val_str(&jobj, "private_key", tmp, len);
 
         decode_len = base64decode_len(tmp, len);
@@ -309,7 +312,7 @@ msg_bin_get_credentials() {
             goto clean;
         }
 
-        _mb_mqtt_context.pk = (char *)malloc((size_t)decode_len);
+        _mb_mqtt_context.pk = (char *)pvPortMalloc((size_t)decode_len);
 
         base64decode(tmp, len, (uint8_t *)_mb_mqtt_context.pk, &decode_len);
         vPortFree(tmp);
@@ -330,7 +333,7 @@ msg_bin_get_credentials() {
             len = 0;
 
             _mb_mqtt_context.topic_list.topic_len_list =
-                    (uint16_t *)malloc(_mb_mqtt_context.topic_list.topic_count * sizeof(uint16_t));
+                    (uint16_t *)pvPortMalloc(_mb_mqtt_context.topic_list.topic_count * sizeof(uint16_t));
 
             for (i = 0; i < _mb_mqtt_context.topic_list.topic_count; i++) {
                 json_array_get_str_len(&jobj, i, &len);
@@ -345,7 +348,7 @@ msg_bin_get_credentials() {
                 total_topic_names_len += _mb_mqtt_context.topic_list.topic_len_list[i];
             }
 
-            _mb_mqtt_context.topic_list.topic_list = (char *)malloc(total_topic_names_len);
+            _mb_mqtt_context.topic_list.topic_list = (char *)pvPortMalloc(total_topic_names_len);
 
             int offset = 0;
 
@@ -389,7 +392,7 @@ start_message_bin_thread() {
 static void
 _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 
-    upd_request_t *fw_url = (upd_request_t *)malloc(sizeof(upd_request_t));
+    upd_request_t *fw_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
     int status = parseFirmwareManifest((char *)p_data, (int)length, fw_url->upd_file_url, get_gateway_ctx());
 
@@ -410,7 +413,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 /*************************************************************************/
 static void
 _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
-    upd_request_t *tl_url = (upd_request_t *)malloc(sizeof(upd_request_t));
+    upd_request_t *tl_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
     int status = parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url, get_gateway_ctx());
 

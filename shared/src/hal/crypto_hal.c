@@ -727,6 +727,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
                         uint16_t tag_len) {
 
     uint16_t key_len;
+    uint8_t add_data = 0;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
     int res = VS_HSM_ERR_CRYPTO;
@@ -736,6 +737,14 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     NOT_ZERO(input);
     NOT_ZERO(output);
     NOT_ZERO(tag);
+
+    if (add_len) {
+        NOT_ZERO(add);
+    }
+
+    if (NULL == add) {
+        add = &add_data;
+    }
 
     key_len = key_bitlen / 8;
 
