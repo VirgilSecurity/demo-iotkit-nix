@@ -336,7 +336,8 @@ msg_bin_get_credentials() {
                 json_array_get_str_len(&jobj, i, &len);
 
                 if (len + 1 > UINT16_MAX) {
-                    VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
+                    VS_LOG_ERROR(
+                            "Error!!! cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
                     goto clean;
                 }
 

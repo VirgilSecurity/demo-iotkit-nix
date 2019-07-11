@@ -40,16 +40,16 @@ extern "C" {
  * TLS networking layer to create a TLS secured socket.
  */
 typedef struct _TLSDataParams {
-	mbedtls_entropy_context entropy;
-	mbedtls_ctr_drbg_context ctr_drbg;
-	mbedtls_ssl_context ssl;
-	mbedtls_ssl_config conf;
-	uint32_t flags;
-	mbedtls_x509_crt cacert;
-	mbedtls_x509_crt clicert;
-	mbedtls_pk_context pkey;
-	mbedtls_net_context server_fd;
-}TLSDataParams;
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    uint32_t flags;
+    mbedtls_x509_crt cacert;
+    mbedtls_x509_crt clicert;
+    mbedtls_pk_context pkey;
+    mbedtls_net_context server_fd;
+} TLSDataParams;
 
 #define IOTSDKC_NETWORK_MBEDTLS_PLATFORM_H_H
 
@@ -57,4 +57,4 @@ typedef struct _TLSDataParams {
 }
 #endif
 
-#endif //IOTSDKC_NETWORK_MBEDTLS_PLATFORM_H_H
+#endif // IOTSDKC_NETWORK_MBEDTLS_PLATFORM_H_H

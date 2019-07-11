@@ -31,7 +31,7 @@ extern "C" {
  * definition of the Timer struct. Platform specific
  */
 struct Timer {
-	struct timeval end_time;
+    struct timeval end_time;
 };
 
 /**
@@ -39,7 +39,8 @@ struct Timer {
  *
  * @param milliseconds The number of milliseconds to sleep.
  */
-void delay(unsigned milliseconds);
+void
+delay(unsigned milliseconds);
 
 #ifdef __cplusplus
 }

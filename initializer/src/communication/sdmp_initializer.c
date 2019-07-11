@@ -54,4 +54,3 @@ vs_sdmp_comm_start(const vs_netif_t *netif) {
 
     return vs_sdmp_prvs_configure_hal(vs_prvs_impl());
 }
-

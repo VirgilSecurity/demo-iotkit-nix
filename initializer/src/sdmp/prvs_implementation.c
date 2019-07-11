@@ -82,7 +82,7 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
 
     own_pubkey = (vs_pubkey_t *)device_info->data;
     vs_sdmp_mac_addr(0, &device_info->mac);
-    //TODO: Fix this hardcode
+    // TODO: Fix this hardcode
     device_info->manufacturer = 0x89abcdef;
     device_info->model = 0x12345678;
     vs_hal_get_udid(device_info->udid_of_device);

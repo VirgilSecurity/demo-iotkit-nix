@@ -80,7 +80,7 @@ main(int argc, char *argv[]) {
     // Init platform specific hardware
     hardware_init();
 
-    //Init PLC interface
+    // Init PLC interface
     if (0 != vs_sdmp_init(vs_hal_netif_plc())) {
         return -1;
     }

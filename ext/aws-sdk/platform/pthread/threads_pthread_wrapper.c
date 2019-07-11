@@ -28,12 +28,13 @@ extern "C" {
  * @param IoT_Mutex_t - pointer to the mutex to be initialized
  * @return IoT_Error_t - error code indicating result of operation
  */
-IoT_Error_t aws_iot_thread_mutex_init(IoT_Mutex_t *pMutex) {
-	if(0 != pthread_mutex_init(&(pMutex->lock), NULL)) {
-		return MUTEX_INIT_ERROR;
-	}
+IoT_Error_t
+aws_iot_thread_mutex_init(IoT_Mutex_t *pMutex) {
+    if (0 != pthread_mutex_init(&(pMutex->lock), NULL)) {
+        return MUTEX_INIT_ERROR;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 /**
@@ -45,13 +46,14 @@ IoT_Error_t aws_iot_thread_mutex_init(IoT_Mutex_t *pMutex) {
  * @param IoT_Mutex_t - pointer to the mutex to be locked
  * @return IoT_Error_t - error code indicating result of operation
  */
-IoT_Error_t aws_iot_thread_mutex_lock(IoT_Mutex_t *pMutex) {
-int rc = pthread_mutex_lock(&(pMutex->lock));
-	if(0 != rc) {
-		return MUTEX_LOCK_ERROR;
-	}
+IoT_Error_t
+aws_iot_thread_mutex_lock(IoT_Mutex_t *pMutex) {
+    int rc = pthread_mutex_lock(&(pMutex->lock));
+    if (0 != rc) {
+        return MUTEX_LOCK_ERROR;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 /**
@@ -63,13 +65,14 @@ int rc = pthread_mutex_lock(&(pMutex->lock));
  * @param IoT_Mutex_t - pointer to the mutex to be locked
  * @return IoT_Error_t - error code indicating result of operation
  */
-IoT_Error_t aws_iot_thread_mutex_trylock(IoT_Mutex_t *pMutex) {
-int rc = pthread_mutex_trylock(&(pMutex->lock));
-	if(0 != rc) {
-		return MUTEX_LOCK_ERROR;
-	}
+IoT_Error_t
+aws_iot_thread_mutex_trylock(IoT_Mutex_t *pMutex) {
+    int rc = pthread_mutex_trylock(&(pMutex->lock));
+    if (0 != rc) {
+        return MUTEX_LOCK_ERROR;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 /**
@@ -80,12 +83,13 @@ int rc = pthread_mutex_trylock(&(pMutex->lock));
  * @param IoT_Mutex_t - pointer to the mutex to be unlocked
  * @return IoT_Error_t - error code indicating result of operation
  */
-IoT_Error_t aws_iot_thread_mutex_unlock(IoT_Mutex_t *pMutex) {
-	if(0 != pthread_mutex_unlock(&(pMutex->lock))) {
-		return MUTEX_UNLOCK_ERROR;
-	}
+IoT_Error_t
+aws_iot_thread_mutex_unlock(IoT_Mutex_t *pMutex) {
+    if (0 != pthread_mutex_unlock(&(pMutex->lock))) {
+        return MUTEX_UNLOCK_ERROR;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 /**
@@ -96,12 +100,13 @@ IoT_Error_t aws_iot_thread_mutex_unlock(IoT_Mutex_t *pMutex) {
  * @param IoT_Mutex_t - pointer to the mutex to be destroyed
  * @return IoT_Error_t - error code indicating result of operation
  */
-IoT_Error_t aws_iot_thread_mutex_destroy(IoT_Mutex_t *pMutex) {
-	if(0 != pthread_mutex_destroy(&(pMutex->lock))) {
-		return MUTEX_DESTROY_ERROR;
-	}
+IoT_Error_t
+aws_iot_thread_mutex_destroy(IoT_Mutex_t *pMutex) {
+    if (0 != pthread_mutex_destroy(&(pMutex->lock))) {
+        return MUTEX_DESTROY_ERROR;
+    }
 
-	return SUCCESS;
+    return SUCCESS;
 }
 
 #ifdef __cplusplus
@@ -109,4 +114,3 @@ IoT_Error_t aws_iot_thread_mutex_destroy(IoT_Mutex_t *pMutex) {
 #endif
 
 #endif /* _ENABLE_THREAD_SUPPORT_ */
-

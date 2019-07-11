@@ -100,7 +100,7 @@ _recursive_delete(const char *dir) {
         }
     }
 
-    finish:
+finish:
     if (ftsp) {
         fts_close(ftsp);
     }
@@ -113,7 +113,7 @@ static void
 _remove_keystorage_dir() {
     char folder[FILENAME_MAX];
 
-    if(!get_keystorage_base_dir(folder)) {
+    if (!get_keystorage_base_dir(folder)) {
         return;
     }
     _recursive_delete(folder);
@@ -121,13 +121,13 @@ _remove_keystorage_dir() {
 
 /********************************************************************************/
 static void
-_assert_handler_fn (const char *message, const char *file, int line){
+_assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
 /********************************************************************************/
 int
-main(int argc, char *argv[]){
+main(int argc, char *argv[]) {
     int res = 0;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
@@ -148,5 +148,4 @@ main(int argc, char *argv[]){
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
     return res;
-
 }

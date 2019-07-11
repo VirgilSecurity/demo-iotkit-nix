@@ -84,6 +84,18 @@ if (USE_UBSAN)
 endif()
 
 # ---------------------------------------------------------------------------
+#   Format code
+# ---------------------------------------------------------------------------
+clangformat_folder(
+        ${CMAKE_CURRENT_SOURCE_DIR}/app
+        ${CMAKE_CURRENT_SOURCE_DIR}/initializer
+        ${CMAKE_CURRENT_SOURCE_DIR}/shared
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk/platform
+        ${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos/unix
+)
+
+# ---------------------------------------------------------------------------
 #   Folders with targets
 # ---------------------------------------------------------------------------
 

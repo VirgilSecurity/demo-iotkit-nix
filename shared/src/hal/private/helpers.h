@@ -43,21 +43,23 @@
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
 
-#define MAX_KEY_SZ  (128)
+#define MAX_KEY_SZ (128)
 
 #define CHECK_BOOL(OPERATION, DESCRIPTION, ...)                                                                        \
     do {                                                                                                               \
-        if (!(OPERATION)) {                                                                      \
+        if (!(OPERATION)) {                                                                                            \
             VS_LOG_ERROR((DESCRIPTION), ##__VA_ARGS__);                                                                \
             goto terminate;                                                                                            \
         }                                                                                                              \
     } while (0)
 
-#define CHECK_MEM_ALLOC(OPERATION, DESCRIPTION, ...)    CHECK_BOOL(OPERATION, DESCRIPTION, ## __VA_ARGS__)
+#define CHECK_MEM_ALLOC(OPERATION, DESCRIPTION, ...) CHECK_BOOL(OPERATION, DESCRIPTION, ##__VA_ARGS__)
 
-#define CHECK_VSCF(OPERATION, DESCRIPTION, ...)         CHECK_BOOL((vscf_status_SUCCESS == (OPERATION)), DESCRIPTION, ##__VA_ARGS__)
+#define CHECK_VSCF(OPERATION, DESCRIPTION, ...)                                                                        \
+    CHECK_BOOL((vscf_status_SUCCESS == (OPERATION)), DESCRIPTION, ##__VA_ARGS__)
 
-#define CHECK_HSM(OPERATION, DESCRIPTION, ...)          CHECK_BOOL((VS_HSM_ERR_OK == (res = (OPERATION))), DESCRIPTION, ##__VA_ARGS__)
+#define CHECK_HSM(OPERATION, DESCRIPTION, ...)                                                                         \
+    CHECK_BOOL((VS_HSM_ERR_OK == (res = (OPERATION))), DESCRIPTION, ##__VA_ARGS__)
 
 #define NOT_ZERO(ARG)                                                                                                  \
     do {                                                                                                               \

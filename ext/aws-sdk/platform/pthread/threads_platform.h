@@ -31,7 +31,7 @@ extern "C" {
  *
  */
 struct _IoT_Mutex_t {
-	pthread_mutex_t lock;
+    pthread_mutex_t lock;
 };
 
 #ifdef __cplusplus
@@ -40,4 +40,3 @@ struct _IoT_Mutex_t {
 
 #endif /* IOTSDKC_THREADS_PLATFORM_H_H */
 #endif /* _ENABLE_THREAD_SUPPORT_ */
-

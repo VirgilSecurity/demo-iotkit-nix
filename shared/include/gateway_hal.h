@@ -38,4 +38,4 @@
 void
 vs_hal_get_udid(uint8_t udid[32]);
 
-#endif //IOT_RPI_GATEWAY_HAL_H
+#endif // IOT_RPI_GATEWAY_HAL_H
