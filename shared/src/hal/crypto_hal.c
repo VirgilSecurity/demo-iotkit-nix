@@ -538,6 +538,7 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
                    uint8_t *tag,
                    uint16_t tag_len) {
 
+    uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vsc_buffer_t tag_buf;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
@@ -549,7 +550,9 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
     NOT_ZERO(output);
     NOT_ZERO(tag);
 
-    if (VS_AES_GCM != aes_type) {
+    key_len = key_bitlen / 8;
+
+    if (VS_AES_GCM != aes_type || key_len != vscf_aes256_gcm_KEY_LEN) {
         return VS_HSM_ERR_NOT_IMPLEMENTED;
     }
 
@@ -560,7 +563,7 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
     vsc_buffer_use(&tag_buf, tag, tag_len);
 
 
-    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_bitlen / 8));
+    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_len));
     vscf_aes256_gcm_set_nonce(aes256_gcm, vsc_data(iv, iv_len));
 
     if (vscf_status_SUCCESS ==
@@ -608,6 +611,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
                         const uint8_t *tag,
                         uint16_t tag_len) {
 
+    uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
     int res = VS_HSM_ERR_CRYPTO;
@@ -618,7 +622,9 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     NOT_ZERO(output);
     NOT_ZERO(tag);
 
-    if (VS_AES_GCM != aes_type) {
+    key_len = key_bitlen / 8;
+
+    if (VS_AES_GCM != aes_type || key_len != vscf_aes256_gcm_KEY_LEN) {
         return VS_HSM_ERR_NOT_IMPLEMENTED;
     }
 
@@ -626,7 +632,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
 
     out_buf = vsc_buffer_new_with_capacity(vscf_aes256_gcm_auth_decrypted_len(aes256_gcm, buf_len));
 
-    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_bitlen / 8));
+    vscf_aes256_gcm_set_key(aes256_gcm, vsc_data(key, key_len));
     vscf_aes256_gcm_set_nonce(aes256_gcm, vsc_data(iv, iv_len));
 
     if (vscf_status_SUCCESS ==
