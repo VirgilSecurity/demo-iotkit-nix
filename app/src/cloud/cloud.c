@@ -113,46 +113,6 @@ remove_padding_size(uint8_t *data, size_t data_sz) {
     return padding_val;
 }
 
-#define ATCA_SHA384_DIGEST_SIZE 48
-#define KDF2_CEIL(x, y) (1 + ((x - 1) / y))
-#define MAX_KDF_IN 100
-/******************************************************************************/
-// bool
-//_kdf2_sha384(const uint8_t *  input, size_t inlen, uint8_t * output, size_t olen) {
-//    size_t counter = 1;
-//    size_t counter_len;
-//    uint8_t buf[MAX_KDF_IN + 5];
-//    uint8_t hash[ATCA_SHA384_DIGEST_SIZE];
-//    uint8_t hash_len = ATCA_SHA384_DIGEST_SIZE;
-//    size_t olen_actual = 0;
-//    uint8_t counter_string[4];
-//    uint16_t hash_sz;
-//
-//    // Get KDF parameters
-//    counter_len = KDF2_CEIL(olen, hash_len);
-//
-//    // Start hashing
-//    for(; counter <= counter_len; ++counter) {
-//        counter_string[0] = (uint8_t)((counter >> 24) & 255);
-//        counter_string[1] = (uint8_t)((counter >> 16) & 255);
-//        counter_string[2] = (uint8_t)((counter >> 8)) & 255;
-//        counter_string[3] = (uint8_t)(counter & 255);
-//
-//        memcpy(buf, input, inlen);
-//        memcpy(&buf[inlen], counter_string, 4);
-//
-//        if (olen_actual + hash_len <= olen) {
-//            vs_hsm_hash_create(VS_HASH_SHA_384, (const unsigned char *)buf,inlen + 4, (unsigned char *)(output +
-//            olen_actual), olen, &hash_sz); olen_actual += hash_len;
-//        } else {
-//            vs_hsm_hash_create(VS_HASH_SHA_384, (const unsigned char *)buf,inlen + 4, (unsigned char *)hash,
-//            sizeof(hash), &hash_sz); memcpy(output + olen_actual, hash, olen - olen_actual); olen_actual = olen;
-//        }
-//    }
-//
-//    return true;
-//}
-
 /******************************************************************************/
 static bool
 _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
@@ -198,13 +158,19 @@ _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
                                     pre_master_key,
                                     sizeof(pre_master_key),
                                     master_key,
-                                    sizeof(master_key))) {
-        return false;
-    }
-
-    if (VS_HSM_ERR_OK !=
-        vs_hsm_aes_decrypt(
-                VS_AES_CBC, master_key, 32 * 8, iv_key, 16, NULL, 0, 48, encrypted_key, decrypted_key, NULL, 0)) {
+                                    sizeof(master_key)) ||
+        VS_HSM_ERR_OK != vs_hsm_aes_decrypt(VS_AES_CBC,
+                                            master_key,
+                                            32 * 8,
+                                            iv_key,
+                                            16,
+                                            NULL,
+                                            0,
+                                            48,
+                                            encrypted_key,
+                                            decrypted_key,
+                                            NULL,
+                                            0)) {
         return false;
     }
 

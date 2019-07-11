@@ -13,12 +13,9 @@
 #include "semphr.h"
 #include <virgil/iot/logger/logger.h>
 
-#define FURL_RETIRIEVAL_START_DELAY MINS_TO_MS(10)
-#define FURL_RETIRIEVAL_PERIOD HOURS_TO_MS(24)
-
 static xTaskHandle upd_retrieval_thread;
 
-static const uint16_t upd_retrieval_stack = 6 * 1024;
+static const uint16_t upd_retrieval_stack = 10 * 1024;
 
 static bool retrieval_started;
 
