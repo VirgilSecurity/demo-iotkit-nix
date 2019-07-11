@@ -66,7 +66,7 @@
 xQueueHandle *upd_event_queue;
 
 static xTaskHandle _mb_thread;
-static const uint16_t _mb_thread_stack = 15 * 1024;
+static const uint16_t _mb_thread_stack = 20 * 1024;
 
 static _mb_mqtt_ctx_t _mb_mqtt_context;
 
