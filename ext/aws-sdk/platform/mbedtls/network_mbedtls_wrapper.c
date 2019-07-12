@@ -273,7 +273,7 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
     mbedtls_ssl_conf_verify(&(tlsDataParams->conf), my_verify, NULL);
     mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), my_debug, NULL);
-    mbedtls_debug_set_threshold(4);
+    mbedtls_debug_set_threshold(0);
 
     mbedtls_ssl_conf_rng(&(tlsDataParams->conf), mbedtls_ctr_drbg_random, &(tlsDataParams->ctr_drbg));
 
