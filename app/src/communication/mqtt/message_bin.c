@@ -179,6 +179,7 @@ mb_mqtt_task(void *pvParameters) {
         if (mb_mqtt_provision_is_present()) {
             if (!mb_mqtt_is_active()) {
 
+                VS_LOG_DEBUG("[MB]Connecting to broker host %s : %u ...", _mb_mqtt_context.host, _mb_mqtt_context.port);
                 mb_service_cert.cert = (unsigned char *)_mb_mqtt_context.cert;
                 mb_service_cert.cert_size = strlen(_mb_mqtt_context.cert) + 1;
                 mb_service_cert.cert_type = IOT_TLS_ENC_PEM;
@@ -203,6 +204,8 @@ mb_mqtt_task(void *pvParameters) {
                                                                          _group_callback,
                                                                          NULL)) {
                     mb_mqtt_set_active();
+                } else {
+                    VS_LOG_DEBUG("[MB]Connection failed");
                 }
             } else {
                 iot_process(&mb_mqtt_handler);
@@ -250,7 +253,7 @@ msg_bin_get_credentials() {
 
         /*----login----*/
         if (json_get_val_str_len(&jobj, "login", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
             goto clean;
         }
         ++len;
@@ -258,7 +261,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "login", _mb_mqtt_context.login, len);
         /*----password----*/
         if (json_get_val_str_len(&jobj, "password", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [password]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [password]");
             goto clean;
         }
         ++len;
@@ -266,7 +269,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "password", _mb_mqtt_context.password, len);
         /*----client_id----*/
         if (json_get_val_str_len(&jobj, "client_id", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [client_id]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [client_id]");
             goto clean;
         }
         ++len;
@@ -274,7 +277,7 @@ msg_bin_get_credentials() {
         json_get_val_str(&jobj, "client_id", _mb_mqtt_context.client_id, len);
         /*----certificate----*/
         if (json_get_val_str_len(&jobj, "certificate", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [certificate]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [certificate]");
             goto clean;
         }
         ++len;
@@ -286,7 +289,7 @@ msg_bin_get_credentials() {
 
         if (0 >= decode_len) {
             vPortFree(tmp);
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) wrong size [certificate]");
             goto clean;
         }
 
@@ -297,7 +300,7 @@ msg_bin_get_credentials() {
 
         /*----private_key----*/
         if (json_get_val_str_len(&jobj, "private_key", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [private_key]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [private_key]");
             goto clean;
         }
         ++len;
@@ -308,7 +311,7 @@ msg_bin_get_credentials() {
 
         if (0 >= decode_len) {
             vPortFree(tmp);
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) wrong size [certificate]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) wrong size [certificate]");
             goto clean;
         }
 
@@ -320,13 +323,13 @@ msg_bin_get_credentials() {
         /*----available_topics----*/
         int topic_count;
         if (json_get_array_object(&jobj, "available_topics", &topic_count) != GATEWAY_OK || topic_count < 0) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) answer not contain [available_topics]");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [available_topics]");
             goto clean;
         }
         _mb_mqtt_context.topic_list.topic_count = (size_t)topic_count;
 
         if (0 == _mb_mqtt_context.topic_list.topic_count) {
-            VS_LOG_ERROR("Error!!! cloud_get_message_bin_credentials(...) [available_topics] is empty!");
+            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) [available_topics] is empty!");
             goto clean;
         } else {
             uint16_t i, total_topic_names_len = 0;
@@ -339,8 +342,7 @@ msg_bin_get_credentials() {
                 json_array_get_str_len(&jobj, i, &len);
 
                 if (len + 1 > UINT16_MAX) {
-                    VS_LOG_ERROR(
-                            "Error!!! cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
+                    VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
                     goto clean;
                 }
 
@@ -365,11 +367,11 @@ msg_bin_get_credentials() {
 
         _mb_mqtt_context.is_filled = true;
         vPortFree(answer);
+        VS_LOG_DEBUG("[MB] Credentials are loaded successfully");
         return true;
     }
 
 clean:
-
     mb_mqtt_ctx_free();
     vPortFree(answer);
     return false;
