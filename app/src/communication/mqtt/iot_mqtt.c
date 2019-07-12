@@ -39,27 +39,27 @@
 #include <string.h>
 #include <stdio.h>
 #include "iot_mqtt.h"
+#include <virgil/iot/logger/logger.h>
 
 /******************************************************************************/
 static void
 disconnect_callback(AWS_IoT_Client *client, void *data) {
-    IOT_WARN("MQTT Disconnect");
+    VS_LOG_WARNING("MQTT Disconnect");
     IoT_Error_t rc = FAILURE;
-
     if (client)
         return;
 
     IOT_UNUSED(data);
 
     if (aws_iot_is_autoreconnect_enabled(client)) {
-        IOT_INFO("Auto Reconnect is enabled, Reconnecting attempt will start now");
+        VS_LOG_INFO("Auto Reconnect is enabled, Reconnecting attempt will start now");
     } else {
-        IOT_WARN("Auto Reconnect not enabled. Starting manual reconnect...");
+        VS_LOG_WARNING("Auto Reconnect not enabled. Starting manual reconnect...");
         rc = aws_iot_mqtt_attempt_reconnect(client);
         if (NETWORK_RECONNECTED == rc) {
-            IOT_WARN("Manual Reconnect Successful");
+            VS_LOG_WARNING("Manual Reconnect Successful");
         } else {
-            IOT_WARN("Manual Reconnect Failed - %d", rc);
+            VS_LOG_WARNING("Manual Reconnect Failed - %d", rc);
         }
     }
 }
@@ -95,7 +95,7 @@ iot_init(iot_message_handler_t *handler,
     mqttInitParams->disconnectHandlerData = NULL;
     rc = aws_iot_mqtt_init(&handler->client, mqttInitParams);
     if (SUCCESS != rc) {
-        IOT_ERROR("iot_mqtt_init returned error : %d ", rc);
+        VS_LOG_ERROR("iot_mqtt_init returned error : %d ", rc);
     }
 
     return rc;
@@ -145,10 +145,10 @@ iot_connect_internal(
         pConnectParams->passwordLen = 0;
     }
 
-    IOT_INFO("Connecting...");
+    VS_LOG_INFO("Connecting...");
     rc = aws_iot_mqtt_connect(&handler->client, pConnectParams);
     if (SUCCESS != rc) {
-        IOT_ERROR("Error(%d) connecting to %s:%d", rc, handler->init_params.pHostURL, handler->init_params.port);
+        VS_LOG_ERROR("Error(%d) connecting to %s:%d", rc, handler->init_params.pHostURL, handler->init_params.port);
         return rc;
     }
 
@@ -159,7 +159,7 @@ iot_connect_internal(
      */
     rc = aws_iot_mqtt_autoreconnect_set_status(&handler->client, true);
     if (SUCCESS != rc) {
-        IOT_ERROR("Unable to set Auto Reconnect to true - %d", rc);
+        VS_LOG_ERROR("Unable to set Auto Reconnect to true - %d", rc);
     }
     return rc;
 }
@@ -192,7 +192,7 @@ iot_connect_and_subscribe_multiple_topics(
             continue;
         }
 
-        IOT_INFO("Subscribing to topic %s", topic_name);
+        VS_LOG_INFO("Subscribing to topic %s", topic_name);
         rc = aws_iot_mqtt_subscribe(&handler->client,
                                     topic_name,
                                     topic_list->topic_len_list[i] - (uint16_t)1,
@@ -200,9 +200,9 @@ iot_connect_and_subscribe_multiple_topics(
                                     iot_get_msg_handler,
                                     iot_get_msg_handler_data);
         if (SUCCESS != rc) {
-            IOT_ERROR("Error subscribing %s : %d ", topic_name, rc);
+            VS_LOG_ERROR("Error subscribing %s : %d ", topic_name, rc);
         } else {
-            IOT_INFO("Success subscribing %s", topic_name);
+            VS_LOG_INFO("Success subscribing %s", topic_name);
             rc = SUCCESS;
         }
     }
@@ -228,11 +228,11 @@ iot_connect_and_subscribe_topic(
         return rc;
     }
 
-    IOT_INFO("Subscribing to topic %s", topic);
+    VS_LOG_INFO("Subscribing to topic %s", topic);
     rc = aws_iot_mqtt_subscribe(
             &handler->client, topic, (uint16_t)strlen(topic), qos, iot_get_msg_handler, iot_get_msg_handler_data);
     if (SUCCESS != rc) {
-        IOT_ERROR("Error subscribing %s: %d ", topic, rc);
+        VS_LOG_ERROR("Error subscribing %s: %d ", topic, rc);
     }
 
     return rc;
@@ -246,11 +246,12 @@ iot_send(iot_message_handler_t *handler, const char *topic, uint8_t *data, size_
     param.payload = data;
     param.payloadLen = data_sz;
     param.isRetained = 0;
+    IoT_Error_t rc;
     // Max time the yield function will wait for read messages
     iot_process(handler);
 
-    if (SUCCESS != aws_iot_mqtt_publish(&handler->client, topic, (uint16_t)strlen(topic), &param)) {
-        IOT_ERROR("Error send to topic %s: %d ", topic, rc);
+    if (SUCCESS != (rc = aws_iot_mqtt_publish(&handler->client, topic, (uint16_t)strlen(topic), &param))) {
+        VS_LOG_ERROR("Error send to topic %s: %d ", topic, rc);
         return false;
     }
     iot_process(handler);

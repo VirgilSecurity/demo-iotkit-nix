@@ -27,6 +27,8 @@ extern "C" {
 #include "network_interface.h"
 #include "network_platform.h"
 
+#include "mbedtls/debug.h"
+
 
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
@@ -109,6 +111,40 @@ iot_tls_init(Network *pNetwork,
     return SUCCESS;
 }
 
+static void
+my_debug(void *ctx, int level, const char *file, int line, const char *str) {
+    const char *p, *basename;
+    (void)ctx;
+
+    /* Extract basename from file */
+    for (p = basename = file; *p != '\0'; p++) {
+        if (*p == '/' || *p == '\\') {
+            basename = p + 1;
+        }
+    }
+
+    mbedtls_printf("%s:%04d: |%d| %s", basename, line, level, str);
+}
+static int
+my_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags) {
+    const uint32_t buf_size = 1024;
+    char buf[buf_size];
+    (void)data;
+
+    mbedtls_printf("\nVerifying certificate at depth %d:\n", depth);
+    mbedtls_x509_crt_info(buf, buf_size - 1, "  ", crt);
+    mbedtls_printf("%s", buf);
+
+    if (*flags == 0)
+        mbedtls_printf("No verification issue for this certificate\n");
+    else {
+        mbedtls_x509_crt_verify_info(buf, buf_size, "  ! ", *flags);
+        mbedtls_printf("%s\n", buf);
+    }
+
+    return 0;
+}
+
 IoT_Error_t
 iot_tls_is_connected(Network *pNetwork) {
     /* Use this to add implementation which can check for physical layer disconnect */
@@ -165,7 +201,9 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     }
 
     IOT_DEBUG("  . Loading the CA root certificate ...");
-    ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->cacert), pNetwork->tlsConnectParams.pRootCALocation);
+    ret = mbedtls_x509_crt_parse(&(tlsDataParams->cacert),
+                                 (unsigned char *)pNetwork->tlsConnectParams.pRootCALocation,
+                                 strlen(pNetwork->tlsConnectParams.pRootCALocation) + 1);
     if (ret < 0) {
         IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing root cert\n\n", -ret);
         return NETWORK_X509_ROOT_CRT_PARSE_ERROR;
@@ -173,13 +211,19 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     IOT_DEBUG(" ok (%d skipped)\n", ret);
 
     IOT_DEBUG("  . Loading the client cert. and key...");
-    ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->clicert), pNetwork->tlsConnectParams.pDeviceCertLocation);
+    ret = mbedtls_x509_crt_parse(&(tlsDataParams->clicert),
+                                 (unsigned char *)pNetwork->tlsConnectParams.pDeviceCertLocation,
+                                 strlen(pNetwork->tlsConnectParams.pDeviceCertLocation) + 1);
     if (ret != 0) {
         IOT_ERROR(" failed\n  !  mbedtls_x509_crt_parse returned -0x%x while parsing device cert\n\n", -ret);
         return NETWORK_X509_DEVICE_CRT_PARSE_ERROR;
     }
 
-    ret = mbedtls_pk_parse_keyfile(&(tlsDataParams->pkey), pNetwork->tlsConnectParams.pDevicePrivateKeyLocation, "");
+    ret = mbedtls_pk_parse_key(&(tlsDataParams->pkey),
+                               (unsigned char *)pNetwork->tlsConnectParams.pDevicePrivateKeyLocation,
+                               strlen(pNetwork->tlsConnectParams.pDevicePrivateKeyLocation) + 1,
+                               (unsigned char *)"",
+                               0);
     if (ret != 0) {
         IOT_ERROR(" failed\n  !  mbedtls_pk_parse_key returned -0x%x while parsing private key\n\n", -ret);
         IOT_DEBUG(" path : %s ", pNetwork->tlsConnectParams.pDevicePrivateKeyLocation);
@@ -226,6 +270,11 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     } else {
         mbedtls_ssl_conf_authmode(&(tlsDataParams->conf), MBEDTLS_SSL_VERIFY_OPTIONAL);
     }
+
+    mbedtls_ssl_conf_verify(&(tlsDataParams->conf), my_verify, NULL);
+    mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), my_debug, NULL);
+    mbedtls_debug_set_threshold(4);
+
     mbedtls_ssl_conf_rng(&(tlsDataParams->conf), mbedtls_ctr_drbg_random, &(tlsDataParams->ctr_drbg));
 
     mbedtls_ssl_conf_ca_chain(&(tlsDataParams->conf), &(tlsDataParams->cacert), NULL);
@@ -264,6 +313,9 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     while ((ret = mbedtls_ssl_handshake(&(tlsDataParams->ssl))) != 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             IOT_ERROR(" failed\n  ! mbedtls_ssl_handshake returned -0x%x\n", -ret);
+            uint8_t buf_err[512];
+            mbedtls_strerror(ret, buf_err, sizeof(buf_err));
+            IOT_ERROR(buf_err);
             if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
                 IOT_ERROR(
                         "    Unable to verify the server's certificate. "

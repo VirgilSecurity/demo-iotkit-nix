@@ -76,11 +76,11 @@ static iot_tls_cert_t mb_service_cert;
 static iot_tls_key_t mb_service_key;
 static iot_message_handler_t mb_mqtt_handler;
 
-extern const uint8_t mb_root_ca_crt[];
-const unsigned int MB_ROOT_CA_CRT_LEN = 58;
+extern const uint8_t msg_bin_root_ca_crt[];
+#define MB_ROOT_CA_CRT_LEN 1931
 
 static const iot_tls_cert_t server_ca_cert = {
-        .cert = (uint8_t *)mb_root_ca_crt,
+        .cert = (uint8_t *)msg_bin_root_ca_crt,
         .cert_size = MB_ROOT_CA_CRT_LEN,
         .cert_type = IOT_TLS_ENC_PEM,
 };
@@ -192,9 +192,9 @@ mb_mqtt_task(void *pvParameters) {
                                         _mb_mqtt_context.host,
                                         _mb_mqtt_context.port,
                                         true,
-                                        (char *)&mb_service_cert,
-                                        (char *)&mb_service_key,
-                                        (char *)&server_ca_cert) &&
+                                        (const char *)mb_service_cert.cert,
+                                        (const char *)mb_service_key.key,
+                                        (const char *)server_ca_cert.cert) &&
                     SUCCESS == iot_connect_and_subscribe_multiple_topics(&mb_mqtt_handler,
                                                                          _mb_mqtt_context.client_id,
                                                                          &_mb_mqtt_context.topic_list,

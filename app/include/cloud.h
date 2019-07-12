@@ -54,7 +54,7 @@
 #define CLOUD_VALUE_ANSWER_JSON_FAIL -7
 #define CLOUD_GENERATE_AUTHORIZATION_FAIL -8
 
-#define MESSAGE_BIN_BROKER_URL ""
+#define MESSAGE_BIN_BROKER_URL "mqtt-dev.virgilsecurity.com"
 #define CLOUD_HOST "https://things-dev.virgilsecurity.com"
 #define THING_EP "thing"
 #define AWS_ID "aws"

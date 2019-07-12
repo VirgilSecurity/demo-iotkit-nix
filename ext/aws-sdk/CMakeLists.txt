@@ -25,6 +25,8 @@ target_compile_definitions(aws-mqtt
         PUBLIC
         -DJSMN_PARENT_LINKS
         -DJSMN_STRICT
+        PRIVATE
+        $<$<CONFIG:DEBUG>:ENABLE_IOT_DEBUG=1 ENABLE_IOT_INFO=1 ENABLE_IOT_WARN=1 ENABLE_IOT_ERROR=1 ENABLE_IOT_TRACE=1>
         )
 
 target_sources(aws-mqtt
