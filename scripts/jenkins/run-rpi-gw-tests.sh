@@ -28,7 +28,7 @@ else
 fi
 
 #***************************************************************************************
-TEST_EXEC="cmake-build-jenkins/tests/rpi_gw_tests"
+TEST_EXEC="cmake-build-debug/tests/rpi_gw_tests"
 
 #*************************************************************************************
 change_retcode() {
