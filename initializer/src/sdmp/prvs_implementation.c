@@ -52,9 +52,7 @@
 
 /******************************************************************************/
 static int
-vs_prvs_dnid(vs_sdmp_prvs_dnid_element_t *element) {
-    // TODO: We need real types of devices
-    element->device_type = 1;
+vs_prvs_dnid() {
     return 0;
 }
 
