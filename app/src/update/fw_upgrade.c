@@ -3,6 +3,7 @@
 #include <stdint.h>
 //#include <json_parser.h>
 
+#include <virgil/iot/logger/logger.h>
 #include "gateway.h"
 #include "gateway_macro.h"
 #include "fw_upgrade.h"
@@ -17,7 +18,8 @@ fetch_firmware(gtwy_t *gtwy, void *data_source, firmware_info_t *fw_info) {
 /*************************************************************************/
 int
 parseFirmwareManifest(void *payload, size_t payload_len, char *fw_url, gtwy_t *gtwy) {
-    return GATEWAY_ERROR;
+    VS_LOG_DEBUG("%s", (char *)payload);
+    return GATEWAY_OK;
 }
 
 /*************************************************************************/

@@ -3,6 +3,7 @@
 #include <stdint.h>
 //#include <json_parser.h>
 
+#include <virgil/iot/logger/logger.h>
 #include "gateway.h"
 #include "gateway_macro.h"
 #include "tl_upgrade.h"
@@ -11,9 +12,9 @@
 /*************************************************************************/
 int
 parse_tl_mainfest(void *payload, size_t payload_len, char *tl_url, gtwy_t *gtwy) {
-    return GATEWAY_ERROR;
+    VS_LOG_DEBUG("%s", (char *)payload);
+    return GATEWAY_OK;
 }
-
 
 /*************************************************************************/
 int
