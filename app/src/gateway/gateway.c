@@ -84,7 +84,7 @@ gateway_task(void *pvParameters) {
     start_upd_http_retrieval_thread();
 
     while (true) {
-        int32_t thread_sleep = 1000 / portTICK_RATE_MS;
+        int32_t thread_sleep = 1000 / portTICK_RATE_MS; //-V501
         // TODO: Main loop will be here
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
     }

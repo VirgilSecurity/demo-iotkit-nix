@@ -189,7 +189,7 @@ virgil_cryptogram_parse_low_level_sha384_aes256(const uint8_t *cryptg_encrypted_
             if (!_virgil_pubkey_to_tiny_no_copy(&_data[pos], _asn1_get_size(pos, _data), public_key))
                 return false;
 
-            if (!_asn1_skip(SEQUENCE, &pos, _sz, _data) || !_asn1_skip(SEQUENCE, &pos, _sz, _data))
+            if (!_asn1_skip(SEQUENCE, &pos, _sz, _data) || !_asn1_skip(SEQUENCE, &pos, _sz, _data)) //-V501
                 return false;
 
             saved_pos = pos;

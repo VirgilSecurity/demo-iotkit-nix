@@ -535,7 +535,6 @@ json_init(jobj_t *jobj, jsontok_t *tokens, int num_tokens, char *js, size_t js_l
         case JSMN_ERROR_INVAL:
             return -WM_E_JSON_INVAL;
         case JSMN_ERROR_PART:
-            break;
             return -WM_E_JSON_INCOMPLETE;
         default:
             return -WM_E_JSON_FAIL;
