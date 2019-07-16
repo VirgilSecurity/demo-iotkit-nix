@@ -40,6 +40,7 @@
 #include <virgil/crypto/foundation/vscf_assert.h>
 
 #include "secbox_impl/file_io_hal.h"
+#include "hal/file_io_hal.h"
 #include <sys/stat.h>
 #include <fts.h>
 
@@ -129,10 +130,14 @@ _assert_handler_fn(const char *message, const char *file, int line) {
 int
 main(int argc, char *argv[]) {
     int res = 0;
+    uint8_t mac[6];
+
+    memset(mac, 0, sizeof(mac));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
 
+    vs_hal_files_set_mac(mac);
     _remove_keystorage_dir();
 
     // Prepare secbox
