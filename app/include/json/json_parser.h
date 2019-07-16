@@ -123,6 +123,7 @@
 #define MOD_JSON 7
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "jsmn.h"
 
 #define MOD_ERROR_START(x) (x << 12 | 0)

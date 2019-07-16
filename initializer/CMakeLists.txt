@@ -96,6 +96,11 @@ target_link_libraries (virgil-iot-gateway-initializer
 		rpi_gw_shared
 		logger
 		)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(virgil-iot-gateway-initializer
+			-Wl,--whole-archive hsm -Wl,--no-whole-archive
+			)
+endif()
 
 #
 #	Add cmake test
