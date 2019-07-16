@@ -150,9 +150,6 @@ main(int argc, char *argv[]) {
         // Get PLC Network interface
         plc_netif = vs_hal_netif_plc();
 
-        // Prepare TL storage
-        vs_tl_init_storage();
-
         // Start SDMP protocol over PLC interface
         vs_sdmp_comm_start(plc_netif);
 

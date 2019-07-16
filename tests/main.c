@@ -37,13 +37,103 @@
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include "secbox_impl/gateway_secbox_impl.h"
+#include <virgil/crypto/foundation/vscf_assert.h>
+
+#include "secbox_impl/file_io_hal.h"
+#include <sys/stat.h>
+#include <fts.h>
+
+/******************************************************************************/
+static int
+_recursive_delete(const char *dir) {
+    int ret = 0;
+    FTS *ftsp = NULL;
+    FTSENT *curr;
+
+    // Cast needed (in C) because fts_open() takes a "char * const *", instead
+    // of a "const char * const *", which is only allowed in C++. fts_open()
+    // does not modify the argument.
+    char *files[] = {(char *)dir, NULL};
+
+    // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
+    //                in multithreaded programs
+    // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
+    //                of the specified directory
+    // FTS_XDEV     - Don't cross filesystem boundaries
+    ftsp = fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
+    if (!ftsp) {
+        VS_LOG_ERROR("%s: fts_open failed", dir);
+        ret = -1;
+        goto finish;
+    }
+
+    while ((curr = fts_read(ftsp))) {
+        switch (curr->fts_info) {
+        case FTS_NS:
+        case FTS_DNR:
+        case FTS_ERR:
+            VS_LOG_TRACE("%s: fts_read error: %s", curr->fts_accpath, strerror(curr->fts_errno));
+            break;
+
+        case FTS_DC:
+        case FTS_DOT:
+        case FTS_NSOK:
+            // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
+            // passed to fts_open()
+            break;
+
+        case FTS_D:
+            // Do nothing. Need depth-first search, so directories are deleted
+            // in FTS_DP
+            break;
+
+        case FTS_DP:
+        case FTS_F:
+        case FTS_SL:
+        case FTS_SLNONE:
+        case FTS_DEFAULT:
+            if (remove(curr->fts_accpath) < 0) {
+                VS_LOG_ERROR("%s: Failed to remove", curr->fts_path);
+                ret = -1;
+            }
+            break;
+        }
+    }
+
+finish:
+    if (ftsp) {
+        fts_close(ftsp);
+    }
+
+    return ret;
+}
+
+/********************************************************************************/
+static void
+_remove_keystorage_dir() {
+    char folder[FILENAME_MAX];
+
+    if (!get_keystorage_base_dir(folder)) {
+        return;
+    }
+    _recursive_delete(folder);
+}
+
+/********************************************************************************/
+static void
+_assert_handler_fn(const char *message, const char *file, int line) {
+    VS_LOG_ERROR("%s %s %u", message, file, line);
+}
 
 /********************************************************************************/
 int
-main(int argc, char *argv[]){
+main(int argc, char *argv[]) {
     int res = 0;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
+    vscf_assert_change_handler(_assert_handler_fn);
+
+    _remove_keystorage_dir();
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
@@ -58,5 +148,4 @@ main(int argc, char *argv[]){
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
     return res;
-
 }

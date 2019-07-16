@@ -55,6 +55,11 @@
 #include "json/json_generator.h"
 #include "json/json_parser.h"
 
+#include "crypto/asn1_cryptogram.h"
+#include <virgil/iot/hsm/hsm_interface.h>
+#include <virgil/iot/hsm/hsm_helpers.h>
+#include <virgil/iot/logger/logger.h>
+
 #define MAX_EP_SIZE (256)
 
 /******************************************************************************/
@@ -90,37 +95,131 @@ _get_serial_number_in_hex_str(char _out_str[SERIAL_SIZE * 2 + 1]) {
 }
 
 /******************************************************************************/
+uint8_t
+remove_padding_size(uint8_t *data, size_t data_sz) {
+    uint8_t i, padding_val;
+
+    padding_val = data[data_sz - 1];
+
+    if (padding_val < 2 || padding_val > 15 || data_sz < padding_val)
+        return 0;
+
+    for (i = 0; i < padding_val; ++i) {
+        if (data[data_sz - 1 - i] != padding_val) {
+            return 0;
+        }
+    }
+
+    return padding_val;
+}
+
+/******************************************************************************/
 static bool
-_crypto_decrypt_sha384_aes256(const uint8_t *recipient_id,
-                              size_t recipient_id_sz,
-                              const uint8_t *private_key,
-                              size_t private_key_sz,
-                              uint8_t *cryptogram,
+_crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
                               size_t cryptogram_sz,
                               uint8_t *decrypted_data,
                               size_t buf_sz,
                               size_t *decrypted_data_sz) {
-    // TODO: please implement me or change to something else
-    return false;
+    uint8_t decrypted_key[48];
+    uint8_t *encrypted_data;
+    size_t encrypted_data_sz;
+
+    uint8_t pre_master_key[32];
+    uint16_t pre_master_key_sz;
+    uint8_t master_key[80];
+
+    uint8_t *public_key;
+    uint8_t *iv_key;
+    uint8_t *encrypted_key;
+    uint8_t *mac_data;
+    uint8_t *iv_data;
+
+    if (!virgil_cryptogram_parse_low_level_sha384_aes256(cryptogram,
+                                                         cryptogram_sz,
+                                                         &public_key,
+                                                         &iv_key,
+                                                         &encrypted_key,
+                                                         &mac_data,
+                                                         &iv_data,
+                                                         &encrypted_data,
+                                                         &encrypted_data_sz)) {
+        return false;
+    }
+
+    if (VS_HSM_ERR_OK != vs_hsm_ecdh(PRIVATE_KEY_SLOT,
+                                     VS_KEYPAIR_EC_SECP256R1,
+                                     public_key,
+                                     vs_hsm_get_pubkey_len(VS_KEYPAIR_EC_SECP256R1),
+                                     pre_master_key,
+                                     sizeof(pre_master_key),
+                                     &pre_master_key_sz) ||
+        VS_HSM_ERR_OK != vs_hsm_kdf(VS_KDF_2,
+                                    VS_HASH_SHA_384,
+                                    pre_master_key,
+                                    sizeof(pre_master_key),
+                                    master_key,
+                                    sizeof(master_key)) ||
+        VS_HSM_ERR_OK != vs_hsm_aes_decrypt(VS_AES_CBC,
+                                            master_key,
+                                            32 * 8,
+                                            iv_key,
+                                            16,
+                                            NULL,
+                                            0,
+                                            48,
+                                            encrypted_key,
+                                            decrypted_key,
+                                            NULL,
+                                            0)) {
+        return false;
+    }
+
+    if (buf_sz < encrypted_data_sz) {
+        return false;
+    }
+
+    *decrypted_data_sz = encrypted_data_sz - 16;
+
+    if (VS_HSM_ERR_OK != vs_hsm_aes_auth_decrypt(VS_AES_GCM,
+                                                 decrypted_key,
+                                                 32 * 8,
+                                                 iv_data,
+                                                 12,
+                                                 NULL,
+                                                 0,
+                                                 encrypted_data_sz - 16,
+                                                 encrypted_data,
+                                                 decrypted_data,
+                                                 &encrypted_data[encrypted_data_sz - 16],
+                                                 16)) {
+        return false;
+    }
+
+    *decrypted_data_sz -= remove_padding_size(decrypted_data, *decrypted_data_sz);
+
+    return true;
 }
 
 /******************************************************************************/
 static int16_t
-_decrypt_answer(char *out_answer, uint16_t *in_out_answer_len) {
+_decrypt_answer(char *out_answer, size_t *in_out_answer_len) {
     jobj_t jobj;
-    if (json_parse_start(&jobj, out_answer, *in_out_answer_len) != GATEWAY_OK)
-        return CLOUD_ANSWER_JSON_FAIL;
+    size_t buf_size = *in_out_answer_len;
 
-    char *crypto_answer_b64 = (char *)pvPortMalloc(HTTPS_INPUT_BUFFER_SIZE);
+    if (json_parse_start(&jobj, out_answer, buf_size) != GATEWAY_OK) {
+        return CLOUD_ANSWER_JSON_FAIL;
+    }
+
+    char *crypto_answer_b64 = (char *)pvPortMalloc(buf_size);
 
     int crypto_answer_b64_len;
 
-    if (json_get_val_str(&jobj, "encrypted_value", crypto_answer_b64, HTTPS_INPUT_BUFFER_SIZE) != GATEWAY_OK)
+    if (json_get_val_str(&jobj, "encrypted_value", crypto_answer_b64, (int)buf_size) != GATEWAY_OK)
         return CLOUD_VALUE_ANSWER_JSON_FAIL;
     else {
         crypto_answer_b64_len = base64decode_len(crypto_answer_b64, (int)strlen(crypto_answer_b64));
 
-        if (0 >= crypto_answer_b64_len || crypto_answer_b64_len > HTTPS_INPUT_BUFFER_SIZE) {
+        if (0 >= crypto_answer_b64_len || crypto_answer_b64_len > buf_size) {
             goto fail;
         }
 
@@ -130,14 +229,10 @@ _decrypt_answer(char *out_answer, uint16_t *in_out_answer_len) {
                      &crypto_answer_b64_len);
         size_t decrypted_data_sz;
 
-        if (!_crypto_decrypt_sha384_aes256(0,
-                                           0,
-                                           NULL,
-                                           0,
-                                           (uint8_t *)crypto_answer_b64,
+        if (!_crypto_decrypt_sha384_aes256((uint8_t *)crypto_answer_b64,
                                            (size_t)crypto_answer_b64_len,
                                            (uint8_t *)out_answer,
-                                           HTTPS_INPUT_BUFFER_SIZE,
+                                           buf_size,
                                            &decrypted_data_sz) ||
             decrypted_data_sz > UINT16_MAX) {
             goto fail;
@@ -157,14 +252,14 @@ fail:
 
 /******************************************************************************/
 int16_t
-cloud_get_gateway_iot(char *out_answer, uint16_t *in_out_answer_len) {
+cloud_get_gateway_iot(char *out_answer, size_t *in_out_answer_len) {
     int16_t ret;
     char *url = (char *)pvPortMalloc(512);
 
     char serial[SERIAL_SIZE * 2 + 1];
     _get_serial_number_in_hex_str(serial);
 
-    int res = snprintf(url, MAX_EP_SIZE, "%s%s%s%s", CLOUD_HOST, THING_EP, AWS_ID, serial);
+    int res = snprintf(url, MAX_EP_SIZE, "%s/%s/%s/%s", CLOUD_HOST, THING_EP, serial, AWS_ID);
     if (res < 0 || res > MAX_EP_SIZE ||
         https(HTTP_GET, url, NULL, NULL, 0, out_answer, in_out_answer_len) != HTTPS_RET_CODE_OK) {
         ret = CLOUD_FAIL;
@@ -178,14 +273,14 @@ cloud_get_gateway_iot(char *out_answer, uint16_t *in_out_answer_len) {
 
 /******************************************************************************/
 int16_t
-cloud_get_message_bin_credentials(char *out_answer, uint16_t *in_out_answer_len) {
+cloud_get_message_bin_credentials(char *out_answer, size_t *in_out_answer_len) {
     int16_t ret;
     char *url = (char *)pvPortMalloc(MAX_EP_SIZE);
 
     char serial[SERIAL_SIZE * 2 + 1];
     _get_serial_number_in_hex_str(serial);
 
-    int res = snprintf(url, MAX_EP_SIZE, "%s%s%s%s", CLOUD_HOST, THING_EP, MQTT_ID, serial);
+    int res = snprintf(url, MAX_EP_SIZE, "%s/%s/%s/%s", CLOUD_HOST, THING_EP, serial, MQTT_ID);
 
     if (res < 0 || res > MAX_EP_SIZE ||
         https(HTTP_GET, url, NULL, NULL, 0, out_answer, in_out_answer_len) != HTTPS_RET_CODE_OK) {

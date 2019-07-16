@@ -36,9 +36,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/trust_list/trust_list.h>
 
 #include "gateway_macro.h"
-#include "secbox_impl/file-system.h"
+#include "secbox_impl/file_io_hal.h"
 
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz);
@@ -60,16 +61,15 @@ static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
 /******************************************************************************/
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
+    // TODO: need to remove asserts
     assert(element_info);
     assert(in_data);
 
-    // prepare folder
-    char folder[FILENAME_MAX];
     char filename[FILENAME_MAX];
-    prepare_keystorage_folder(folder);
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
-    return write_keystorage_file(folder, filename, in_data, data_sz) ? GATEWAY_OK : GATEWAY_ERROR;
+
+    return write_trustlist_file(filename, in_data, data_sz);
 }
 
 /******************************************************************************/
@@ -78,20 +78,13 @@ vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data
     assert(element_info);
     assert(out_data);
 
-    size_t out_sz;
-
-    // prepare folder
-    char folder[FILENAME_MAX];
+    uint16_t out_sz;
     char filename[FILENAME_MAX];
-    prepare_keystorage_folder(folder);
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
     // TODO: RETURN REAL SIZE OF READ DATA
-    if (!read_keystorage_file(folder, filename, out_data, data_sz, &out_sz)) {
-        return GATEWAY_ERROR;
-    }
-    return GATEWAY_OK;
+    return read_trustlist_file(filename, out_data, data_sz, &out_sz);
 }
 
 /******************************************************************************/
@@ -99,12 +92,18 @@ static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
     assert(element_info);
 
-    return -1;
+    char filename[FILENAME_MAX];
+
+    snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
+
+    return delete_trustlist_file(filename);
 }
+
 
 /******************************************************************************/
 static int
 vs_secbox_gateway_init() {
+    vs_tl_init_storage();
     return GATEWAY_OK;
 }
 

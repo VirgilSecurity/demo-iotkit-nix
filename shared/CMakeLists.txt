@@ -39,52 +39,45 @@ project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 #
 #   RaspberryPi gateway library
 #
-add_library(rpi_gw
+add_library(rpi_gw_shared
 		# Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
 		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-system.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_hal.c
 		)
 
 find_package (Threads)
-target_link_libraries(rpi_gw
+target_link_libraries(rpi_gw_shared
 		converters
 		hsm
 		logger
 		foundation
+		provision
 		sdmp
 		secbox
+		trust_list
 		${CMAKE_THREAD_LIBS_INIT}
 		)
 #
 #   -Wall -Werror
 #
-set_target_properties(rpi_gw PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
 
 #
 #   Common include directories
 #
-target_include_directories(rpi_gw
+target_include_directories(rpi_gw_shared
 		PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		)
-
-#
-#	Definitions
-#
-target_compile_definitions(rpi_gw
-		PUBLIC
-		KEYSTORAGE_DIR="$ENV{HOME}/keystorage/gateway"
 		)
 
 #
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi_gw)
+	add_clangformat(rpi_gw_shared)
 endif()

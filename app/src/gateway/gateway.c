@@ -43,6 +43,7 @@
 #include "message_bin.h"
 #include "upd_http_retrieval_thread.h"
 #include "event_group_bit_flags.h"
+#include "gateway_hal.h"
 
 static gtwy_t _gtwy;
 
@@ -56,9 +57,8 @@ xQueueHandle *upd_event_queue;
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
     memset(&_gtwy, 0x00, sizeof(_gtwy));
-    // TODO: Need to use real serial
-    memcpy(_gtwy.udid_of_device, mac_addr->bytes, ETH_ADDR_LEN);
-    memset(&_gtwy.udid_of_device[ETH_ADDR_LEN], 0x03, SERIAL_SIZE - ETH_ADDR_LEN);
+
+    vs_hal_get_udid(_gtwy.udid_of_device);
 
     _gtwy.shared_event_group = xEventGroupCreate();
     _gtwy.incoming_data_event_group = xEventGroupCreate();
@@ -79,11 +79,12 @@ get_gateway_ctx(void) {
 /******************************************************************************/
 static void
 gateway_task(void *pvParameters) {
+
     start_message_bin_thread();
     start_upd_http_retrieval_thread();
 
     while (true) {
-        int32_t thread_sleep = 1000 / portTICK_RATE_MS;
+        int32_t thread_sleep = 1000 / portTICK_RATE_MS; //-V501
         // TODO: Main loop will be here
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
     }

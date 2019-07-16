@@ -35,6 +35,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
 #include "sdmp_app.h"
 #include "gateway.h"
@@ -75,19 +77,21 @@ main(int argc, char *argv[]) {
         return -1;
     }
 
-    const vs_netif_t *plc_netif = NULL;
-
     // Init platform specific hardware
     hardware_init();
+
+    // Init PLC interface
+    if (0 != vs_sdmp_init(vs_hal_netif_plc())) {
+        return -1;
+    }
 
     // Init gateway object
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
 
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
-
-    // Get PLC Network interface
-    plc_netif = vs_hal_netif_plc();
 
     // Start SDMP protocol over PLC interface
     // TODO: Need to use freertos interface

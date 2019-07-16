@@ -42,8 +42,9 @@
 #ifndef INCLUDE_HTTPS_H_
 #define INCLUDE_HTTPS_H_
 #include <stdint.h>
+#include <stddef.h>
 
-#define HTTPS_INPUT_BUFFER_SIZE (8192 * 2)
+#define HTTPS_INPUT_BUFFER_SIZE (8192)
 
 #define HTTPS_RET_CODE_ERROR_OPEN_SESSION 1000
 #define HTTPS_RET_CODE_ERROR_PREPARE_REQ 1001
@@ -72,7 +73,7 @@ https(http_method_t type,
       const char *url,
       const char *authorization,
       const char *data,
-      uint16_t in_size,
+      size_t data_size,
       char *out_data,
-      uint16_t *in_out_size);
+      size_t *in_out_size);
 #endif /* INCLUDE_HTTPS_H_ */

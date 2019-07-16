@@ -34,6 +34,15 @@
 
 cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 
+project(virgil-iot-gateway-initializer VERSION 0.1.0 LANGUAGES C)
+
+#
+#	MCU Initializer
+#
+add_executable(virgil-iot-gateway-initializer
+		${GW_INITIALIZER_SRC}
+		)
+
 #
 #	Define variables
 #
@@ -41,30 +50,34 @@ set (IOT_GW_INITIALIZER virgil-iot-gateway-initializer)
 set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
 
 #
-#	Source files
+#	Header/Source files
 #
-set (GW_INITIALIZER_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp_initializer.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/sdmp/prvs_implementation.c
-		)
+target_sources(virgil-iot-gateway-initializer
+		PRIVATE
+		# Headers
+		include/virgil/iot/initializer/communication/sdmp_initializer.h
+		include/virgil/iot/initializer/sdmp/prvs_implementation.h
 
-#
-#	MCU Initializer
-#
-add_executable(${IOT_GW_INITIALIZER}
-		${GW_INITIALIZER_SRC}
+		# Sources
+		src/main.c
+		src/communication/sdmp_initializer.c
+		src/sdmp/prvs_implementation.c
 		)
 
 #
 #   -Wall -Werror
 #
-set_target_properties(${IOT_GW_INITIALIZER} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+target_compile_options(virgil-iot-gateway-initializer
+		PRIVATE
+		-Wall
+		-Werror
+		-Wno-multichar
+		)
 
 #
 #   Include directories
 #
-target_include_directories(${IOT_GW_INITIALIZER}
+target_include_directories(virgil-iot-gateway-initializer
 		PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}/../shared/include
@@ -76,17 +89,23 @@ target_include_directories(${IOT_GW_INITIALIZER}
 #
 #	Link libraries
 #
-target_link_libraries (${IOT_GW_INITIALIZER}
+target_link_libraries (virgil-iot-gateway-initializer
 		foundation
 		sdmp
 		secbox
-		rpi_gw
+		rpi_gw_shared
+		logger
 		)
+if(UNIX AND NOT APPLE)
+	target_link_libraries(virgil-iot-gateway-initializer
+			-Wl,--whole-archive hsm -Wl,--no-whole-archive
+			)
+endif()
 
 #
 #	Add cmake test
 #
 add_test (
-		NAME ${IOT_GW_INITIALIZER}
-		COMMAND "${CMAKE_CURRENT_BINARY_DIR}/${IOT_GW_INITIALIZER}"
+		NAME virgil-iot-gateway-initializer
+		COMMAND "${CMAKE_CURRENT_BINARY_DIR}/virgil-iot-gateway-initializer"
 )

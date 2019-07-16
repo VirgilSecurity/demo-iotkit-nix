@@ -33,21 +33,39 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <assert.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <virgil/iot/protocols/sdmp.h>
+#include <stdlib-config.h>
+
+/******************************************************************************/
 void
 vs_iot_assert(int exp) {
     assert(exp);
 }
 
+/******************************************************************************/
 void
 vs_global_hal_msleep(size_t msec) {
     usleep(msec * 1000);
 }
 
+/******************************************************************************/
 bool
 vs_logger_output_hal(const char *msg) {
     return printf("%s", msg) != 0;
+}
+
+/******************************************************************************/
+void
+vs_hal_get_udid(uint8_t udid[32]) {
+    vs_mac_addr_t mac;
+    vs_sdmp_mac_addr(0, &mac);
+
+    // TODO: Need to use real serial
+    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
+    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
 }

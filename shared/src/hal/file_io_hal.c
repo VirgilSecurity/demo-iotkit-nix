@@ -49,7 +49,9 @@
 #include <virgil/iot/logger/helpers.h>
 
 static char base_dir[FILENAME_MAX] = {0};
-static const char *directory = "slots";
+static const char *main_storage_dir = "keystorage/gateway";
+static const char *slots_dir = "slots";
+static const char *tl_dir = "trust_list";
 static bool initialized = false;
 
 #define CHECK_SNPRINTF(BUF, FORMAT, ...)                                                                               \
@@ -69,20 +71,15 @@ static bool initialized = false;
         }                                                                                                              \
     } while (0)
 
+
 /******************************************************************************/
-static bool
-_init_fio(void) {
-    struct passwd *pwd = NULL;
+static int
+_mkdir_recursive(const char *dir) {
     char tmp[FILENAME_MAX];
     char *p = NULL;
     size_t len;
 
-    pwd = getpwuid(getuid());
-    CHECK_SNPRINTF(base_dir, "%s/%s", pwd->pw_dir, directory);
-
-    VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
-
-    strcpy(tmp, base_dir);
+    snprintf(tmp, sizeof(tmp), "%s", dir);
     len = strlen(tmp);
 
     if (tmp[len - 1] == '/') {
@@ -95,13 +92,37 @@ _init_fio(void) {
             if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO) && errno != EEXIST) {
                 VS_LOG_ERROR(
                         "mkdir call for %s path has not been successful. errno = %d (%s)", tmp, errno, strerror(errno));
-                goto terminate;
+                return -1;
             }
             *p = '/';
         }
-
     if (mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO) && errno != EEXIST) {
         VS_LOG_ERROR("mkdir call for %s path has not been successful. errno = %d (%s)", tmp, errno, strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+/******************************************************************************/
+static bool
+_init_fio(void) {
+    struct passwd *pwd = NULL;
+    char tmp[FILENAME_MAX];
+
+    pwd = getpwuid(getuid());
+    CHECK_SNPRINTF(base_dir, "%s/%s", pwd->pw_dir, main_storage_dir);
+
+    VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
+
+    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, slots_dir);
+
+    if (-1 == _mkdir_recursive(tmp)) {
+        goto terminate;
+    }
+
+    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, tl_dir);
+
+    if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
     }
 
@@ -114,33 +135,59 @@ terminate:
 
 /******************************************************************************/
 static bool
-_write_file_data(const char *file_name, const void *data, uint16_t data_sz) {
-    char file_path[FILENAME_MAX];
+_check_fio_and_path(const char *folder, const char *file_name, char file_path[FILENAME_MAX]) {
     DIR *d = NULL;
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        return false;
+    }
+
+    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
+        return false;
+    }
+
+    d = opendir(file_path);
+
+    if (d) {
+        closedir(d);
+    } else {
+        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
+        return false;
+    }
+
+    if ((strlen(file_path) + strlen(file_name) + 1) >= FILENAME_MAX) {
+        return false;
+    }
+
+    strcat(file_path, "/");
+    strcat(file_path, file_name);
+
+    return true;
+}
+
+
+/******************************************************************************/
+static bool
+_write_file_data(const char *folder, const char *file_name, const void *data, uint16_t data_sz) {
+    char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
 
+    NOT_ZERO(folder);
     NOT_ZERO(file_name);
     NOT_ZERO(data);
     NOT_ZERO(data_sz);
 
     if (!initialized && !_init_fio()) {
         VS_LOG_ERROR("Unable to initialize file I/O operations");
-        goto terminate;
-    }
-
-    d = opendir(base_dir);
-
-    if (d) {
-        closedir(d);
-    } else {
-        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
-        goto terminate;
-    }
-
-    if (snprintf(file_path, sizeof(file_path), "%s/%s", base_dir, file_name) < 0) {
         return false;
     }
+
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
+        return false;
+    }
+
     VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
 
     fp = fopen(file_path, "wb");
@@ -170,30 +217,18 @@ terminate:
 
 /******************************************************************************/
 static bool
-_read_file_data(const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
+_read_file_data(const char *folder, const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
     char file_path[FILENAME_MAX];
-    DIR *d = NULL;
     FILE *fp = NULL;
     bool res = false;
 
+    NOT_ZERO(folder);
     NOT_ZERO(file_name);
     NOT_ZERO(data);
     NOT_ZERO(read_sz);
 
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
         goto terminate;
-    }
-    d = opendir(base_dir);
-
-    if (d) {
-        closedir(d);
-    } else {
-        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
-        goto terminate;
-    }
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, file_name) < 0) {
-        return false;
     }
 
     fp = fopen(file_path, "rb");
@@ -207,9 +242,12 @@ _read_file_data(const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t 
 
         if (!*read_sz) {
             VS_LOG_ERROR("File %s is empty", file_path);
-        } else if (buf_sz < *read_sz) {
-            VS_LOG_ERROR("File %s size is %d, buffer size %d is not enough", file_path, *read_sz, buf_sz);
-        } else if (1 == fread((void *)data, *read_sz, 1, fp)) {
+            goto terminate;
+        }
+
+        *read_sz = buf_sz <= *read_sz ? buf_sz : *read_sz;
+
+        if (1 == fread((void *)data, *read_sz, 1, fp)) {
             res = true;
         } else {
             VS_LOG_ERROR("Unable to read %d bytes from %s", *read_sz, file_path);
@@ -226,6 +264,38 @@ terminate:
     }
 
     return res;
+}
+
+/******************************************************************************/
+static bool
+_remove_file_data(const char *folder, const char *file_name) {
+    char file_path[FILENAME_MAX];
+
+    if (!folder || !file_name) {
+        VS_LOG_ERROR("Zero arguments");
+        return false;
+    }
+
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
+        return false;
+    }
+
+    remove(file_path);
+
+    return true;
+}
+
+/******************************************************************************/
+bool
+get_keystorage_base_dir(char dir[FILENAME_MAX]) {
+    struct passwd *pwd = NULL;
+
+    pwd = getpwuid(getuid());
+
+    if (snprintf(dir, FILENAME_MAX, "%s/%s", pwd->pw_dir, main_storage_dir) <= 0) {
+        return false;
+    }
+    return true;
 }
 
 /******************************************************************************/
@@ -324,19 +394,37 @@ get_slot_name(vs_iot_hsm_slot_e slot) {
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return _write_file_data(get_slot_name(slot), data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return _write_file_data(slots_dir, get_slot_name(slot), data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
 
 /********************************************************************************/
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    return _read_file_data(get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return _read_file_data(slots_dir, get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+}
+
+/******************************************************************************/
+int
+write_trustlist_file(const char *file_name, const uint8_t *data, uint16_t data_sz) {
+    return _write_file_data(tl_dir, file_name, data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+}
+
+/******************************************************************************/
+int
+read_trustlist_file(const char *file_name, uint8_t *out_data, size_t buf_sz, uint16_t *out_sz) {
+    return _read_file_data(tl_dir, file_name, out_data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+}
+
+/******************************************************************************/
+int
+delete_trustlist_file(const char *file_name) {
+    return _remove_file_data(tl_dir, file_name) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
 int
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return 0;
+    return _remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/

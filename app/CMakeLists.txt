@@ -34,14 +34,9 @@
 
 cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 
-#
-#	Define variables
-#
-set (IOT_GW_APP virgil-iot-gateway-app)
-set (BIN_FILE ${IOT_GW_APP}.bin)
+project(virgil-iot-gateway-app VERSION 0.1.0 LANGUAGES C)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/aws-mqtt)
-
+add_executable(virgil-iot-gateway-app)
 #
 #	Source files
 #
@@ -55,73 +50,57 @@ elseif(UNIX)
 			)
 endif ()
 
-set (GW_APP_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/platform/os.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/sdmp/sdmp_app.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/mqtt/message_bin.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/mqtt/msg-bin-root-ca.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/communication/mqtt/iot_mqtt.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/cloud/https.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/cloud/cloud.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/gateway/gateway.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/update/fw_upgrade.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/update/tl_update.c
-		${CMAKE_CURRENT_SOURCE_DIR}/src/update/upd_http_retrieval_thread.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/communication/gateway_netif_plc.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/secbox_impl/gateway_secbox_impl.c
-		../shared/src/helpers/file-system.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/secbox_impl/gateway_keystorage_tl.c
-		src/json/json_parser.c
-		src/json/json_generator.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/src/base64/base64.c
-		)
-
-#
-#	MCU Initializer
-#
-add_executable(${IOT_GW_APP}
-		${GW_APP_SRC}
+target_sources(virgil-iot-gateway-app
+		PRIVATE
 		${GW_PLATFORM_APP_SRC}
+		src/main.c
+		src/cloud/cloud.c
+		src/cloud/https.c
+		src/communication/mqtt/message_bin.c
+		src/communication/mqtt/msg-bin-root-ca.c
+		src/communication/mqtt/iot_mqtt.c
+		src/communication/sdmp/sdmp_app.c
+		src/gateway/gateway.c
+		src/json/json_generator.c
+		src/json/json_parser.c
+		src/platform/os.c
+		src/update/fw_upgrade.c
+		src/update/tl_update.c
+		src/update/upd_http_retrieval_thread.c
+		src/crypto/asn1_cryptogram.c
 		)
 
 #
 #   -Wall -Werror
 #
-set_target_properties(${IOT_GW_APP} PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+target_compile_options(virgil-iot-gateway-app
+		PRIVATE
+		-Wall
+		-Werror
+		-Wno-multichar
+		)
 
 #
 #   Include directories
 #
-target_include_directories(${IOT_GW_APP}
+target_include_directories(virgil-iot-gateway-app
 		PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/aws-mqtt/lib/external_libs/jsmn/
-		${CMAKE_CURRENT_SOURCE_DIR}/aws-mqtt/lib/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/protocols/sdmp/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/secbox/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../sp/crypto/inc
-		${SIM_INCLUDE_DIR}
+		${CMAKE_CURRENT_LIST_DIR}/include
 		)
 
 #
 #	Link libraries
 #
-target_link_libraries (${IOT_GW_APP}
-		foundation
-		mbedtls_sp
-		mbedx509_sp
-		sdmp
-		secbox
-		freertos-unix
+if(UNIX AND NOT APPLE)
+	target_link_libraries(virgil-iot-gateway-app
+			-Wl,--whole-archive rpi_gw_shared hsm provision -Wl,--no-whole-archive
+			)
+else()
+	target_link_libraries(virgil-iot-gateway-app rpi_gw_shared)
+endif()
+
+target_link_libraries (virgil-iot-gateway-app
+		curl
+		freertos
 		aws-mqtt
 		)
-
-#
-#	Add cmake test
-#
-add_test (
-		NAME ${IOT_GW_APP}
-		COMMAND "${CMAKE_CURRENT_BINARY_DIR}/${IOT_GW_APP}"
-)

@@ -60,6 +60,7 @@ project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C Go)
 #   Enable/Disable simulator
 #
 option(GATEWAY_SIMULATOR "On/Off code for simulator." ON)
+option(VIRGIL_IOT_MCU_BUILD "Enable build for MCU" OFF)
 add_definitions(-DSIMULATOR=${GATEWAY_SIMULATOR})
 
 #
@@ -81,6 +82,18 @@ if (USE_UBSAN)
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=undefined")
 endif()
+
+# ---------------------------------------------------------------------------
+#   Format code
+# ---------------------------------------------------------------------------
+clangformat_folder(
+        ${CMAKE_CURRENT_SOURCE_DIR}/app
+        ${CMAKE_CURRENT_SOURCE_DIR}/initializer
+        ${CMAKE_CURRENT_SOURCE_DIR}/shared
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk/platform
+        ${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos/unix
+)
 
 # ---------------------------------------------------------------------------
 #   Folders with targets
@@ -126,9 +139,14 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shared)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
 
 #
+#   aws-sdk
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
+
+#
 #   Application
 #
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/app)
 
 #
 #   Unit tests

@@ -11,13 +11,11 @@
 #include "event_group_bit_flags.h"
 
 #include "semphr.h"
-
-#define FURL_RETIRIEVAL_START_DELAY MINS_TO_MS(10)
-#define FURL_RETIRIEVAL_PERIOD HOURS_TO_MS(24)
+#include <virgil/iot/logger/logger.h>
 
 static xTaskHandle upd_retrieval_thread;
 
-static const uint16_t upd_retrieval_stack = 6 * 1024;
+static const uint16_t upd_retrieval_stack = 10 * 1024;
 
 static bool retrieval_started;
 
@@ -27,16 +25,16 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     // It should be immediately available given that this starts first
     while (xSemaphoreTake(gtwy->firmware_semaphore, portMAX_DELAY) == pdFALSE) {
     }
-    IOT_INFO("[MB_NOTIFY]:In while loop and got firmware semaphore");
+    VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
 
-    IOT_INFO("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
+    VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
     if (GATEWAY_OK == fetch_and_store_fw_file(request->upd_file_url, NULL)) {
-        IOT_INFO("[MB_NOTIFY]:FW Successful fetched");
+        VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
         // TODO: Check for firmware
     }
 
     (void)xSemaphoreGive(gtwy->firmware_semaphore);
-    IOT_INFO("[MB_NOTIFY]:Firmware semaphore freed");
+    VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
 
     // This thread needs to be signaled by the off chance that there was a powerloss
     xEventGroupSetBits(gtwy->firmware_event_group, NEW_FIRMWARE_HTTP_BIT);
@@ -48,15 +46,15 @@ static void
 tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     while (xSemaphoreTake(gtwy->tl_semaphore, portMAX_DELAY) == pdFALSE) {
     }
-    IOT_INFO("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
+    VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
 
     if (GATEWAY_OK == fetch_and_store_tl(request->upd_file_url, NULL)) {
-        IOT_INFO("[MB_NOTIFY]:TL Successful fetched\r\n");
+        VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
         // TODO: Check for firmware
     }
 
     (void)xSemaphoreGive(gtwy->tl_semaphore);
-    IOT_INFO("[MB_NOTIFY]:TL semaphore freed\r\n");
+    VS_LOG_DEBUG("[MB_NOTIFY]:TL semaphore freed\r\n");
     vPortFree(request);
 }
 
@@ -67,14 +65,14 @@ upd_http_retrieval(void *pvParameters) {
 
     // Wait for the sdmp stack and services to be up before looking for new firmware
     wait_indefinitely(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT, pdTRUE);
-    IOT_INFO("upd_http_retrieval thread started");
+    VS_LOG_DEBUG("upd_http_retrieval thread started");
 
     while (1) {
         upd_request_t *request;
 
         xEventGroupWaitBits(gtwy->firmware_event_group, MSG_BIN_RECEIVE_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        IOT_INFO("upd_http_retrieval thread resume");
+        VS_LOG_DEBUG("upd_http_retrieval thread resume");
 
         while (message_bin_get_request(&request)) {
             if (MSG_BIN_UPD_TYPE_FW == request->upd_type) {

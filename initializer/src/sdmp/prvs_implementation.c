@@ -48,16 +48,7 @@
 
 #include <virgil/iot/secbox/secbox.h>
 
-#define VS_SECBOX_ELEMENT_PBR 0
-#define VS_SECBOX_ELEMENT_PBA 1
-#define VS_SECBOX_ELEMENT_PBT 2
-#define VS_SECBOX_ELEMENT_PBF 3
-#define VS_SECBOX_ELEMENT_SGN 4
-#define VS_SECBOX_ELEMENT_TLH 6
-#define VS_SECBOX_ELEMENT_TLC 7
-#define VS_SECBOX_ELEMENT_TLF 8
-#define VS_SECBOX_ELEMENT_GET_OWN_PUBKEY 5
-#define SERIAL_SIZE 100
+#include <gateway_hal.h>
 
 /******************************************************************************/
 static int
@@ -78,10 +69,10 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
 
     own_pubkey = (vs_pubkey_t *)device_info->data;
     vs_sdmp_mac_addr(0, &device_info->mac);
+    // TODO: Fix this hardcode
     device_info->manufacturer = 0x89abcdef;
     device_info->model = 0x12345678;
-    VS_IOT_MEMCPY(device_info->udid_of_device, device_info->mac.bytes, ETH_ADDR_LEN);
-    VS_IOT_MEMSET(&device_info->udid_of_device[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
+    vs_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key
     if (VS_HSM_ERR_OK !=

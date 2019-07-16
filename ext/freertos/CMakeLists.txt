@@ -40,19 +40,22 @@ project(freertos VERSION 0.1.0 LANGUAGES C)
 #   Pure FreeRTOS library
 # ---------------------------------------------------------------------------
 
-set(FREERTOS_LIB freertos)
-
 #
 # file folders
 #
-set(FREERTOS_ROOT     "${CMAKE_CURRENT_SOURCE_DIR}/freertos/FreeRTOS")
+set(FREERTOS_ROOT     "${CMAKE_CURRENT_LIST_DIR}/freertos/FreeRTOS")
 set(FREERTOS_SOURCE   "${FREERTOS_ROOT}/Source")
 set(FREERTOS_INCLUDE  "${FREERTOS_ROOT}/Source/include")
 
-#
-#   Freertos core sources
-#
-set(FREERTOS_LIB_SOURCE_FILES
+add_library(freertos)
+
+target_compile_definitions(freertos
+          PRIVATE
+          $<$<CONFIG:DEBUG>:DEBUG=1>
+          )
+
+target_sources(freertos
+        PRIVATE
         "${FREERTOS_SOURCE}/tasks.c"
         "${FREERTOS_SOURCE}/timers.c"
         "${FREERTOS_SOURCE}/list.c"
@@ -61,11 +64,13 @@ set(FREERTOS_LIB_SOURCE_FILES
         "${FREERTOS_SOURCE}/stream_buffer.c"
         "${FREERTOS_SOURCE}/croutine.c"
         "${FREERTOS_SOURCE}/portable/MemMang/heap_3.c"
+        "${CMAKE_CURRENT_LIST_DIR}/unix/port.c"
         )
 
-add_library(${FREERTOS_LIB}
-        ${FREERTOS_LIB_SOURCE_FILES}
+target_include_directories(freertos
+        PUBLIC
+        ${FREERTOS_INCLUDE}
+        ${FREERTOS_SOURCE}
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/unix
         )
-
-target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_INCLUDE})
-target_include_directories(${FREERTOS_LIB} PUBLIC ${FREERTOS_SOURCE})

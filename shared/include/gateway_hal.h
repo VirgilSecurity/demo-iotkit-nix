@@ -32,25 +32,10 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#ifndef IOT_RPI_GATEWAY_HAL_H
+#define IOT_RPI_GATEWAY_HAL_H
 
-#include <virgil/iot/initializer/communication/sdmp_initializer.h>
-#include <virgil/iot/initializer/sdmp/prvs_implementation.h>
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/PRVS.h>
+void
+vs_hal_get_udid(uint8_t udid[32]);
 
-#include <unistd.h>
-
-/******************************************************************************/
-int
-vs_sdmp_comm_start(const vs_netif_t *netif) {
-
-    if (0 != vs_sdmp_init(netif)) {
-        return -1;
-    }
-
-    if (0 != vs_sdmp_register_service(vs_sdmp_prvs_service())) {
-        return -1;
-    }
-
-    return vs_sdmp_prvs_configure_hal(vs_prvs_impl());
-}
+#endif // IOT_RPI_GATEWAY_HAL_H
