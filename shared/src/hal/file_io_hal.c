@@ -156,7 +156,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
         return false;
     }
 
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", file_path, file_name) < 0) {
+    if (snprintf(file_path, FILENAME_MAX - 1, "%s/%s", (char *)file_path, file_name) < 0) {
         return false;
     }
     return true;
