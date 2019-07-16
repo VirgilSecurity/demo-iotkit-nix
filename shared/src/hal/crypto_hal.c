@@ -66,7 +66,8 @@
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
 #include <virgil/crypto/foundation/vscf_kdf2.h>
-#include <mbedtls/ctr_drbg.h>
+
+#define RNG_MAX_REQUEST (256)
 
 /********************************************************************************/
 int
@@ -503,11 +504,11 @@ vs_hsm_random(uint8_t *output, uint16_t output_sz) {
                    "Unable to initialize random number generator");
     }
 
-    for (cur_off = 0; cur_off < output_sz; cur_off += MBEDTLS_CTR_DRBG_MAX_REQUEST) {
+    for (cur_off = 0; cur_off < output_sz; cur_off += RNG_MAX_REQUEST) {
         cur_size = output_sz - cur_off;
 
-        if (cur_size > MBEDTLS_CTR_DRBG_MAX_REQUEST) {
-            cur_size = MBEDTLS_CTR_DRBG_MAX_REQUEST;
+        if (cur_size > RNG_MAX_REQUEST) {
+            cur_size = RNG_MAX_REQUEST;
         }
 
         CHECK_VSCF(vscf_random(random_impl, cur_size, &out_buf), "Unable to generate random sequence");
