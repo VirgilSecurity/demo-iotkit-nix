@@ -18,7 +18,7 @@ fetch_firmware(gtwy_t *gtwy, void *data_source, firmware_info_t *fw_info) {
 /*************************************************************************/
 int
 parseFirmwareManifest(void *payload, size_t payload_len, char *fw_url, gtwy_t *gtwy) {
-    VS_LOG_DEBUG("%s", (char *)payload);
+    VS_LOG_DEBUG("NEW FIRMWARE: %s", (char *)payload);
     return GATEWAY_OK;
 }
 
