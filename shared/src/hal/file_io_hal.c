@@ -48,11 +48,14 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 
+#include "hal/file_io_hal.h"
+
 static char base_dir[FILENAME_MAX] = {0};
 static const char *main_storage_dir = "keystorage/gateway";
 static const char *slots_dir = "slots";
 static const char *tl_dir = "trust_list";
 static bool initialized = false;
+static uint8_t mac[6];
 
 #define CHECK_SNPRINTF(BUF, FORMAT, ...)                                                                               \
     do {                                                                                                               \
@@ -71,6 +74,12 @@ static bool initialized = false;
         }                                                                                                              \
     } while (0)
 
+/******************************************************************************/
+
+void
+vs_hal_files_set_mac(uint8_t mac_addr[6]) {
+    memcpy(mac, mac_addr, 6);
+}
 
 /******************************************************************************/
 static int
@@ -106,11 +115,9 @@ _mkdir_recursive(const char *dir) {
 /******************************************************************************/
 static bool
 _init_fio(void) {
-    struct passwd *pwd = NULL;
     char tmp[FILENAME_MAX];
 
-    pwd = getpwuid(getuid());
-    CHECK_SNPRINTF(base_dir, "%s/%s", pwd->pw_dir, main_storage_dir);
+    get_keystorage_base_dir(base_dir);
 
     VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
 
@@ -292,7 +299,17 @@ get_keystorage_base_dir(char dir[FILENAME_MAX]) {
 
     pwd = getpwuid(getuid());
 
-    if (snprintf(dir, FILENAME_MAX, "%s/%s", pwd->pw_dir, main_storage_dir) <= 0) {
+    if (snprintf(dir,
+                 FILENAME_MAX,
+                 "%s/%s/%x:%x:%x:%x:%x:%x",
+                 pwd->pw_dir,
+                 main_storage_dir,
+                 mac[0],
+                 mac[1],
+                 mac[2],
+                 mac[3],
+                 mac[4],
+                 mac[5]) <= 0) {
         return false;
     }
     return true;

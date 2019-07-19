@@ -32,18 +32,16 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_SECBOX_KEYSTORAGE_FILE_H
-#define GATEWAY_SECBOX_KEYSTORAGE_FILE_H
+#ifndef IOT_RPI_GATEWAY_FILE_IO_HAL_H
+#define IOT_RPI_GATEWAY_FILE_IO_HAL_H
 
 #include <stdint.h>
 #include <stdio.h>
 
+void
+vs_hal_files_set_mac(uint8_t mac_addr[6]);
+
 bool
 get_keystorage_base_dir(char dir[FILENAME_MAX]);
-int
-write_trustlist_file(const char *file_name, const uint8_t *data, uint16_t data_sz);
-int
-read_trustlist_file(const char *file_name, uint8_t *buf, size_t buf_sz, uint16_t *out_sz);
-int
-delete_trustlist_file(const char *file_name);
-#endif // GATEWAY_SECBOX_KEYSTORAGE_FILE_H
+
+#endif //IOT_RPI_GATEWAY_FILE_IO_HAL_H

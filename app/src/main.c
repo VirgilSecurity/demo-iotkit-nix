@@ -44,6 +44,7 @@
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"
+#include "hal/file_io_hal.h"
 
 /******************************************************************************/
 static bool
@@ -72,6 +73,7 @@ main(int argc, char *argv[]) {
 
     if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
+        vs_hal_files_set_mac(forced_mac_addr.bytes);
     } else {
         printf("\nERROR: need to set MAC address of simulated device\n\n");
         return -1;

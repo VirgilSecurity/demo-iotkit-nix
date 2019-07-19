@@ -47,6 +47,7 @@
 
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
+#include "hal/file_io_hal.h"
 
 /******************************************************************************/
 static bool
@@ -140,6 +141,7 @@ main(int argc, char *argv[]) {
 
     if (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
+        vs_hal_files_set_mac(forced_mac_addr.bytes);
 
         // Prepare secbox
         vs_secbox_configure_hal(vs_secbox_gateway());
