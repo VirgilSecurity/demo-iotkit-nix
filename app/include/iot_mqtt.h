@@ -53,29 +53,6 @@ typedef struct {
     size_t topic_count;
 } iot_topics_list_t;
 
-/** The type of binary encoding */
-typedef enum iot_tls_enc_type { IOT_TLS_ENC_PEM = 1, IOT_TLS_ENC_DER } tls_enc_type_t;
-
-/** Representation of a TLS Certificate */
-typedef struct iot_tls_cert {
-    /** The type of the certificate */
-    tls_enc_type_t cert_type;
-    /** The buffer that holds the certificate */
-    const unsigned char *cert;
-    /** The size of the data in the buffer pointed to above */
-    unsigned int cert_size;
-} iot_tls_cert_t;
-
-/** Representation of a TLS Key */
-typedef struct iot_tls_key {
-    /** The type of the key */
-    tls_enc_type_t key_type;
-    /** The buffer that holds the certificate */
-    const unsigned char *key;
-    /** The size of the data in the buffer pointed to above */
-    unsigned int key_size;
-} iot_tls_key_t;
-
 IoT_Error_t
 iot_init(iot_message_handler_t *handler,
          const char *host,

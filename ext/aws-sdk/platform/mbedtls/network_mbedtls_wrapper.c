@@ -38,12 +38,51 @@ extern "C" {
  */
 #ifdef ENABLE_IOT_DEBUG
 #define MBEDTLS_DEBUG_BUFFER_SIZE 2048
+
+/******************************************************************************/
+static void
+_tls_debug_backend(void *ctx, int level, const char *file, int line, const char *str) {
+    const char *p, *basename;
+    (void)ctx;
+
+    /* Extract basename from file */
+    for (p = basename = file; *p != '\0'; p++) {
+        if (*p == '/' || *p == '\\') {
+            basename = p + 1;
+        }
+    }
+
+    mbedtls_printf("%s:%04d: |%d| %s", basename, line, level, str);
+}
+
+/******************************************************************************/
+static int
+_tls_verify_backend(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags) {
+    const uint32_t buf_size = 1024;
+    char buf[buf_size];
+    (void)data;
+
+    mbedtls_printf("\nVerifying certificate at depth %d:\n", depth);
+    mbedtls_x509_crt_info(buf, buf_size - 1, "  ", crt);
+    mbedtls_printf("%s", buf);
+
+    if (*flags == 0)
+        mbedtls_printf("No verification issue for this certificate\n");
+    else {
+        mbedtls_x509_crt_verify_info(buf, buf_size, "  ! ", *flags);
+        mbedtls_printf("%s\n", buf);
+    }
+
+    return 0;
+}
+
 #endif
 
 /*
  * This is a function to do further verification if needed on the cert received
  */
 
+/******************************************************************************/
 static int
 _iot_tls_verify_cert(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags) {
     char buf[1024];
@@ -63,6 +102,7 @@ _iot_tls_verify_cert(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fla
     return 0;
 }
 
+/******************************************************************************/
 void
 _iot_tls_set_connect_params(Network *pNetwork,
                             char *pRootCALocation,
@@ -81,6 +121,7 @@ _iot_tls_set_connect_params(Network *pNetwork,
     pNetwork->tlsConnectParams.ServerVerificationFlag = ServerVerificationFlag;
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_init(Network *pNetwork,
              char *pRootCALocation,
@@ -111,46 +152,14 @@ iot_tls_init(Network *pNetwork,
     return SUCCESS;
 }
 
-static void
-my_debug(void *ctx, int level, const char *file, int line, const char *str) {
-    const char *p, *basename;
-    (void)ctx;
-
-    /* Extract basename from file */
-    for (p = basename = file; *p != '\0'; p++) {
-        if (*p == '/' || *p == '\\') {
-            basename = p + 1;
-        }
-    }
-
-    mbedtls_printf("%s:%04d: |%d| %s", basename, line, level, str);
-}
-static int
-my_verify(void *data, mbedtls_x509_crt *crt, int depth, uint32_t *flags) {
-    const uint32_t buf_size = 1024;
-    char buf[buf_size];
-    (void)data;
-
-    mbedtls_printf("\nVerifying certificate at depth %d:\n", depth);
-    mbedtls_x509_crt_info(buf, buf_size - 1, "  ", crt);
-    mbedtls_printf("%s", buf);
-
-    if (*flags == 0)
-        mbedtls_printf("No verification issue for this certificate\n");
-    else {
-        mbedtls_x509_crt_verify_info(buf, buf_size, "  ! ", *flags);
-        mbedtls_printf("%s\n", buf);
-    }
-
-    return 0;
-}
-
+/******************************************************************************/
 IoT_Error_t
 iot_tls_is_connected(Network *pNetwork) {
     /* Use this to add implementation which can check for physical layer disconnect */
     return NETWORK_PHYSICAL_LAYER_CONNECTED;
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     int ret = 0;
@@ -271,10 +280,11 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
         mbedtls_ssl_conf_authmode(&(tlsDataParams->conf), MBEDTLS_SSL_VERIFY_OPTIONAL);
     }
 
-    mbedtls_ssl_conf_verify(&(tlsDataParams->conf), my_verify, NULL);
-    mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), my_debug, NULL);
+#ifdef ENABLE_IOT_DEBUG
+    mbedtls_ssl_conf_verify(&(tlsDataParams->conf), _tls_verify_backend, NULL);
+    mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), _tls_debug_backend, NULL);
     mbedtls_debug_set_threshold(0);
-
+#endif
     mbedtls_ssl_conf_rng(&(tlsDataParams->conf), mbedtls_ctr_drbg_random, &(tlsDataParams->ctr_drbg));
 
     mbedtls_ssl_conf_ca_chain(&(tlsDataParams->conf), &(tlsDataParams->cacert), NULL);
@@ -313,9 +323,6 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     while ((ret = mbedtls_ssl_handshake(&(tlsDataParams->ssl))) != 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             IOT_ERROR(" failed\n  ! mbedtls_ssl_handshake returned -0x%x\n", -ret);
-            uint8_t buf_err[512];
-            mbedtls_strerror(ret, buf_err, sizeof(buf_err));
-            IOT_ERROR(buf_err);
             if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
                 IOT_ERROR(
                         "    Unable to verify the server's certificate. "
@@ -368,6 +375,7 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     return (IoT_Error_t)ret;
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *written_len) {
     size_t written_so_far;
@@ -404,6 +412,7 @@ iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, 
     return SUCCESS;
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, size_t *read_len) {
     mbedtls_ssl_context *ssl = &(pNetwork->tlsDataParams.ssl);
@@ -440,6 +449,7 @@ iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Timer *timer, s
     }
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_disconnect(Network *pNetwork) {
     mbedtls_ssl_context *ssl = &(pNetwork->tlsDataParams.ssl);
@@ -454,6 +464,7 @@ iot_tls_disconnect(Network *pNetwork) {
     return SUCCESS;
 }
 
+/******************************************************************************/
 IoT_Error_t
 iot_tls_destroy(Network *pNetwork) {
     TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);

@@ -64,7 +64,7 @@
 
 /******************************************************************************/
 static bool
-data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *_in_out_len) {
+_data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *_in_out_len) {
     const uint8_t hex_str[] = "0123456789abcdef";
 
     if (!_len) {
@@ -91,12 +91,12 @@ static void
 _get_serial_number_in_hex_str(char _out_str[SERIAL_SIZE * 2 + 1]) {
     uint32_t _in_out_len = SERIAL_SIZE * 2 + 1;
     uint8_t *serial_number = get_gateway_ctx()->udid_of_device;
-    data_to_hex(serial_number, SERIAL_SIZE, (uint8_t *)_out_str, &_in_out_len);
+    _data_to_hex(serial_number, SERIAL_SIZE, (uint8_t *)_out_str, &_in_out_len);
 }
 
 /******************************************************************************/
-uint8_t
-remove_padding_size(uint8_t *data, size_t data_sz) {
+static uint8_t
+_remove_padding_size(uint8_t *data, size_t data_sz) {
     uint8_t i, padding_val;
 
     padding_val = data[data_sz - 1];
@@ -195,7 +195,7 @@ _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
         return false;
     }
 
-    *decrypted_data_sz -= remove_padding_size(decrypted_data, *decrypted_data_sz);
+    *decrypted_data_sz -= _remove_padding_size(decrypted_data, *decrypted_data_sz);
 
     return true;
 }

@@ -2,6 +2,19 @@ cmake_minimum_required (VERSION 3.11)
 
 project(aws-mqtt VERSION 0.1.0 LANGUAGES C)
 
+# ---------------------------------------------------------------------------
+#   Settings
+# ---------------------------------------------------------------------------
+
+#
+#   Enable/Disable debug
+#
+option(ENABLE_IOT_INFO "Enable info messages" ON)
+option(ENABLE_IOT_ERROR "Enable error messages" OFF)
+option(ENABLE_IOT_WARN "Enable warning messages" OFF)
+option(ENABLE_IOT_DEBUG "Enable debug messages" OFF)
+option(ENABLE_IOT_TRACE "Enable trace messages" OFF)
+
 # file folders
 set(AWS_MQTT_ROOT     "${CMAKE_CURRENT_LIST_DIR}/aws-iot-device-sdk-embedded-C")
 set(AWS_MQTT_SOURCE   "${AWS_MQTT_ROOT}/src")
@@ -26,7 +39,11 @@ target_compile_definitions(aws-mqtt
         -DJSMN_PARENT_LINKS
         -DJSMN_STRICT
         PRIVATE
-        #$<$<CONFIG:DEBUG>:ENABLE_IOT_DEBUG=1 ENABLE_IOT_INFO=1 ENABLE_IOT_WARN=1 ENABLE_IOT_ERROR=1 ENABLE_IOT_TRACE=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_INFO}>>:ENABLE_IOT_INFO=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_ERROR}>>:ENABLE_IOT_ERROR=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_WARN}>>:ENABLE_IOT_WARN=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_DEBUG}>>:ENABLE_IOT_DEBUG=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_TRACE}>>:ENABLE_IOT_TRACE=1>
         )
 
 target_sources(aws-mqtt
