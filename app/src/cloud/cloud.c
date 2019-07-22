@@ -127,6 +127,8 @@ _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
     uint8_t pre_master_key[32];
     uint16_t pre_master_key_sz;
     uint8_t master_key[80];
+    uint8_t mac_buf[48];
+    uint16_t mac_sz;
 
     uint8_t *public_key;
     uint8_t *iv_key;
@@ -159,6 +161,15 @@ _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
                                     sizeof(pre_master_key),
                                     master_key,
                                     sizeof(master_key)) ||
+        VS_HSM_ERR_OK != vs_hsm_hmac(VS_HASH_SHA_384,
+                                     master_key + 32,
+                                     sizeof(master_key) - 32,
+                                     encrypted_key,
+                                     48,
+                                     mac_buf,
+                                     sizeof(mac_buf),
+                                     &mac_sz) ||
+        0 != memcmp(mac_data, mac_buf, mac_sz) ||
         VS_HSM_ERR_OK != vs_hsm_aes_decrypt(VS_AES_CBC,
                                             master_key,
                                             32 * 8,
