@@ -44,4 +44,4 @@ vs_hal_files_set_mac(uint8_t mac_addr[6]);
 bool
 get_keystorage_base_dir(char dir[FILENAME_MAX]);
 
-#endif //IOT_RPI_GATEWAY_FILE_IO_HAL_H
+#endif // IOT_RPI_GATEWAY_FILE_IO_HAL_H
