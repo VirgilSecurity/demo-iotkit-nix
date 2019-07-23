@@ -29,7 +29,6 @@ extern "C" {
 
 #include "mbedtls/debug.h"
 
-
 /* This is the value used for ssl read timeout */
 #define IOT_SSL_READ_TIMEOUT 10
 
@@ -198,6 +197,11 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     mbedtls_x509_crt_init(&(tlsDataParams->clicert));
     mbedtls_pk_init(&(tlsDataParams->pkey));
 
+#ifdef ENABLE_IOT_DEBUG
+    mbedtls_ssl_conf_verify(&(tlsDataParams->conf), _tls_verify_backend, NULL);
+    mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), _tls_debug_backend, NULL);
+    mbedtls_debug_set_threshold(MBEDTLS_DBG_LVL);
+#endif
     IOT_DEBUG("\n  . Seeding the random number generator...");
     mbedtls_entropy_init(&(tlsDataParams->entropy));
     if ((ret = mbedtls_ctr_drbg_seed(&(tlsDataParams->ctr_drbg),
@@ -241,6 +245,7 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     IOT_DEBUG(" ok\n");
     snprintf(portBuffer, 6, "%d", pNetwork->tlsConnectParams.DestinationPort);
     IOT_DEBUG("  . Connecting to %s/%s...", pNetwork->tlsConnectParams.pDestinationURL, portBuffer);
+
     if ((ret = mbedtls_net_connect(&(tlsDataParams->server_fd),
                                    pNetwork->tlsConnectParams.pDestinationURL,
                                    portBuffer,
@@ -280,11 +285,6 @@ iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
         mbedtls_ssl_conf_authmode(&(tlsDataParams->conf), MBEDTLS_SSL_VERIFY_OPTIONAL);
     }
 
-#ifdef ENABLE_IOT_DEBUG
-    mbedtls_ssl_conf_verify(&(tlsDataParams->conf), _tls_verify_backend, NULL);
-    mbedtls_ssl_conf_dbg(&(tlsDataParams->conf), _tls_debug_backend, NULL);
-    mbedtls_debug_set_threshold(0);
-#endif
     mbedtls_ssl_conf_rng(&(tlsDataParams->conf), mbedtls_ctr_drbg_random, &(tlsDataParams->ctr_drbg));
 
     mbedtls_ssl_conf_ca_chain(&(tlsDataParams->conf), &(tlsDataParams->cacert), NULL);
