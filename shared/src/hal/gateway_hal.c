@@ -55,8 +55,14 @@ vs_global_hal_msleep(size_t msec) {
 
 /******************************************************************************/
 bool
-vs_logger_output_hal(const char *msg) {
-    return printf("%s", msg) != 0;
+vs_logger_output_hal(const char *buffer) {
+    if (!buffer) {
+        return false;
+    }
+
+    int res = printf("%s", buffer) != 0;
+    fflush(stdout);
+    return res != 0;
 }
 
 /******************************************************************************/
