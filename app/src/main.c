@@ -40,7 +40,7 @@
 #include <virgil/iot/secbox/secbox.h>
 #include "sdmp_app.h"
 #include "gateway.h"
-#include "platform_hardware.h"
+#include "platform/platform_hardware.h"
 #include "communication/gateway_netif_plc.h"
 #include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"

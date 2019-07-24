@@ -41,7 +41,6 @@ project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 #
 add_library(rpi_gw_shared
 		# Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/base64/base64.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
 		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c

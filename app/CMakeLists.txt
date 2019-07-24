@@ -61,13 +61,10 @@ target_sources(virgil-iot-gateway-app
 		src/communication/mqtt/iot_mqtt.c
 		src/communication/sdmp/sdmp_app.c
 		src/gateway/gateway.c
-		src/json/json_generator.c
-		src/json/json_parser.c
 		src/platform/os.c
 		src/update/fw_upgrade.c
 		src/update/tl_update.c
 		src/update/upd_http_retrieval_thread.c
-		src/crypto/asn1_cryptogram.c
 		)
 
 #
@@ -86,6 +83,8 @@ target_compile_options(virgil-iot-gateway-app
 target_include_directories(virgil-iot-gateway-app
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/include
+		PUBLIC
+		${CMAKE_CURRENT_LIST_DIR}/include/platform
 		)
 
 #
@@ -103,4 +102,5 @@ target_link_libraries (virgil-iot-gateway-app
 		curl
 		freertos
 		aws-mqtt
+		cloud
 		)

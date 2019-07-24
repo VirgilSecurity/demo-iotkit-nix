@@ -44,16 +44,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define CLOUD_OK 0
-#define CLOUD_FAIL -1
-#define CLOUD_HTTP_BUFFER_TO_SMALL -2
-#define CLOUD_CALCULATE_SIGNATURE_FAIL -3
-#define CLOUD_CONFIG_JSON_FAIL -4
-#define CLOUD_ANSWER_JSON_FAIL -5
-#define CLOUD_DECRYPT_ANSWER_JSON_FAIL -6
-#define CLOUD_VALUE_ANSWER_JSON_FAIL -7
-#define CLOUD_GENERATE_AUTHORIZATION_FAIL -8
-
 #define MESSAGE_BIN_BROKER_URL "mqtt-dev.virgilsecurity.com"
 #define CLOUD_HOST "https://things-dev.virgilsecurity.com"
 #define THING_EP "thing"

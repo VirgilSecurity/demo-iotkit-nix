@@ -51,11 +51,11 @@
 #include "gateway_macro.h"
 #include "cloud.h"
 #include "https.h"
-#include "base64/base64.h"
-#include "json/json_generator.h"
-#include "json/json_parser.h"
+#include <virgil/iot/cloud/base64/base64.h>
+#include <virgil/iot/cloud/json/json_parser.h>
 
-#include "crypto/asn1_cryptogram.h"
+#include <virgil/iot/cloud/cloud.h>
+#include <virgil/iot/cloud/private/asn1_cryptogram.h>
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
@@ -136,15 +136,15 @@ _crypto_decrypt_sha384_aes256(uint8_t *cryptogram,
     uint8_t *mac_data;
     uint8_t *iv_data;
 
-    if (!virgil_cryptogram_parse_low_level_sha384_aes256(cryptogram,
-                                                         cryptogram_sz,
-                                                         &public_key,
-                                                         &iv_key,
-                                                         &encrypted_key,
-                                                         &mac_data,
-                                                         &iv_data,
-                                                         &encrypted_data,
-                                                         &encrypted_data_sz)) {
+    if (VS_CLOUD_ERR_OK != vs_cloud_virgil_cryptogram_parse_sha384_aes256(cryptogram,
+                                                                          cryptogram_sz,
+                                                                          &public_key,
+                                                                          &iv_key,
+                                                                          &encrypted_key,
+                                                                          &mac_data,
+                                                                          &iv_data,
+                                                                          &encrypted_data,
+                                                                          &encrypted_data_sz)) {
         return false;
     }
 
@@ -218,7 +218,7 @@ _decrypt_answer(char *out_answer, size_t *in_out_answer_len) {
     size_t buf_size = *in_out_answer_len;
 
     if (json_parse_start(&jobj, out_answer, buf_size) != GATEWAY_OK) {
-        return CLOUD_ANSWER_JSON_FAIL;
+        return VS_CLOUD_ERR_FAIL;
     }
 
     char *crypto_answer_b64 = (char *)pvPortMalloc(buf_size);
@@ -226,7 +226,7 @@ _decrypt_answer(char *out_answer, size_t *in_out_answer_len) {
     int crypto_answer_b64_len;
 
     if (json_get_val_str(&jobj, "encrypted_value", crypto_answer_b64, (int)buf_size) != GATEWAY_OK)
-        return CLOUD_VALUE_ANSWER_JSON_FAIL;
+        return VS_CLOUD_ERR_FAIL;
     else {
         crypto_answer_b64_len = base64decode_len(crypto_answer_b64, (int)strlen(crypto_answer_b64));
 
@@ -258,7 +258,7 @@ fail:
     vPortFree(crypto_answer_b64);
     *in_out_answer_len = 0;
     out_answer[0] = '\0';
-    return CLOUD_DECRYPT_ANSWER_JSON_FAIL;
+    return VS_CLOUD_ERR_FAIL;
 }
 
 /******************************************************************************/
@@ -273,7 +273,7 @@ cloud_get_gateway_iot(char *out_answer, size_t *in_out_answer_len) {
     int res = snprintf(url, MAX_EP_SIZE, "%s/%s/%s/%s", CLOUD_HOST, THING_EP, serial, AWS_ID);
     if (res < 0 || res > MAX_EP_SIZE ||
         https(HTTP_GET, url, NULL, NULL, 0, out_answer, in_out_answer_len) != HTTPS_RET_CODE_OK) {
-        ret = CLOUD_FAIL;
+        ret = VS_CLOUD_ERR_FAIL;
     } else {
         ret = _decrypt_answer(out_answer, in_out_answer_len);
     }
@@ -295,7 +295,7 @@ cloud_get_message_bin_credentials(char *out_answer, size_t *in_out_answer_len) {
 
     if (res < 0 || res > MAX_EP_SIZE ||
         https(HTTP_GET, url, NULL, NULL, 0, out_answer, in_out_answer_len) != HTTPS_RET_CODE_OK) {
-        ret = CLOUD_FAIL;
+        ret = VS_CLOUD_ERR_FAIL;
     } else {
         ret = _decrypt_answer(out_answer, in_out_answer_len);
     }

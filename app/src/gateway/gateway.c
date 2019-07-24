@@ -37,7 +37,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include "platform_os.h"
+#include "platform/platform_os.h"
 #include "gateway.h"
 #include "gateway_macro.h"
 #include "message_bin.h"

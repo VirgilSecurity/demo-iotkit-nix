@@ -7,7 +7,7 @@
 #include "message_bin.h"
 #include "gateway.h"
 #include "gateway_macro.h"
-#include "platform_os.h"
+#include "platform/platform_os.h"
 #include "event_group_bit_flags.h"
 
 #include "semphr.h"

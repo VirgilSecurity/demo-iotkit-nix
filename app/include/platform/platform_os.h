@@ -49,6 +49,9 @@
 /** Do Not Wait */
 #define OS_NO_WAIT 0
 
+#define platform_malloc vPortMalloc
+#define platform_free vPortFree
+
 EventBits_t
 wait_indefinitely(EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToWaitFor, BaseType_t all);
 

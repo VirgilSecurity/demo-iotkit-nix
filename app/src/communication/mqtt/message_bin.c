@@ -45,15 +45,15 @@
 #include "queue.h"
 #include "event_groups.h"
 
-#include "base64/base64.h"
+#include <virgil/iot/cloud/base64/base64.h>
 #include "message_bin.h"
 #include "gateway.h"
 #include "gateway_macro.h"
-#include "platform_os.h"
+#include "platform/platform_os.h"
 #include "tl_upgrade.h"
 #include "fw_upgrade.h"
 #include "event_group_bit_flags.h"
-#include "json/json_parser.h"
+#include <virgil/iot/cloud/json/json_parser.h>
 #include "cloud.h"
 #include "https.h"
 
