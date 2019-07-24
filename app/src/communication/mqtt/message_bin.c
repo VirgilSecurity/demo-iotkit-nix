@@ -54,9 +54,8 @@
 #include "fw_upgrade.h"
 #include "event_group_bit_flags.h"
 #include <virgil/iot/cloud/json/json_parser.h>
-#include "cloud.h"
-#include "https.h"
-
+#include <virgil/iot/cloud/cloud.h>
+#include <cloud-config.h>
 #include <virgil/iot/logger/logger.h>
 
 #define NUM_TOKENS 300
@@ -224,7 +223,7 @@ msg_bin_get_credentials() {
     }
 
 
-    if (HTTPS_RET_CODE_OK == cloud_get_message_bin_credentials(answer, &answer_size)) {
+    if (VS_CLOUD_ERR_OK == vs_cloud_get_message_bin_credentials(answer, &answer_size)) {
         jobj_t jobj;
         int len;
 

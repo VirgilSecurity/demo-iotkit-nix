@@ -54,7 +54,6 @@ target_sources(virgil-iot-gateway-app
 		PRIVATE
 		${GW_PLATFORM_APP_SRC}
 		src/main.c
-		src/cloud/cloud.c
 		src/cloud/https.c
 		src/communication/mqtt/message_bin.c
 		src/communication/mqtt/msg-bin-root-ca.c
@@ -65,6 +64,9 @@ target_sources(virgil-iot-gateway-app
 		src/update/fw_upgrade.c
 		src/update/tl_update.c
 		src/update/upd_http_retrieval_thread.c
+
+		PUBLIC
+		src/platform/platform-hal.c
 		)
 
 #

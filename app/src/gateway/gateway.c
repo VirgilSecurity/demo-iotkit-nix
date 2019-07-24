@@ -58,7 +58,7 @@ gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
     memset(&_gtwy, 0x00, sizeof(_gtwy));
 
-    vs_hal_get_udid(_gtwy.udid_of_device);
+    vs_gateway_hal_get_udid(_gtwy.udid_of_device);
 
     _gtwy.shared_event_group = xEventGroupCreate();
     _gtwy.incoming_data_event_group = xEventGroupCreate();

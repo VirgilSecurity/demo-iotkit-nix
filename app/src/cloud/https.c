@@ -38,8 +38,8 @@
  * @file https.c
  * @brief https wrapper.
  */
-#include "https.h"
-#include "cloud.h"
+
+#include <virgil/iot/cloud/cloud.h>
 #include <string.h>
 #include <curl/curl.h>
 

@@ -32,31 +32,24 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_H
-#define GATEWAY_H
-
-#include <stdint.h>
 #include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
-#include "event_groups.h"
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <string.h>
 #include <global-hal.h>
+#include <gateway.h>
+/******************************************************************************/
+void *
+platform_malloc(size_t size) {
+    return pvPortMalloc(size);
+}
 
-typedef struct gtwy_s {
-    uint8_t udid_of_device[SERIAL_SIZE];
-    EventGroupHandle_t shared_event_group;
-    EventGroupHandle_t incoming_data_event_group;
-    EventGroupHandle_t firmware_event_group;
-    SemaphoreHandle_t firmware_semaphore;
-    SemaphoreHandle_t tl_semaphore;
-} gtwy_t;
-
-gtwy_t *
-init_gateway_ctx(vs_mac_addr_t *mac_addr);
-gtwy_t *
-get_gateway_ctx(void);
+/******************************************************************************/
 void
-start_gateway_threads(void);
-#endif // GATEWAY_H
+platform_free(void *ptr) {
+    return vPortFree(ptr);
+}
+
+/******************************************************************************/
+void
+vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
+    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
+}
