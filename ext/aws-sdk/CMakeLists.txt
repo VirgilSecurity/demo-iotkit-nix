@@ -35,9 +35,6 @@ add_library(aws-mqtt SHARED)
 file (GLOB_RECURSE AWS_MQTT_LIST_SRC "${AWS_MQTT_SOURCE}/*.c")
 
 target_compile_definitions(aws-mqtt
-        PUBLIC
-        -DJSMN_PARENT_LINKS
-        -DJSMN_STRICT
         PRIVATE
         $<$<CONFIG:DEBUG>:MBEDTLS_DBG_LVL=${MBEDTLS_DEBUG_LEVEL}>
         $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_INFO}>>:ENABLE_IOT_INFO=1>
@@ -50,7 +47,6 @@ target_compile_definitions(aws-mqtt
 target_sources(aws-mqtt
         PRIVATE
         ${AWS_MQTT_LIST_SRC}
-        "${AWS_MQTT_EXT_LIBS}/jsmn/jsmn.c"
         "${CMAKE_CURRENT_LIST_DIR}/platform/common/timer.c"
         "${CMAKE_CURRENT_LIST_DIR}/platform/mbedtls/network_mbedtls_wrapper.c"
         "${CMAKE_CURRENT_LIST_DIR}/platform/pthread/threads_pthread_wrapper.c"
@@ -59,13 +55,13 @@ target_sources(aws-mqtt
 target_link_libraries(aws-mqtt
         mbedtls::mbedtls
         mbedtls::mbedx509
+        jsmn
         )
 
 target_include_directories (aws-mqtt
         PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}"
         "${AWS_MQTT_INCLUDE}"
-        "${AWS_MQTT_EXT_LIBS}/jsmn"
         "${CMAKE_CURRENT_LIST_DIR}/platform/common"
         "${CMAKE_CURRENT_LIST_DIR}/platform/mbedtls"
         "${CMAKE_CURRENT_LIST_DIR}/platform/pthread"
