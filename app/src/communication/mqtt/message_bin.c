@@ -45,7 +45,6 @@
 #include "queue.h"
 #include "event_groups.h"
 
-#include <virgil/iot/cloud/base64/base64.h>
 #include "message_bin.h"
 #include "gateway.h"
 #include "gateway_macro.h"
@@ -53,9 +52,7 @@
 #include "tl_upgrade.h"
 #include "fw_upgrade.h"
 #include "event_group_bit_flags.h"
-#include <virgil/iot/cloud/json/json_parser.h>
 #include <virgil/iot/cloud/cloud.h>
-#include <cloud-config.h>
 #include <virgil/iot/logger/logger.h>
 
 #define NUM_TOKENS 300
@@ -91,48 +88,49 @@ _group_callback(AWS_IoT_Client *client,
     message_bin_process_command(topic, p, (uint16_t)params->payloadLen);
 }
 
+///*************************************************************************/
+static int
+_connect_to_mqtt(const char *host, uint16_t port, const char *device_cert, const char *priv_key, const char *ca_cert) {
+
+    return (SUCCESS == iot_init(&_mb_mqtt_handler, host, port, true, device_cert, priv_key, ca_cert))
+                   ? VS_CLOUD_ERR_OK
+                   : VS_CLOUD_ERR_FAIL;
+}
+
 /*************************************************************************/
-void
-mb_mqtt_task(void *pvParameters) {
+static int
+_subscribe_to_topics(const char *client_id,
+                     const char *login,
+                     const char *password,
+                     const vs_cloud_mb_topics_list_t *topic_list) {
+    return (SUCCESS == iot_connect_and_subscribe_multiple_topics(
+                               &_mb_mqtt_handler, client_id, topic_list, login, password, QOS1, _group_callback, NULL))
+                   ? VS_CLOUD_ERR_OK
+                   : VS_CLOUD_ERR_FAIL;
+}
+
+/*************************************************************************/
+static int
+_mqtt_process() {
+    return (SUCCESS == aws_iot_mqtt_yield(&_mb_mqtt_handler.client, 500)) ? VS_CLOUD_ERR_OK : VS_CLOUD_ERR_FAIL;
+}
+
+/*************************************************************************/
+static void
+_mb_mqtt_task(void *pvParameters) {
     VS_LOG_DEBUG("message bin thread started");
+    vs_cloud_mb_init_ctx(&_mb_mqtt_context);
 
     while (true) {
-        if (!vs_cloud_mb_mqtt_provision_is_present(&_mb_mqtt_context)) {
-            vs_cloud_mb_get_message_bin_credentials(&_mb_mqtt_context);
+        if (VS_CLOUD_ERR_OK == vs_cloud_mb_process(&_mb_mqtt_context,
+                                                   (const char *)msg_bin_root_ca_crt,
+                                                   _connect_to_mqtt,
+                                                   _subscribe_to_topics,
+                                                   _mqtt_process)) {
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        } else {
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
         }
-
-        if (vs_cloud_mb_mqtt_provision_is_present(&_mb_mqtt_context)) {
-            if (!vs_cloud_mb_mqtt_is_active(&_mb_mqtt_context)) {
-
-                VS_LOG_DEBUG("[MB]Connecting to broker host %s : %u ...", _mb_mqtt_context.host, _mb_mqtt_context.port);
-
-                if (SUCCESS == iot_init(&_mb_mqtt_handler,
-                                        _mb_mqtt_context.host,
-                                        _mb_mqtt_context.port,
-                                        true,
-                                        (const char *)_mb_mqtt_context.cert,
-                                        (const char *)_mb_mqtt_context.pk,
-                                        (const char *)msg_bin_root_ca_crt) &&
-                    SUCCESS == iot_connect_and_subscribe_multiple_topics(&_mb_mqtt_handler,
-                                                                         _mb_mqtt_context.client_id,
-                                                                         &_mb_mqtt_context.topic_list,
-                                                                         _mb_mqtt_context.login,
-                                                                         _mb_mqtt_context.password,
-                                                                         QOS1,
-                                                                         _group_callback,
-                                                                         NULL)) {
-                    vs_cloud_mb_mqtt_set_active(&_mb_mqtt_context);
-                } else {
-                    VS_LOG_DEBUG("[MB]Connection failed");
-                }
-            } else {
-                iot_process(&_mb_mqtt_handler);
-            }
-        }
-        if (!vs_cloud_mb_mqtt_is_active(&_mb_mqtt_context)) {
-            vTaskDelay(5000 / portTICK_RATE_MS);
-        } else
-            vTaskDelay(100 / portTICK_RATE_MS);
     }
 }
 
@@ -144,7 +142,7 @@ start_message_bin_thread() {
         upd_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
         *upd_event_queue = xQueueCreate(MB_QUEUE_SZ, sizeof(upd_request_t *));
         is_threads_started =
-                (pdTRUE == xTaskCreate(mb_mqtt_task, "mb_mqtt_task", _mb_thread_stack, 0, OS_PRIO_3, &_mb_thread));
+                (pdTRUE == xTaskCreate(_mb_mqtt_task, "_mb_mqtt_task", _mb_thread_stack, 0, OS_PRIO_3, &_mb_thread));
     }
     return &_mb_thread;
 }

@@ -43,13 +43,13 @@
 
 /******************************************************************************/
 static void
-disconnect_callback(AWS_IoT_Client *client, void *data) {
+_disconnect_callback(AWS_IoT_Client *client, void *data) {
     VS_LOG_WARNING("MQTT Disconnect");
     IoT_Error_t rc = FAILURE;
     if (client)
         return;
 
-    IOT_UNUSED(data);
+    (void)(data);
 
     if (aws_iot_is_autoreconnect_enabled(client)) {
         VS_LOG_INFO("Auto Reconnect is enabled, Reconnecting attempt will start now");
@@ -74,7 +74,7 @@ iot_init(iot_message_handler_t *handler,
          const char *priv_key,
          const char *rootCACert) {
 
-    IoT_Error_t rc = SUCCESS;
+    IoT_Error_t rc;
     handler->init_params = iotClientInitParamsDefault;
     handler->connect_params = iotClientConnectParamsDefault;
 
@@ -91,7 +91,7 @@ iot_init(iot_message_handler_t *handler,
     mqttInitParams->mqttCommandTimeout_ms = 20000;
     mqttInitParams->tlsHandshakeTimeout_ms = 15000;
     mqttInitParams->isSSLHostnameVerify = is_ssl_hostname_verify;
-    mqttInitParams->disconnectHandler = disconnect_callback;
+    mqttInitParams->disconnectHandler = _disconnect_callback;
     mqttInitParams->disconnectHandlerData = NULL;
     rc = aws_iot_mqtt_init(&handler->client, mqttInitParams);
     if (SUCCESS != rc) {
@@ -103,7 +103,7 @@ iot_init(iot_message_handler_t *handler,
 
 /******************************************************************************/
 static char *
-get_topic_name_by_index(const vs_cloud_mb_topics_list_t *topic_list, uint32_t index) {
+_get_topic_name_by_index(const vs_cloud_mb_topics_list_t *topic_list, uint32_t index) {
     uint32_t i;
     char *topic_list_ptr = topic_list->topic_list;
 
@@ -118,7 +118,7 @@ get_topic_name_by_index(const vs_cloud_mb_topics_list_t *topic_list, uint32_t in
 
 /******************************************************************************/
 static IoT_Error_t
-iot_connect_internal(
+_iot_connect_internal(
         iot_message_handler_t *handler,
         const char *client_id,
         const char *login,
@@ -179,14 +179,14 @@ iot_connect_and_subscribe_multiple_topics(
 
     IoT_Error_t rc;
     uint32_t i;
-    rc = iot_connect_internal(handler, client_id, login, password, iot_get_msg_handler);
+    rc = _iot_connect_internal(handler, client_id, login, password, iot_get_msg_handler);
     if (SUCCESS != rc) {
         return rc;
     }
 
     rc = FAILURE;
     for (i = 0; i < topic_list->topic_count; ++i) {
-        char *topic_name = get_topic_name_by_index(topic_list, i);
+        char *topic_name = _get_topic_name_by_index(topic_list, i);
 
         if (0 == topic_list->topic_len_list[i]) {
             continue;
@@ -223,7 +223,7 @@ iot_connect_and_subscribe_topic(
         void *iot_get_msg_handler_data) {
 
     IoT_Error_t rc;
-    rc = iot_connect_internal(handler, client_id, login, password, iot_get_msg_handler);
+    rc = _iot_connect_internal(handler, client_id, login, password, iot_get_msg_handler);
     if (SUCCESS != rc) {
         return rc;
     }
