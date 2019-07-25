@@ -38,7 +38,7 @@
 #define __AMAZON_MQTT__
 
 #include "aws_iot_mqtt_client_interface.h"
-
+#include <virgil/iot/cloud/cloud.h>
 typedef struct {
     IoT_Client_Init_Params init_params;
     IoT_Client_Connect_Params connect_params;
@@ -46,12 +46,6 @@ typedef struct {
 } iot_message_handler_t;
 
 #define UPD_URL_STR_SIZE 200
-
-typedef struct {
-    char *topic_list;
-    uint16_t *topic_len_list;
-    size_t topic_count;
-} iot_topics_list_t;
 
 IoT_Error_t
 iot_init(iot_message_handler_t *handler,
@@ -66,7 +60,7 @@ IoT_Error_t
 iot_connect_and_subscribe_multiple_topics(
         iot_message_handler_t *handler,
         const char *client_id,
-        const iot_topics_list_t *topic_list,
+        const vs_cloud_mb_topics_list_t *topic_list,
         const char *login,
         const char *password,
         QoS qos,

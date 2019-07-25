@@ -103,7 +103,7 @@ iot_init(iot_message_handler_t *handler,
 
 /******************************************************************************/
 static char *
-get_topic_name_by_index(const iot_topics_list_t *topic_list, uint32_t index) {
+get_topic_name_by_index(const vs_cloud_mb_topics_list_t *topic_list, uint32_t index) {
     uint32_t i;
     char *topic_list_ptr = topic_list->topic_list;
 
@@ -169,7 +169,7 @@ IoT_Error_t
 iot_connect_and_subscribe_multiple_topics(
         iot_message_handler_t *handler,
         const char *client_id,
-        const iot_topics_list_t *topic_list,
+        const vs_cloud_mb_topics_list_t *topic_list,
         const char *login,
         const char *password,
         QoS qos,

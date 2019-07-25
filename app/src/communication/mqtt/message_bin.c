@@ -67,9 +67,7 @@ xQueueHandle *upd_event_queue;
 static xTaskHandle _mb_thread;
 static const uint16_t _mb_thread_stack = 20 * 1024;
 
-static _mb_mqtt_ctx_t _mb_mqtt_context;
-
-static bool _mb_mqtt_init_done = false;
+static vs_cloud_mb_mqtt_ctx_t _mb_mqtt_context;
 
 static iot_message_handler_t _mb_mqtt_handler;
 
@@ -94,80 +92,17 @@ _group_callback(AWS_IoT_Client *client,
 }
 
 /*************************************************************************/
-bool
-mb_mqtt_provision_is_present() {
-    return _mb_mqtt_context.is_filled;
-}
-
-/*************************************************************************/
-void
-mb_mqtt_ctx_free() {
-    _mb_mqtt_context.is_filled = false;
-    _mb_mqtt_init_done = false;
-
-    if (_mb_mqtt_context.cert != NULL) {
-        vPortFree(_mb_mqtt_context.cert);
-        _mb_mqtt_context.cert = NULL;
-    }
-
-    if (_mb_mqtt_context.login != NULL) {
-        vPortFree(_mb_mqtt_context.login);
-        _mb_mqtt_context.login = NULL;
-    }
-
-    if (_mb_mqtt_context.password != NULL) {
-        vPortFree(_mb_mqtt_context.password);
-        _mb_mqtt_context.password = NULL;
-    }
-
-    if (_mb_mqtt_context.client_id != NULL) {
-        vPortFree(_mb_mqtt_context.client_id);
-        _mb_mqtt_context.client_id = NULL;
-    }
-
-    if (_mb_mqtt_context.pk != NULL) {
-        vPortFree(_mb_mqtt_context.pk);
-        _mb_mqtt_context.pk = NULL;
-    }
-
-    if (_mb_mqtt_context.topic_list.topic_list != NULL) {
-        vPortFree(_mb_mqtt_context.topic_list.topic_list);
-        _mb_mqtt_context.topic_list.topic_list = NULL;
-    }
-
-    if (_mb_mqtt_context.topic_list.topic_len_list != NULL) {
-        vPortFree(_mb_mqtt_context.topic_list.topic_len_list);
-        _mb_mqtt_context.topic_list.topic_len_list = NULL;
-    }
-
-    if (_mb_mqtt_context.port != 0)
-        _mb_mqtt_context.port = 0;
-}
-
-/*************************************************************************/
-static bool
-mb_mqtt_is_active() {
-    return _mb_mqtt_init_done;
-}
-
-/*************************************************************************/
-static void
-mb_mqtt_set_active() {
-    _mb_mqtt_init_done = true;
-}
-
-/*************************************************************************/
 void
 mb_mqtt_task(void *pvParameters) {
     VS_LOG_DEBUG("message bin thread started");
 
     while (true) {
-        if (!mb_mqtt_provision_is_present()) {
-            msg_bin_get_credentials();
+        if (!vs_cloud_mb_mqtt_provision_is_present(&_mb_mqtt_context)) {
+            vs_cloud_mb_get_message_bin_credentials(&_mb_mqtt_context);
         }
 
-        if (mb_mqtt_provision_is_present()) {
-            if (!mb_mqtt_is_active()) {
+        if (vs_cloud_mb_mqtt_provision_is_present(&_mb_mqtt_context)) {
+            if (!vs_cloud_mb_mqtt_is_active(&_mb_mqtt_context)) {
 
                 VS_LOG_DEBUG("[MB]Connecting to broker host %s : %u ...", _mb_mqtt_context.host, _mb_mqtt_context.port);
 
@@ -186,7 +121,7 @@ mb_mqtt_task(void *pvParameters) {
                                                                          QOS1,
                                                                          _group_callback,
                                                                          NULL)) {
-                    mb_mqtt_set_active();
+                    vs_cloud_mb_mqtt_set_active(&_mb_mqtt_context);
                 } else {
                     VS_LOG_DEBUG("[MB]Connection failed");
                 }
@@ -194,170 +129,11 @@ mb_mqtt_task(void *pvParameters) {
                 iot_process(&_mb_mqtt_handler);
             }
         }
-        if (!mb_mqtt_is_active()) {
+        if (!vs_cloud_mb_mqtt_is_active(&_mb_mqtt_context)) {
             vTaskDelay(5000 / portTICK_RATE_MS);
         } else
             vTaskDelay(100 / portTICK_RATE_MS);
     }
-}
-
-/******************************************************************************/
-bool
-msg_bin_get_credentials() {
-
-    if (mb_mqtt_provision_is_present()) {
-        return false;
-    }
-
-    mb_mqtt_ctx_free();
-
-    VS_LOG_DEBUG("------------------------- LOAD MESSAGE BIN CREDENTIALS -------------------------");
-
-    size_t answer_size = HTTPS_INPUT_BUFFER_SIZE;
-    char *answer = (char *)pvPortMalloc(answer_size);
-    if (!answer) {
-        VS_LOG_ERROR("ALLOCATION FAIL in message bin credentials\r\n");
-        // TODO: What should we do here ?
-        while (1)
-            ;
-    }
-
-
-    if (VS_CLOUD_ERR_OK == vs_cloud_get_message_bin_credentials(answer, &answer_size)) {
-        jobj_t jobj;
-        int len;
-
-        _mb_mqtt_context.host = MESSAGE_BIN_BROKER_URL; /*host*/
-        _mb_mqtt_context.port = MSG_BIN_MQTT_PORT;      /*port*/
-
-        if (json_parse_start(&jobj, answer, answer_size) != GATEWAY_OK) {
-            goto clean;
-        }
-
-        /*----login----*/
-        if (json_get_val_str_len(&jobj, "login", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [login]!!!\r\n");
-            goto clean;
-        }
-        ++len;
-        _mb_mqtt_context.login = (char *)pvPortMalloc((size_t)len);
-        json_get_val_str(&jobj, "login", _mb_mqtt_context.login, len);
-        /*----password----*/
-        if (json_get_val_str_len(&jobj, "password", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [password]");
-            goto clean;
-        }
-        ++len;
-        _mb_mqtt_context.password = (char *)pvPortMalloc((size_t)len);
-        json_get_val_str(&jobj, "password", _mb_mqtt_context.password, len);
-        /*----client_id----*/
-        if (json_get_val_str_len(&jobj, "client_id", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [client_id]");
-            goto clean;
-        }
-        ++len;
-        _mb_mqtt_context.client_id = (char *)pvPortMalloc((size_t)len);
-        json_get_val_str(&jobj, "client_id", _mb_mqtt_context.client_id, len);
-        /*----certificate----*/
-        if (json_get_val_str_len(&jobj, "certificate", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [certificate]");
-            goto clean;
-        }
-        ++len;
-
-        char *tmp = (char *)pvPortMalloc((size_t)len);
-        json_get_val_str(&jobj, "certificate", tmp, len);
-
-        int decode_len = base64decode_len(tmp, len);
-
-        if (0 >= decode_len) {
-            vPortFree(tmp);
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) wrong size [certificate]");
-            goto clean;
-        }
-
-        _mb_mqtt_context.cert = (char *)pvPortMalloc((size_t)decode_len);
-
-        base64decode(tmp, len, (uint8_t *)_mb_mqtt_context.cert, &decode_len);
-        vPortFree(tmp);
-
-        /*----private_key----*/
-        if (json_get_val_str_len(&jobj, "private_key", &len) != GATEWAY_OK || len < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [private_key]");
-            goto clean;
-        }
-        ++len;
-        tmp = (char *)pvPortMalloc((size_t)len);
-        json_get_val_str(&jobj, "private_key", tmp, len);
-
-        decode_len = base64decode_len(tmp, len);
-
-        if (0 >= decode_len) {
-            vPortFree(tmp);
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) wrong size [certificate]");
-            goto clean;
-        }
-
-        _mb_mqtt_context.pk = (char *)pvPortMalloc((size_t)decode_len);
-
-        base64decode(tmp, len, (uint8_t *)_mb_mqtt_context.pk, &decode_len);
-        vPortFree(tmp);
-
-        /*----available_topics----*/
-        int topic_count;
-        if (json_get_array_object(&jobj, "available_topics", &topic_count) != GATEWAY_OK || topic_count < 0) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) answer not contain [available_topics]");
-            goto clean;
-        }
-        _mb_mqtt_context.topic_list.topic_count = (size_t)topic_count;
-
-        if (0 == _mb_mqtt_context.topic_list.topic_count) {
-            VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) [available_topics] is empty!");
-            goto clean;
-        } else {
-            uint16_t i, total_topic_names_len = 0;
-            len = 0;
-
-            _mb_mqtt_context.topic_list.topic_len_list =
-                    (uint16_t *)pvPortMalloc(_mb_mqtt_context.topic_list.topic_count * sizeof(uint16_t));
-
-            for (i = 0; i < _mb_mqtt_context.topic_list.topic_count; i++) {
-                json_array_get_str_len(&jobj, i, &len);
-
-                if (len + 1 > UINT16_MAX) {
-                    VS_LOG_ERROR("[MB] cloud_get_message_bin_credentials(...) [available_topics] name len is too big");
-                    goto clean;
-                }
-
-                _mb_mqtt_context.topic_list.topic_len_list[i] = (uint16_t)(len + 1);
-                total_topic_names_len += _mb_mqtt_context.topic_list.topic_len_list[i];
-            }
-
-            _mb_mqtt_context.topic_list.topic_list = (char *)pvPortMalloc(total_topic_names_len);
-
-            int offset = 0;
-
-            for (i = 0; i < _mb_mqtt_context.topic_list.topic_count; i++) {
-                json_array_get_str(
-                        &jobj, i, _mb_mqtt_context.topic_list.topic_list + offset, total_topic_names_len - offset);
-
-                json_array_get_str_len(&jobj, i, &len);
-                offset += len;
-                _mb_mqtt_context.topic_list.topic_list[offset] = '\0';
-                offset++;
-            }
-        }
-
-        _mb_mqtt_context.is_filled = true;
-        vPortFree(answer);
-        VS_LOG_DEBUG("[MB] Credentials are loaded successfully");
-        return true;
-    }
-
-clean:
-    mb_mqtt_ctx_free();
-    vPortFree(answer);
-    return false;
 }
 
 /*************************************************************************/

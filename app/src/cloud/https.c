@@ -48,6 +48,7 @@ typedef struct resp_buff_s {
     size_t buff_sz;
     size_t used_size;
 } resp_buff_t;
+
 /******************************************************************************/
 static size_t
 write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {

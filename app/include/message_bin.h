@@ -49,20 +49,6 @@
 #include "task.h"
 #include "iot_mqtt.h"
 
-#define MSG_BIN_MQTT_PORT 8883
-
-typedef struct {
-    char *login;
-    char *password;
-    char *cert;
-    char *pk;
-    char *host;
-    iot_topics_list_t topic_list;
-    char *client_id;
-    uint16_t port;
-    bool is_filled;
-} _mb_mqtt_ctx_t;
-
 #define MSG_BIN_UPD_TYPE_FW 0
 #define MSG_BIN_UPD_TYPE_TL 1
 
