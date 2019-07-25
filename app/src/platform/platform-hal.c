@@ -49,6 +49,19 @@ platform_free(void *ptr) {
 }
 
 /******************************************************************************/
+void *
+platform_calloc(size_t num, size_t size) {
+
+    void *ptr;
+
+    vTaskSuspendAll();
+    { ptr = calloc(num, size); }
+    xTaskResumeAll();
+
+    return ptr;
+}
+
+/******************************************************************************/
 void
 vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
     memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
