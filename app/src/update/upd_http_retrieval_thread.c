@@ -38,7 +38,7 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
     // This thread needs to be signaled by the off chance that there was a powerloss
     xEventGroupSetBits(gtwy->firmware_event_group, NEW_FIRMWARE_HTTP_BIT);
-    free(request);
+    vPortFree(request);
 }
 
 /*************************************************************************/

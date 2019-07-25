@@ -72,18 +72,9 @@ static _mb_mqtt_ctx_t _mb_mqtt_context;
 
 static bool _mb_mqtt_init_done = false;
 
-static iot_tls_cert_t mb_service_cert;
-static iot_tls_key_t mb_service_key;
-static iot_message_handler_t mb_mqtt_handler;
+static iot_message_handler_t _mb_mqtt_handler;
 
 extern const uint8_t msg_bin_root_ca_crt[];
-#define MB_ROOT_CA_CRT_LEN 1931
-
-static const iot_tls_cert_t server_ca_cert = {
-        .cert = (uint8_t *)msg_bin_root_ca_crt,
-        .cert_size = MB_ROOT_CA_CRT_LEN,
-        .cert_type = IOT_TLS_ENC_PEM,
-};
 
 /*************************************************************************/
 static void
@@ -180,22 +171,15 @@ mb_mqtt_task(void *pvParameters) {
             if (!mb_mqtt_is_active()) {
 
                 VS_LOG_DEBUG("[MB]Connecting to broker host %s : %u ...", _mb_mqtt_context.host, _mb_mqtt_context.port);
-                mb_service_cert.cert = (unsigned char *)_mb_mqtt_context.cert;
-                mb_service_cert.cert_size = strlen(_mb_mqtt_context.cert) + 1;
-                mb_service_cert.cert_type = IOT_TLS_ENC_PEM;
-                mb_service_key.key_type = IOT_TLS_ENC_PEM;
 
-                mb_service_key.key = (unsigned char *)_mb_mqtt_context.pk;
-                mb_service_key.key_size = strlen(_mb_mqtt_context.pk) + 1;
-
-                if (SUCCESS == iot_init(&mb_mqtt_handler,
+                if (SUCCESS == iot_init(&_mb_mqtt_handler,
                                         _mb_mqtt_context.host,
                                         _mb_mqtt_context.port,
                                         true,
-                                        (const char *)mb_service_cert.cert,
-                                        (const char *)mb_service_key.key,
-                                        (const char *)server_ca_cert.cert) &&
-                    SUCCESS == iot_connect_and_subscribe_multiple_topics(&mb_mqtt_handler,
+                                        (const char *)_mb_mqtt_context.cert,
+                                        (const char *)_mb_mqtt_context.pk,
+                                        (const char *)msg_bin_root_ca_crt) &&
+                    SUCCESS == iot_connect_and_subscribe_multiple_topics(&_mb_mqtt_handler,
                                                                          _mb_mqtt_context.client_id,
                                                                          &_mb_mqtt_context.topic_list,
                                                                          _mb_mqtt_context.login,
@@ -208,7 +192,7 @@ mb_mqtt_task(void *pvParameters) {
                     VS_LOG_DEBUG("[MB]Connection failed");
                 }
             } else {
-                iot_process(&mb_mqtt_handler);
+                iot_process(&_mb_mqtt_handler);
             }
         }
         if (!mb_mqtt_is_active()) {

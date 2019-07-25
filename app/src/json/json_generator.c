@@ -295,7 +295,11 @@ json_set_object_value(struct json_str *jptr,
         break;
 
     case JSON_VAL_UINT_64:
-        snprintf(&jptr->buff[jptr->free_ptr], jptr->len - jptr->free_ptr, "\"%s\":%llu", name, (unsigned long long)value);
+        snprintf(&jptr->buff[jptr->free_ptr],
+                 jptr->len - jptr->free_ptr,
+                 "\"%s\":%llu",
+                 name,
+                 (unsigned long long)value);
         break;
 
     case JSON_VAL_FLOAT:

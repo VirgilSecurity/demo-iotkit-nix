@@ -12,6 +12,7 @@
 /*************************************************************************/
 int
 parse_tl_mainfest(void *payload, size_t payload_len, char *tl_url, gtwy_t *gtwy) {
+    memset(tl_url, 0, UPD_URL_STR_SIZE);
     VS_LOG_DEBUG("NEW TL: %s", (char *)payload);
     return GATEWAY_OK;
 }

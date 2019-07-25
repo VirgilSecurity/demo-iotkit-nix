@@ -2,12 +2,25 @@ cmake_minimum_required (VERSION 3.11)
 
 project(aws-mqtt VERSION 0.1.0 LANGUAGES C)
 
+# ---------------------------------------------------------------------------
+#   Settings
+# ---------------------------------------------------------------------------
+
+#
+#   Enable/Disable debug
+#
+option(ENABLE_IOT_INFO "Enable info messages" ON)
+option(ENABLE_IOT_ERROR "Enable error messages" OFF)
+option(ENABLE_IOT_WARN "Enable warning messages" OFF)
+option(ENABLE_IOT_DEBUG "Enable debug messages" OFF)
+option(ENABLE_IOT_TRACE "Enable trace messages" OFF)
+set(MBEDTLS_DEBUG_LEVEL "0" CACHE STRING "MbedTLS debug level from 0 to 4")
+
 # file folders
 set(AWS_MQTT_ROOT     "${CMAKE_CURRENT_LIST_DIR}/aws-iot-device-sdk-embedded-C")
 set(AWS_MQTT_SOURCE   "${AWS_MQTT_ROOT}/src")
 set(AWS_MQTT_INCLUDE  "${AWS_MQTT_ROOT}/include")
 set(AWS_MQTT_EXT_LIBS  "${AWS_MQTT_ROOT}/external_libs")
-set(AWS_MQTT_PLATFORM  "${AWS_MQTT_ROOT}/platform/linux")
 
 # Include and build external libraries
 include (${CMAKE_CURRENT_LIST_DIR}/../virgil-iot-sdk/cmake/virgil_depends.cmake)
@@ -26,7 +39,12 @@ target_compile_definitions(aws-mqtt
         -DJSMN_PARENT_LINKS
         -DJSMN_STRICT
         PRIVATE
-        #$<$<CONFIG:DEBUG>:ENABLE_IOT_DEBUG=1 ENABLE_IOT_INFO=1 ENABLE_IOT_WARN=1 ENABLE_IOT_ERROR=1 ENABLE_IOT_TRACE=1>
+        $<$<CONFIG:DEBUG>:MBEDTLS_DBG_LVL=${MBEDTLS_DEBUG_LEVEL}>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_INFO}>>:ENABLE_IOT_INFO=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_ERROR}>>:ENABLE_IOT_ERROR=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_WARN}>>:ENABLE_IOT_WARN=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_DEBUG}>>:ENABLE_IOT_DEBUG=1>
+        $<$<AND:$<CONFIG:DEBUG>,$<BOOL:${ENABLE_IOT_TRACE}>>:ENABLE_IOT_TRACE=1>
         )
 
 target_sources(aws-mqtt

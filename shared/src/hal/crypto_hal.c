@@ -62,10 +62,11 @@
 #include <virgil/crypto/foundation/vscf_compute_shared_key.h>
 #include <virgil/crypto/foundation/vscf_aes256_gcm.h>
 #include <virgil/crypto/foundation/vscf_aes256_cbc.h>
+#include <virgil/crypto/foundation/vscf_kdf2.h>
+#include <virgil/crypto/foundation/vscf_hmac.h>
 #include <virgil/crypto/common/private/vsc_buffer_defs.h>
 #include <virgil/crypto/common/vsc_buffer.h>
 #include <virgil/crypto/common/vsc_data.h>
-#include <virgil/crypto/foundation/vscf_kdf2.h>
 
 #define RNG_MAX_REQUEST (256)
 
@@ -411,7 +412,55 @@ vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
             uint16_t output_buf_sz,
             uint16_t *output_sz) {
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    vscf_impl_t *hash_impl;
+    vsc_buffer_t out_buf;
+    int hash_sz;
+
+    NOT_ZERO(key);
+    NOT_ZERO(input);
+    NOT_ZERO(output);
+    NOT_ZERO(output_sz);
+
+    hash_sz = vs_hsm_get_hash_len(hash_type);
+    if (hash_sz < 0) {
+        VS_LOG_ERROR("Unsupported hash type %d", hash_type);
+        return VS_HSM_ERR_CRYPTO;
+    }
+
+    if (output_buf_sz < hash_sz) {
+        VS_LOG_ERROR("Output buffer too small");
+        return VS_HSM_ERR_INVAL;
+    }
+
+    vscf_hmac_t *hmac = vscf_hmac_new();
+
+    switch (hash_type) {
+    case VS_HASH_SHA_256:
+        hash_impl = vscf_sha256_impl(vscf_sha256_new());
+        break;
+
+    case VS_HASH_SHA_384:
+        hash_impl = vscf_sha384_impl(vscf_sha384_new());
+        break;
+
+    case VS_HASH_SHA_512:
+        hash_impl = vscf_sha512_impl(vscf_sha512_new());
+        break;
+    default:
+        return VS_HSM_ERR_NOT_IMPLEMENTED;
+    }
+
+    vscf_hmac_take_hash(hmac, hash_impl);
+
+    vsc_buffer_init(&out_buf);
+    vsc_buffer_use(&out_buf, output, output_buf_sz);
+
+    vscf_hmac_mac(hmac, vsc_data(key, key_sz), vsc_data(input, input_sz), &out_buf);
+
+    *output_sz = (uint16_t)hash_sz;
+    vscf_hmac_delete(hmac);
+
+    return VS_HSM_ERR_OK;
 }
 
 /********************************************************************************/

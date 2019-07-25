@@ -18,16 +18,22 @@ check_error() {
 # Build User space
 cd "${SCRIPT_FOLDER}/../../"
 echo "----------------------------------------------------------------------"
-echo "################# BUILDING VIRGIL IOT GATEWAY INITIALIZER ############"
+echo "################# BUILDING VIRGIL IOT GATEWAY ########################"
 echo "----------------------------------------------------------------------"
 echo "------------- Preparing for build ------------------------------------"
 rm -rf cmake-build-debug
 mkdir -p cmake-build-debug
 cd ./cmake-build-debug && cmake -DVIRGIL_IOT_MCU_BUILD=OFF $@ "../"
 check_error
-echo "------------- Build virgil-iot-gateway-initializer.sh -----------------------------------"
+
+echo "------------- Build virgil-iot-gateway-initializer -------------------"
 make virgil-iot-gateway-initializer -j 8
 check_error
+
+echo "------------- Build virgil-iot-gateway-app ---------------------------"
+make virgil-iot-gateway-app -j 8
+check_error
+
 echo "----------------------------------------------------------------------"
-echo "##### FINISH VIRGIL IOT GATEWAY INITIALIZER BUILDING #################"
+echo "################### FINISH VIRGIL IOT GATEWAY  #######################"
 echo "----------------------------------------------------------------------"
