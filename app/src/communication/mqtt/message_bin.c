@@ -49,11 +49,11 @@
 #include "gateway.h"
 #include "gateway_macro.h"
 #include "platform/platform_os.h"
-#include "tl_upgrade.h"
-#include "fw_upgrade.h"
 #include "event_group_bit_flags.h"
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/update/update.h>
+#include <cloud-config.h>
 
 #define NUM_TOKENS 300
 
@@ -153,9 +153,9 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 
     upd_request_t *fw_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
-    int status = parseFirmwareManifest((char *)p_data, (int)length, fw_url->upd_file_url, get_gateway_ctx());
+    int status = vs_update_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
 
-    if (GATEWAY_OK == status) {
+    if (VS_UPDATE_ERR_OK == status) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
             vPortFree(fw_url);
@@ -174,9 +174,9 @@ static void
 _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     upd_request_t *tl_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
-    int status = parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url, get_gateway_ctx());
+    int status = vs_update_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url);
 
-    if (GATEWAY_OK == status) {
+    if (VS_UPDATE_ERR_OK == status) {
 
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
@@ -191,16 +191,20 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     }
 }
 
+#define VS_FW_TOPIC_MASK "fw/"
+
+#define VS_TL_TOPIC_MASK "tl/"
+
 /*************************************************************************/
 void
 message_bin_process_command(const char *topic, const uint8_t *p_data, const uint16_t length) {
-    char *ptr = strstr(topic, FW_TOPIC_MASK);
+    char *ptr = strstr(topic, VS_FW_TOPIC_MASK);
     if (ptr != NULL && topic == ptr) {
         _firmware_topic_process(p_data, length);
         return;
     }
 
-    ptr = strstr(topic, TL_TOPIC_MASK);
+    ptr = strstr(topic, VS_TL_TOPIC_MASK);
     if (ptr != NULL && topic == ptr) {
         _tl_topic_process(p_data, length);
         return;

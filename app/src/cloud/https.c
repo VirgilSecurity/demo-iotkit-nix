@@ -65,7 +65,7 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
 
 /******************************************************************************/
 uint16_t
-https(http_method_t type,
+https(vs_http_method_t type,
       const char *url,
       const char *authorization,
       const char *data,
@@ -82,7 +82,7 @@ https(http_method_t type,
     curl = curl_easy_init();
     if (curl) {
         switch (type) {
-        case HTTP_GET:
+        case VS_HTTP_GET:
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp);

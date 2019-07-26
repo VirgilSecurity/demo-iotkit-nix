@@ -61,8 +61,6 @@ target_sources(virgil-iot-gateway-app
 		src/communication/sdmp/sdmp_app.c
 		src/gateway/gateway.c
 		src/platform/os.c
-		src/update/fw_upgrade.c
-		src/update/tl_update.c
 		src/update/upd_http_retrieval_thread.c
 
 		PUBLIC
@@ -105,4 +103,5 @@ target_link_libraries (virgil-iot-gateway-app
 		freertos
 		aws-mqtt
 		cloud
+		update
 		)

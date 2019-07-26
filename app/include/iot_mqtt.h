@@ -45,8 +45,6 @@ typedef struct {
     AWS_IoT_Client client;
 } iot_message_handler_t;
 
-#define UPD_URL_STR_SIZE 200
-
 IoT_Error_t
 iot_init(iot_message_handler_t *handler,
          const char *host,
