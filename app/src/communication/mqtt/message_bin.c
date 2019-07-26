@@ -90,7 +90,7 @@ _group_callback(AWS_IoT_Client *client,
 
 ///*************************************************************************/
 static int
-_connect_to_mqtt(const char *host, uint16_t port, const char *device_cert, const char *priv_key, const char *ca_cert) {
+_init_mqtt(const char *host, uint16_t port, const char *device_cert, const char *priv_key, const char *ca_cert) {
 
     return (SUCCESS == iot_init(&_mb_mqtt_handler, host, port, true, device_cert, priv_key, ca_cert))
                    ? VS_CLOUD_ERR_OK
@@ -99,10 +99,10 @@ _connect_to_mqtt(const char *host, uint16_t port, const char *device_cert, const
 
 /*************************************************************************/
 static int
-_subscribe_to_topics(const char *client_id,
-                     const char *login,
-                     const char *password,
-                     const vs_cloud_mb_topics_list_t *topic_list) {
+_connect_and_subscribe_to_topics(const char *client_id,
+                                 const char *login,
+                                 const char *password,
+                                 const vs_cloud_mb_topics_list_t *topic_list) {
     return (SUCCESS == iot_connect_and_subscribe_multiple_topics(
                                &_mb_mqtt_handler, client_id, topic_list, login, password, QOS1, _group_callback, NULL))
                    ? VS_CLOUD_ERR_OK
@@ -124,8 +124,8 @@ _mb_mqtt_task(void *pvParameters) {
     while (true) {
         if (VS_CLOUD_ERR_OK == vs_cloud_mb_process(&_mb_mqtt_context,
                                                    (const char *)msg_bin_root_ca_crt,
-                                                   _connect_to_mqtt,
-                                                   _subscribe_to_topics,
+                                                   _init_mqtt,
+                                                   _connect_and_subscribe_to_topics,
                                                    _mqtt_process)) {
             vTaskDelay(100 / portTICK_PERIOD_MS);
         } else {
