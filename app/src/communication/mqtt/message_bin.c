@@ -80,7 +80,7 @@ _group_callback(AWS_IoT_Client *client,
     uint8_t *p = (uint8_t *)params->payload;
     p[params->payloadLen] = 0;
     VS_LOG_DEBUG("[MB] Message from topic %s", topic);
-    VS_LOG_DEBUG("[MB] _group_callback params->payloadLen=%d, params->payload=%s", (int)params->payloadLen, p);
+    VS_LOG_DEBUG("[MB] _group_callback params->payloadLen=%d", (int)params->payloadLen);
     if (params->payloadLen > UINT16_MAX) {
         VS_LOG_ERROR("[MB] Topic message is too big");
         return;
