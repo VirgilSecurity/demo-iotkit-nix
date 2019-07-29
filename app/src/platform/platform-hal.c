@@ -36,6 +36,7 @@
 #include <string.h>
 #include <global-hal.h>
 #include <gateway.h>
+#include <virgil/iot/cloud/cloud.h>
 /******************************************************************************/
 void *
 platform_malloc(size_t size) {
@@ -65,4 +66,10 @@ platform_calloc(size_t num, size_t size) {
 void
 vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
     memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
+}
+
+/******************************************************************************/
+int
+vs_cloud_store_firmware_hal(uint8_t *data, uint32_t data_size, uint32_t offset) {
+    return VS_CLOUD_ERR_OK;
 }

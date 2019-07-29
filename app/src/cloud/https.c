@@ -71,14 +71,14 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
 
 /******************************************************************************/
 uint16_t
-https(vs_http_method_t type,
-      const char *url,
-      const char *data,
-      size_t data_size,
-      char *out_data,
-      fetch_handler_func fetch_handler,
-      void *hander_data,
-      size_t *in_out_size) {
+vs_cloud_https_hal(vs_http_method_t type,
+                   const char *url,
+                   const char *data,
+                   size_t data_size,
+                   char *out_data,
+                   fetch_handler_func fetch_handler,
+                   void *hander_data,
+                   size_t *in_out_size) {
     CURL *curl;
     CURLcode curl_res;
     uint16_t res = HTTPS_RET_CODE_OK;
