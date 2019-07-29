@@ -26,7 +26,7 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
 
     VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
-    if (GATEWAY_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url, NULL)) {
+    if (GATEWAY_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
         // TODO: Check for firmware
     }
@@ -46,7 +46,7 @@ tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     }
     VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
 
-    if (GATEWAY_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url, NULL)) {
+    if (GATEWAY_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
         // TODO: Check for firmware
     }
