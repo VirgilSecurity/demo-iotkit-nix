@@ -46,6 +46,7 @@
 #define GW_APP_TYPE                                                                                                    \
     { 'A', 'P', 'P', '0' }
 
+// TODO: Need to use real descriptor, which
 static const vs_firmware_descriptor_t _descriptor = {
         .manufacture_id = GW_MANUFACTURE_ID,
         .device_type = GW_DEVICE_TYPE,
@@ -101,6 +102,7 @@ vs_global_hal_get_firmware_descriptor(void) {
 
 /******************************************************************************/
 int
-vs_cloud_store_firmware_hal(uint8_t *data, uint32_t data_size, uint32_t offset) {
+vs_cloud_store_firmware_hal(vs_firmware_descriptor_t *descriptor, uint8_t *data, uint32_t data_size, uint32_t offset) {
+    // TODO: Need to implement
     return VS_CLOUD_ERR_OK;
 }
