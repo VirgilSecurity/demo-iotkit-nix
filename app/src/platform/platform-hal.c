@@ -40,7 +40,7 @@
 #include <virgil/iot/provision/provision.h>
 
 #define GW_MANUFACTURE_ID                                                                                              \
-    { 'V', 'R', 'G', 'L' }
+    { 0 }
 #define GW_DEVICE_TYPE                                                                                                 \
     { 'G', 'T', 'W', 'Y' }
 #define GW_APP_TYPE                                                                                                    \
@@ -98,11 +98,4 @@ vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
 const vs_firmware_descriptor_t *
 vs_global_hal_get_firmware_descriptor(void) {
     return &_descriptor;
-}
-
-/******************************************************************************/
-int
-vs_cloud_store_firmware_hal(vs_firmware_descriptor_t *descriptor, uint8_t *data, uint32_t data_size, uint32_t offset) {
-    // TODO: Need to implement
-    return VS_CLOUD_ERR_OK;
 }

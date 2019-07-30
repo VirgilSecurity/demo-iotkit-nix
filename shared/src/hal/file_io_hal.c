@@ -443,5 +443,3 @@ int
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
     return _remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
-
-/******************************************************************************/

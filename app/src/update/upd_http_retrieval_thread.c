@@ -10,6 +10,7 @@
 
 #include "semphr.h"
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/update/update_interface.h>
 
 static xTaskHandle upd_retrieval_thread;
 
