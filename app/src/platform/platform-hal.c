@@ -37,6 +37,31 @@
 #include <global-hal.h>
 #include <gateway.h>
 #include <virgil/iot/cloud/cloud.h>
+#include <virgil/iot/provision/provision.h>
+
+#define GW_MANUFACTURE_ID                                                                                              \
+    { 'V', 'R', 'G', 'L' }
+#define GW_DEVICE_TYPE                                                                                                 \
+    { 'G', 'T', 'W', 'Y' }
+#define GW_APP_TYPE                                                                                                    \
+    { 'A', 'P', 'P', '0' }
+
+static const vs_firmware_descriptor_t _descriptor = {
+        .manufacture_id = GW_MANUFACTURE_ID,
+        .device_type = GW_DEVICE_TYPE,
+        .version.app_type = GW_APP_TYPE,
+        .version.major = 0,
+        .version.minor = 1,
+        .version.patch = 3,
+        .version.dev_milestone = 'm',
+        .version.dev_build = 0,
+        .version.timestamp = 0,
+        .padding = 0,
+        .chunk_size = 256,
+        .firmware_length = 2097152,
+        .app_size = 2097152,
+};
+
 /******************************************************************************/
 void *
 platform_malloc(size_t size) {
@@ -66,6 +91,12 @@ platform_calloc(size_t num, size_t size) {
 void
 vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
     memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
+}
+
+/******************************************************************************/
+const vs_firmware_descriptor_t *
+vs_global_hal_get_firmware_descriptor(void) {
+    return &_descriptor;
 }
 
 /******************************************************************************/

@@ -29,6 +29,8 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
         // TODO: Check for firmware
+    } else {
+        VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
     }
 
     (void)xSemaphoreGive(gtwy->firmware_semaphore);
