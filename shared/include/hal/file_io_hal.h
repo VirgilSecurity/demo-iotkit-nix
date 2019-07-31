@@ -42,6 +42,32 @@ void
 vs_hal_files_set_mac(uint8_t mac_addr[6]);
 
 bool
-get_keystorage_base_dir(char dir[FILENAME_MAX]);
+vs_gateway_get_keystorage_base_dir(char *dir);
 
+const char *
+vs_gateway_get_trust_list_dir(void);
+
+const char *
+vs_gateway_get_slots_dir(void);
+
+const char *
+vs_gateway_get_firmware_dir(void);
+
+bool
+vs_gateway_write_file_data(const char *folder,
+                           const char *file_name,
+                           uint32_t offset,
+                           const void *data,
+                           uint16_t data_sz);
+
+bool
+vs_gateway_read_file_data(const char *folder,
+                          const char *file_name,
+                          uint32_t offset,
+                          uint8_t *data,
+                          uint16_t buf_sz,
+                          uint16_t *read_sz);
+
+bool
+vs_gateway_remove_file_data(const char *folder, const char *file_name);
 #endif // IOT_RPI_GATEWAY_FILE_IO_HAL_H

@@ -51,6 +51,7 @@ add_library(rpi_gw_shared
 
 find_package (Threads)
 target_link_libraries(rpi_gw_shared
+		macros
 		converters
 		hsm
 		logger
