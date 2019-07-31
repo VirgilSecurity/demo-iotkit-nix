@@ -79,7 +79,7 @@ static uint8_t mac[6];
 
 void
 vs_hal_files_set_mac(uint8_t mac_addr[6]) {
-    memcpy(mac, mac_addr, 6);
+    VS_IOT_MEMCPY(mac, mac_addr, 6);
 }
 
 /******************************************************************************/
@@ -89,7 +89,7 @@ _mkdir_recursive(const char *dir) {
     char *p = NULL;
     size_t len;
 
-    snprintf(tmp, sizeof(tmp), "%s", dir);
+    VS_IOT_SNPRINTF(tmp, sizeof(tmp), "%s", dir);
     len = strlen(tmp);
 
     if (tmp[len - 1] == '/') {
@@ -157,7 +157,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
         return false;
     }
 
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
+    if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
         return false;
     }
 
@@ -178,6 +178,46 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
     strcat(file_path, file_name);
 
     return true;
+}
+
+/******************************************************************************/
+int
+vs_gateway_get_file_len(const char *folder, const char *file_name) {
+
+    int res = -1;
+    char file_path[FILENAME_MAX];
+    FILE *fp = NULL;
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        return false;
+    }
+
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
+        return false;
+    }
+
+    fp = fopen(file_path, "rb");
+
+    if (fp) {
+        UNIX_CALL(fseek(fp, 0, SEEK_END));
+        res = ftell(fp);
+
+        if (res <= 0) {
+            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+            res = -1;
+            goto terminate;
+        }
+    } else {
+        VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
+    }
+
+terminate:
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
 }
 
 /******************************************************************************/
@@ -233,13 +273,13 @@ vs_gateway_write_file_data(const char *folder,
         }
 
         fclose(fp);
-        memcpy(buf + offset, data, data_sz);
+        VS_IOT_MEMCPY(buf + offset, data, data_sz);
 
     } else {
         new_file_sz = offset + data_sz;
         buf = calloc(offset + data_sz, 1);
-        memset(buf, 0xFF, offset);
-        memcpy(buf + offset, data, data_sz);
+        VS_IOT_MEMSET(buf, 0xFF, offset);
+        VS_IOT_MEMCPY(buf + offset, data, data_sz);
     }
 
     fp = fopen(file_path, "wb");
@@ -356,17 +396,17 @@ vs_gateway_get_keystorage_base_dir(char *dir) {
 
     pwd = getpwuid(getuid());
 
-    if (snprintf(dir,
-                 FILENAME_MAX,
-                 "%s/%s/%x:%x:%x:%x:%x:%x",
-                 pwd->pw_dir,
-                 main_storage_dir,
-                 mac[0],
-                 mac[1],
-                 mac[2],
-                 mac[3],
-                 mac[4],
-                 mac[5]) <= 0) {
+    if (VS_IOT_SNPRINTF(dir,
+                        FILENAME_MAX,
+                        "%s/%s/%x:%x:%x:%x:%x:%x",
+                        pwd->pw_dir,
+                        main_storage_dir,
+                        mac[0],
+                        mac[1],
+                        mac[2],
+                        mac[3],
+                        mac[4],
+                        mac[5]) <= 0) {
         return false;
     }
     return true;

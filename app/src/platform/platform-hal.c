@@ -96,6 +96,6 @@ vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
 
 /******************************************************************************/
 const vs_firmware_descriptor_t *
-vs_global_hal_get_firmware_descriptor(void) {
+vs_global_hal_get_own_firmware_descriptor(void) {
     return &_descriptor;
 }

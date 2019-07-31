@@ -41,6 +41,9 @@
 void
 vs_hal_files_set_mac(uint8_t mac_addr[6]);
 
+int
+vs_gateway_get_file_len(const char *folder, const char *file_name);
+
 bool
 vs_gateway_get_keystorage_base_dir(char *dir);
 

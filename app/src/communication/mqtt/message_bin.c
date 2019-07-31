@@ -153,20 +153,18 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 
     upd_request_t *fw_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
-    int status = vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
 
-    if (VS_CLOUD_ERR_OK == status) {
+    if (VS_CLOUD_ERR_OK == vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url)) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
-            vPortFree(fw_url);
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
         }
 
     } else {
-        VS_LOG_INFO("[MB] Error parse firmware manifest status = %d\n", status);
-        vPortFree(fw_url);
+        VS_LOG_INFO("[MB] Error parse firmware manifest\n");
     }
+    vPortFree(fw_url);
 }
 
 /*************************************************************************/
@@ -174,25 +172,21 @@ static void
 _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     upd_request_t *tl_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
-    int status = vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url);
 
-    if (VS_CLOUD_ERR_OK == status) {
+    if (VS_CLOUD_ERR_OK == vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url)) {
 
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
-            vPortFree(tl_url);
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
         }
-
     } else {
-        VS_LOG_INFO("[MB] Error parse tl manifest status = %d\n", status);
-        vPortFree(tl_url);
+        VS_LOG_INFO("[MB] Error parse tl manifest\n");
     }
+    vPortFree(tl_url);
 }
 
 #define VS_FW_TOPIC_MASK "fw/"
-
 #define VS_TL_TOPIC_MASK "tl/"
 
 /*************************************************************************/
