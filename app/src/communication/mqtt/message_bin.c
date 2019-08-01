@@ -159,6 +159,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
+            return;
         }
 
     } else {
@@ -179,6 +180,7 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
         } else {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
+            return;
         }
     } else {
         VS_LOG_INFO("[MB] Error parse tl manifest\n");
