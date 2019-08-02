@@ -105,11 +105,6 @@ vs_update_save_firmware_footer(vs_firmware_descriptor_t *descriptor, uint8_t *fo
               VS_UPDATE_ERR_FAIL,
               "Error create filename")
 
-    if (0 != memcmp(descriptor, &f->descriptor, sizeof(vs_firmware_descriptor_t))) {
-        VS_LOG_ERROR("Invalid firmware descriptor");
-        return VS_UPDATE_ERR_INVAL;
-    }
-
     for (uint8_t i = 0; i < f->signatures_count; ++i) {
         int key_len;
         int sign_len;
@@ -180,7 +175,6 @@ vs_update_save_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
 
             if (0 == memcmp(ptr->manufacture_id, descriptor->manufacture_id, MANUFACTURE_ID_SIZE) &&
                 0 == memcmp(ptr->device_type, descriptor->device_type, DEVICE_TYPE_SIZE)) {
-                VS_IOT_MEMCPY(ptr, descriptor, sizeof(vs_firmware_descriptor_t));
                 break;
             }
 
@@ -205,6 +199,7 @@ vs_update_load_firmware_descriptor(uint8_t manufacture_id[MANUFACTURE_ID_SIZE],
                                    uint8_t device_type[DEVICE_TYPE_SIZE],
                                    vs_firmware_descriptor_t *descriptor) {
 
+    int res = VS_UPDATE_ERR_NOT_FOUND;
     int file_sz;
     uint8_t *buf = NULL;
     uint32_t offset = 0;
@@ -214,7 +209,7 @@ vs_update_load_firmware_descriptor(uint8_t manufacture_id[MANUFACTURE_ID_SIZE],
     file_sz = vs_gateway_get_file_len(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME);
 
     if (file_sz <= 0) {
-        return VS_UPDATE_ERR_FAIL;
+        goto terminate;
     }
 
     uint16_t read_sz;
@@ -222,23 +217,88 @@ vs_update_load_firmware_descriptor(uint8_t manufacture_id[MANUFACTURE_ID_SIZE],
     CHECK_NOT_ZERO(buf, VS_UPDATE_ERR_FAIL);
 
     if (!vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, buf, file_sz, &read_sz)) {
-        VS_IOT_FREE(buf);
-        return VS_UPDATE_ERR_FAIL;
+        res = VS_UPDATE_ERR_FAIL;
+        goto terminate;
     }
 
     while (offset < file_sz || offset + sizeof(vs_firmware_descriptor_t) > file_sz) {
         vs_firmware_descriptor_t *ptr = (vs_firmware_descriptor_t *)(buf + offset);
 
         if (0 == memcmp(ptr->manufacture_id, manufacture_id, MANUFACTURE_ID_SIZE) &&
-            0 == memcmp(ptr->device_type, manufacture_id, DEVICE_TYPE_SIZE)) {
+            0 == memcmp(ptr->device_type, device_type, DEVICE_TYPE_SIZE)) {
             VS_IOT_MEMCPY(descriptor, ptr, sizeof(vs_firmware_descriptor_t));
+            res = VS_UPDATE_ERR_OK;
             break;
         }
 
         offset += sizeof(vs_firmware_descriptor_t);
     }
 
+terminate:
     VS_IOT_FREE(buf);
 
-    return VS_UPDATE_ERR_OK;
+    return res;
+}
+
+/*************************************************************************/
+int
+vs_update_delete_firmware(vs_firmware_descriptor_t *descriptor) {
+    int res = VS_UPDATE_ERR_FAIL;
+    int file_sz;
+    uint8_t *buf = NULL;
+    char filename[FILENAME_MAX];
+
+    CHECK_NOT_ZERO(descriptor, VS_UPDATE_ERR_INVAL);
+
+    CHECK_RET(VS_UPDATE_ERR_OK ==
+                      _create_firmware_filename(
+                              descriptor->manufacture_id, descriptor->device_type, filename, sizeof(filename)),
+              VS_UPDATE_ERR_FAIL,
+              "Error create filename")
+
+    if (!vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), filename)) {
+        goto terminate;
+    }
+
+    file_sz = vs_gateway_get_file_len(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME);
+
+    if (file_sz <= 0) {
+        goto terminate;
+    }
+
+    uint16_t read_sz;
+    uint32_t offset = 0;
+    buf = VS_IOT_CALLOC(1, file_sz);
+    CHECK_NOT_ZERO(buf, VS_UPDATE_ERR_FAIL);
+
+    if (!vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, buf, file_sz, &read_sz)) {
+        goto terminate;
+    }
+
+    while (offset < file_sz || offset + sizeof(vs_firmware_descriptor_t) > file_sz) {
+        vs_firmware_descriptor_t *ptr = (vs_firmware_descriptor_t *)(buf + offset);
+
+        if (0 == memcmp(ptr->manufacture_id, descriptor->manufacture_id, MANUFACTURE_ID_SIZE) &&
+            0 == memcmp(ptr->device_type, descriptor->device_type, DEVICE_TYPE_SIZE)) {
+            VS_IOT_MEMMOVE(buf + offset,
+                           buf + offset + sizeof(vs_firmware_descriptor_t),
+                           file_sz - offset - sizeof(vs_firmware_descriptor_t));
+            file_sz -= sizeof(vs_firmware_descriptor_t);
+            break;
+        }
+    }
+
+    if (!vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME)) {
+        goto terminate;
+    }
+
+    res = vs_gateway_write_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, buf, file_sz)
+                  ? VS_UPDATE_ERR_OK
+                  : VS_UPDATE_ERR_FAIL;
+
+
+terminate:
+    VS_IOT_FREE(buf);
+
+    return res;
 }

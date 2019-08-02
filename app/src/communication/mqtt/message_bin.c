@@ -150,11 +150,13 @@ start_message_bin_thread() {
 /*************************************************************************/
 static void
 _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
-
+    int res;
     upd_request_t *fw_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
 
-    if (VS_CLOUD_ERR_OK == vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url)) {
+    res = vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
+
+    if (VS_CLOUD_ERR_OK == res) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
         } else {
@@ -162,19 +164,25 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
             return;
         }
 
+    } else if (VS_CLOUD_ERR_NOT_FOUND == res) {
+        VS_LOG_INFO("[MB] Firmware manifest contains old version\n");
     } else {
         VS_LOG_INFO("[MB] Error parse firmware manifest\n");
     }
+
     vPortFree(fw_url);
 }
 
 /*************************************************************************/
 static void
 _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
+    int res;
     upd_request_t *tl_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
 
-    if (VS_CLOUD_ERR_OK == vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url)) {
+    res = vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url);
+
+    if (VS_CLOUD_ERR_OK == res) {
 
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
@@ -182,9 +190,12 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
             xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
             return;
         }
+    } else if (VS_CLOUD_ERR_NOT_FOUND == res) {
+        VS_LOG_INFO("[MB] TL manifest contains old version\n");
     } else {
         VS_LOG_INFO("[MB] Error parse tl manifest\n");
     }
+
     vPortFree(tl_url);
 }
 
