@@ -60,6 +60,7 @@ target_sources(virgil-iot-gateway-initializer
 
 		# Sources
 		src/main.c
+		src/platform-hal.c
 		src/communication/sdmp_initializer.c
 		src/sdmp/prvs_implementation.c
 		)

@@ -35,6 +35,7 @@
 #include "FreeRTOS.h"
 #include "event_groups.h"
 
+/******************************************************************************/
 // Wrapper to wait until event group bits are set and not timed out
 EventBits_t
 wait_indefinitely(EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToWaitFor, BaseType_t all) {

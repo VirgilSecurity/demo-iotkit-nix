@@ -32,78 +32,70 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
-#include <unistd.h>
+#include "FreeRTOS.h"
+#include <string.h>
+#include <global-hal.h>
+#include <gateway.h>
+#include <virgil/iot/cloud/cloud.h>
+#include <virgil/iot/provision/provision.h>
 
-#include <virgil/iot/logger/logger.h>
-#include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/secbox/secbox.h>
-#include "sdmp_app.h"
-#include "gateway.h"
-#include "platform/platform_hardware.h"
-#include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
-#include "event_group_bit_flags.h"
-#include "hal/file_io_hal.h"
+#define GW_MANUFACTURE_ID                                                                                              \
+    { 0 }
+#define GW_DEVICE_TYPE                                                                                                 \
+    { 'G', 'T', 'W', 'Y' }
+#define GW_APP_TYPE                                                                                                    \
+    { 'A', 'P', 'P', '0' }
+
+// TODO: Need to use real descriptor, which
+static const vs_firmware_descriptor_t _descriptor = {
+        .manufacture_id = GW_MANUFACTURE_ID,
+        .device_type = GW_DEVICE_TYPE,
+        .version.app_type = GW_APP_TYPE,
+        .version.major = 0,
+        .version.minor = 1,
+        .version.patch = 3,
+        .version.dev_milestone = 'm',
+        .version.dev_build = 0,
+        .version.timestamp = 0,
+        .padding = 0,
+        .chunk_size = 256,
+        .firmware_length = 2097152,
+        .app_size = 2097152,
+};
 
 /******************************************************************************/
-static bool
-_read_mac_address(const char *arg, vs_mac_addr_t *mac) {
-    unsigned int values[6];
-    int i;
-
-    if (6 ==
-        sscanf(arg, "%x:%x:%x:%x:%x:%x%*c", &values[0], &values[1], &values[2], &values[3], &values[4], &values[5])) {
-        /* convert to uint8_t */
-        for (i = 0; i < 6; ++i) {
-            mac->bytes[i] = (uint8_t)values[i];
-        }
-        return true;
-    }
-
-    return false;
+void *
+platform_malloc(size_t size) {
+    return pvPortMalloc(size);
 }
 
 /******************************************************************************/
-int
-main(int argc, char *argv[]) {
-    // Setup forced mac address
-    // TODO: Need to use real mac
-    vs_mac_addr_t forced_mac_addr;
-
-    if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
-        vs_hal_netif_plc_force_mac(forced_mac_addr);
-        vs_hal_files_set_mac(forced_mac_addr.bytes);
-    } else {
-        printf("\nERROR: need to set MAC address of simulated device\n\n");
-        return -1;
-    }
-
-    // Init platform specific hardware
-    hardware_init();
-
-    // Init PLC interface
-    if (0 != vs_sdmp_init(vs_hal_netif_plc())) {
-        return -1;
-    }
-
-    // Init gateway object
-    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
-
-    vs_logger_init(VS_LOGLEV_DEBUG);
-
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
-
-    // Start SDMP protocol over PLC interface
-    // TODO: Need to use freertos interface
-    // vs_sdmp_comm_start_thread(plc_netif);
-    xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
-
-
-    // Start app
-    start_gateway_threads();
-    return 0;
+void
+platform_free(void *ptr) {
+    return vPortFree(ptr);
 }
 
 /******************************************************************************/
+void *
+platform_calloc(size_t num, size_t size) {
+
+    void *ptr;
+
+    vTaskSuspendAll();
+    { ptr = calloc(num, size); }
+    xTaskResumeAll();
+
+    return ptr;
+}
+
+/******************************************************************************/
+void
+vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
+    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
+}
+
+/******************************************************************************/
+const vs_firmware_descriptor_t *
+vs_global_hal_get_own_firmware_descriptor(void) {
+    return &_descriptor;
+}

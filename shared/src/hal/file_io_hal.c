@@ -54,6 +54,7 @@ static char base_dir[FILENAME_MAX] = {0};
 static const char *main_storage_dir = "keystorage/gateway";
 static const char *slots_dir = "slots";
 static const char *tl_dir = "trust_list";
+static const char *firmware_dir = "firmware";
 static bool initialized = false;
 static uint8_t mac[6];
 
@@ -78,7 +79,7 @@ static uint8_t mac[6];
 
 void
 vs_hal_files_set_mac(uint8_t mac_addr[6]) {
-    memcpy(mac, mac_addr, 6);
+    VS_IOT_MEMCPY(mac, mac_addr, 6);
 }
 
 /******************************************************************************/
@@ -88,7 +89,7 @@ _mkdir_recursive(const char *dir) {
     char *p = NULL;
     size_t len;
 
-    snprintf(tmp, sizeof(tmp), "%s", dir);
+    VS_IOT_SNPRINTF(tmp, sizeof(tmp), "%s", dir);
     len = strlen(tmp);
 
     if (tmp[len - 1] == '/') {
@@ -117,7 +118,7 @@ static bool
 _init_fio(void) {
     char tmp[FILENAME_MAX];
 
-    get_keystorage_base_dir(base_dir);
+    vs_gateway_get_keystorage_base_dir(base_dir);
 
     VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
 
@@ -128,6 +129,12 @@ _init_fio(void) {
     }
 
     CHECK_SNPRINTF(tmp, "%s/%s", base_dir, tl_dir);
+
+    if (-1 == _mkdir_recursive(tmp)) {
+        goto terminate;
+    }
+
+    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, firmware_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
@@ -150,7 +157,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
         return false;
     }
 
-    if (snprintf(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
+    if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
         return false;
     }
 
@@ -173,13 +180,58 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
     return true;
 }
 
+/******************************************************************************/
+int
+vs_gateway_get_file_len(const char *folder, const char *file_name) {
+
+    int res = -1;
+    char file_path[FILENAME_MAX];
+    FILE *fp = NULL;
+
+    if (!initialized && !_init_fio()) {
+        VS_LOG_ERROR("Unable to initialize file I/O operations");
+        return false;
+    }
+
+    if (!_check_fio_and_path(folder, file_name, file_path)) {
+        return false;
+    }
+
+    fp = fopen(file_path, "rb");
+
+    if (fp) {
+        UNIX_CALL(fseek(fp, 0, SEEK_END));
+        res = ftell(fp);
+
+        if (res <= 0) {
+            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+            res = -1;
+            goto terminate;
+        }
+    } else {
+        VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
+    }
+
+terminate:
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
+}
 
 /******************************************************************************/
-static bool
-_write_file_data(const char *folder, const char *file_name, const void *data, uint16_t data_sz) {
+bool
+vs_gateway_write_file_data(const char *folder,
+                           const char *file_name,
+                           uint32_t offset,
+                           const void *data,
+                           uint16_t data_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
+    uint8_t *buf = NULL;
+    uint32_t new_file_sz;
 
     NOT_ZERO(folder);
     NOT_ZERO(file_name);
@@ -197,10 +249,44 @@ _write_file_data(const char *folder, const char *file_name, const void *data, ui
 
     VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
 
+    fp = fopen(file_path, "rb");
+    if (fp) {
+        long f_sz;
+        UNIX_CALL(fseek(fp, 0, SEEK_END));
+        f_sz = ftell(fp);
+        rewind(fp);
+
+        if (f_sz <= 0) {
+            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+            res = false;
+            goto terminate;
+        }
+
+        new_file_sz = f_sz > offset + data_sz ? f_sz : offset + data_sz;
+        buf = calloc(new_file_sz, 1);
+
+        if (1 != fread((void *)buf, f_sz, 1, fp)) {
+            fclose(fp);
+            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+            res = false;
+            goto terminate;
+        }
+
+        fclose(fp);
+        VS_IOT_MEMCPY(buf + offset, data, data_sz);
+
+    } else {
+        new_file_sz = offset + data_sz;
+        buf = calloc(offset + data_sz, 1);
+        VS_IOT_MEMSET(buf, 0xFF, offset);
+        VS_IOT_MEMCPY(buf + offset, data, data_sz);
+    }
+
     fp = fopen(file_path, "wb");
 
     if (fp) {
-        if (1 != fwrite(data, data_sz, 1, fp)) {
+
+        if (1 != fwrite(buf, new_file_sz, 1, fp)) {
             VS_LOG_ERROR("Unable to write %d bytes to the file %s. errno = %d (%s)",
                          data_sz,
                          file_path,
@@ -219,15 +305,23 @@ terminate:
         fclose(fp);
     }
 
+    free(buf);
+
     return res;
 }
 
 /******************************************************************************/
-static bool
-_read_file_data(const char *folder, const char *file_name, uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
+bool
+vs_gateway_read_file_data(const char *folder,
+                          const char *file_name,
+                          uint32_t offset,
+                          uint8_t *data,
+                          uint16_t buf_sz,
+                          uint16_t *read_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
+    int64_t max_avail_sz;
 
     NOT_ZERO(folder);
     NOT_ZERO(file_name);
@@ -241,23 +335,26 @@ _read_file_data(const char *folder, const char *file_name, uint8_t *data, uint16
     fp = fopen(file_path, "rb");
 
     if (fp) {
-        UNIX_CALL(fseek(fp, 0L, SEEK_END));
-        *read_sz = ftell(fp);
-        rewind(fp);
+        UNIX_CALL(fseek(fp, offset, SEEK_END));
+        max_avail_sz = ftell(fp) - offset;
 
-        VS_LOG_DEBUG("Read file '%s', %d bytes", file_path, (int)*read_sz);
-
-        if (!*read_sz) {
-            VS_LOG_ERROR("File %s is empty", file_path);
+        if (max_avail_sz < 0) {
+            VS_LOG_ERROR("File %s is smaller than offset %u", buf_sz, file_path, offset);
+            *read_sz = 0;
             goto terminate;
         }
 
-        *read_sz = buf_sz <= *read_sz ? buf_sz : *read_sz;
+        UNIX_CALL(fseek(fp, offset, SEEK_SET));
+
+        *read_sz = max_avail_sz < buf_sz ? max_avail_sz : buf_sz;
+
+        VS_LOG_DEBUG("Read file '%s', %d bytes", file_path, (int)*read_sz);
 
         if (1 == fread((void *)data, *read_sz, 1, fp)) {
             res = true;
         } else {
             VS_LOG_ERROR("Unable to read %d bytes from %s", *read_sz, file_path);
+            *read_sz = 0;
         }
 
     } else {
@@ -274,8 +371,8 @@ terminate:
 }
 
 /******************************************************************************/
-static bool
-_remove_file_data(const char *folder, const char *file_name) {
+bool
+vs_gateway_remove_file_data(const char *folder, const char *file_name) {
     char file_path[FILENAME_MAX];
 
     if (!folder || !file_name) {
@@ -294,22 +391,22 @@ _remove_file_data(const char *folder, const char *file_name) {
 
 /******************************************************************************/
 bool
-get_keystorage_base_dir(char dir[FILENAME_MAX]) {
+vs_gateway_get_keystorage_base_dir(char *dir) {
     struct passwd *pwd = NULL;
 
     pwd = getpwuid(getuid());
 
-    if (snprintf(dir,
-                 FILENAME_MAX,
-                 "%s/%s/%x:%x:%x:%x:%x:%x",
-                 pwd->pw_dir,
-                 main_storage_dir,
-                 mac[0],
-                 mac[1],
-                 mac[2],
-                 mac[3],
-                 mac[4],
-                 mac[5]) <= 0) {
+    if (VS_IOT_SNPRINTF(dir,
+                        FILENAME_MAX,
+                        "%s/%s/%x:%x:%x:%x:%x:%x",
+                        pwd->pw_dir,
+                        main_storage_dir,
+                        mac[0],
+                        mac[1],
+                        mac[2],
+                        mac[3],
+                        mac[4],
+                        mac[5]) <= 0) {
         return false;
     }
     return true;
@@ -409,39 +506,39 @@ get_slot_name(vs_iot_hsm_slot_e slot) {
 #undef CHECK_SNPRINTF
 
 /********************************************************************************/
+const char *
+vs_gateway_get_trust_list_dir() {
+    return tl_dir;
+}
+
+/********************************************************************************/
+const char *
+vs_gateway_get_slots_dir() {
+    return slots_dir;
+}
+
+/********************************************************************************/
+const char *
+vs_gateway_get_firmware_dir() {
+    return firmware_dir;
+}
+
+/********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return _write_file_data(slots_dir, get_slot_name(slot), data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_gateway_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) ? VS_HSM_ERR_OK
+                                                                                        : VS_HSM_ERR_FILE_IO;
 }
 
 /********************************************************************************/
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    return _read_file_data(slots_dir, get_slot_name(slot), data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
-}
-
-/******************************************************************************/
-int
-write_trustlist_file(const char *file_name, const uint8_t *data, uint16_t data_sz) {
-    return _write_file_data(tl_dir, file_name, data, data_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
-}
-
-/******************************************************************************/
-int
-read_trustlist_file(const char *file_name, uint8_t *out_data, size_t buf_sz, uint16_t *out_sz) {
-    return _read_file_data(tl_dir, file_name, out_data, buf_sz, out_sz) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
-}
-
-/******************************************************************************/
-int
-delete_trustlist_file(const char *file_name) {
-    return _remove_file_data(tl_dir, file_name) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_gateway_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, out_sz) ? VS_HSM_ERR_OK
+                                                                                              : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
 int
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return _remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_gateway_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
-
-/******************************************************************************/

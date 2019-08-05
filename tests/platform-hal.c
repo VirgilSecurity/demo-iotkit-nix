@@ -32,18 +32,22 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_SECBOX_KEYSTORAGE_FILE_H
-#define GATEWAY_SECBOX_KEYSTORAGE_FILE_H
+#include <stdlib.h>
 
-#include <stdint.h>
-#include <stdio.h>
+/******************************************************************************/
+void *
+platform_calloc(size_t num, size_t size) {
+    return calloc(num, size);
+}
 
-bool
-get_keystorage_base_dir(char dir[FILENAME_MAX]);
-int
-write_trustlist_file(const char *file_name, const uint8_t *data, uint16_t data_sz);
-int
-read_trustlist_file(const char *file_name, uint8_t *buf, size_t buf_sz, uint16_t *out_sz);
-int
-delete_trustlist_file(const char *file_name);
-#endif // GATEWAY_SECBOX_KEYSTORAGE_FILE_H
+/******************************************************************************/
+void *
+platform_malloc(size_t size) {
+    return malloc(size);
+}
+
+/******************************************************************************/
+void
+platform_free(void *ptr) {
+    return free(ptr);
+}

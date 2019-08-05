@@ -38,8 +38,8 @@
  * @file https.c
  * @brief https wrapper.
  */
-#include "https.h"
-#include "cloud.h"
+
+#include <virgil/iot/cloud/cloud.h>
 #include <string.h>
 #include <curl/curl.h>
 
@@ -47,12 +47,19 @@ typedef struct resp_buff_s {
     uint8_t *buff;
     size_t buff_sz;
     size_t used_size;
+    fetch_handler_func fetch_handler;
+    void *userdata;
 } resp_buff_t;
+
 /******************************************************************************/
 static size_t
 write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
-    size_t chunksize = size * nmemb;
     resp_buff_t *resp = (resp_buff_t *)userdata;
+    size_t chunksize = size * nmemb;
+
+    if (resp->fetch_handler) {
+        return resp->fetch_handler(contents, chunksize, resp->userdata);
+    }
 
     if (NULL == resp->buff || resp->used_size + chunksize > resp->buff_sz) {
         return 0;
@@ -64,24 +71,30 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
 
 /******************************************************************************/
 uint16_t
-https(http_method_t type,
-      const char *url,
-      const char *authorization,
-      const char *data,
-      size_t data_size,
-      char *out_data,
-      size_t *in_out_size) {
+vs_cloud_https_hal(vs_http_method_t type,
+                   const char *url,
+                   const char *data,
+                   size_t data_size,
+                   char *out_data,
+                   fetch_handler_func fetch_handler,
+                   void *hander_data,
+                   size_t *in_out_size) {
     CURL *curl;
     CURLcode curl_res;
     uint16_t res = HTTPS_RET_CODE_OK;
-    resp_buff_t resp = {(uint8_t *)out_data, *in_out_size, 0};
+
+    if (NULL == in_out_size) {
+        return HTTPS_RET_CODE_ERROR_PREPARE_REQ;
+    }
+
+    resp_buff_t resp = {(uint8_t *)out_data, *in_out_size, 0, fetch_handler, hander_data};
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
     curl = curl_easy_init();
     if (curl) {
         switch (type) {
-        case HTTP_GET:
+        case VS_HTTP_GET:
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &resp);

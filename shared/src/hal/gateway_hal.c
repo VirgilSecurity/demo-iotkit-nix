@@ -67,7 +67,7 @@ vs_logger_output_hal(const char *buffer) {
 
 /******************************************************************************/
 void
-vs_hal_get_udid(uint8_t udid[32]) {
+vs_gateway_hal_get_udid(uint8_t *udid) {
     vs_mac_addr_t mac;
     vs_sdmp_mac_addr(0, &mac);
 

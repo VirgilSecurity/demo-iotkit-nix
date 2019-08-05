@@ -35,11 +35,14 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/logger/logger.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/trust_list/trust_list.h>
 
 #include "gateway_macro.h"
-#include "secbox_impl/file_io_hal.h"
+#include "hal/file_io_hal.h"
 
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz);
@@ -61,22 +64,23 @@ static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
 /******************************************************************************/
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    // TODO: need to remove asserts
-    assert(element_info);
-    assert(in_data);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(in_data, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
-    return write_trustlist_file(filename, in_data, data_sz);
+    return vs_gateway_write_file_data(vs_gateway_get_trust_list_dir(), filename, 0, in_data, data_sz)
+                   ? VS_HSM_ERR_OK
+                   : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz) {
-    assert(element_info);
-    assert(out_data);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(out_data, VS_HSM_ERR_INVAL);
 
     uint16_t out_sz;
     char filename[FILENAME_MAX];
@@ -84,21 +88,22 @@ vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
     // TODO: RETURN REAL SIZE OF READ DATA
-    return read_trustlist_file(filename, out_data, data_sz, &out_sz);
+    return vs_gateway_read_file_data(vs_gateway_get_trust_list_dir(), filename, 0, out_data, data_sz, &out_sz)
+                   ? VS_HSM_ERR_OK
+                   : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
 static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
-    assert(element_info);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
-    return delete_trustlist_file(filename);
+    return vs_gateway_remove_file_data(vs_gateway_get_trust_list_dir(), filename) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
-
 
 /******************************************************************************/
 static int

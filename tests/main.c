@@ -39,7 +39,7 @@
 #include "secbox_impl/gateway_secbox_impl.h"
 #include <virgil/crypto/foundation/vscf_assert.h>
 
-#include "secbox_impl/file_io_hal.h"
+#include "hal/file_io_hal.h"
 #include "hal/file_io_hal.h"
 #include <sys/stat.h>
 #include <fts.h>
@@ -114,7 +114,7 @@ static void
 _remove_keystorage_dir() {
     char folder[FILENAME_MAX];
 
-    if (!get_keystorage_base_dir(folder)) {
+    if (!vs_gateway_get_keystorage_base_dir(folder)) {
         return;
     }
     _recursive_delete(folder);

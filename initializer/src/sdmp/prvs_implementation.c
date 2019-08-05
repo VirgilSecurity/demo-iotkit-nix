@@ -72,7 +72,7 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     // TODO: Fix this hardcode
     device_info->manufacturer = 0x89abcdef;
     device_info->model = 0x12345678;
-    vs_hal_get_udid(device_info->udid_of_device);
+    vs_gateway_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key
     if (VS_HSM_ERR_OK !=
