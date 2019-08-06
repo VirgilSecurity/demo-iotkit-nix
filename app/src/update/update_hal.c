@@ -53,6 +53,24 @@ vs_update_get_firmware_descriptor_table_len_hal(void) {
 
 /******************************************************************************/
 int
+vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_type) {
+
+    char filename[FILENAME_MAX];
+    int file_sz;
+
+    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
+              VS_UPDATE_ERR_FAIL,
+              "Error create filename")
+
+    file_sz = vs_gateway_get_file_len(vs_gateway_get_firmware_dir(), filename);
+
+    return (file_sz > 0) ? file_sz : VS_UPDATE_ERR_NOT_FOUND;
+}
+
+/******************************************************************************/
+int
 vs_update_read_firmware_descriptor_table_hal(uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
     CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
     CHECK_NOT_ZERO(read_sz, VS_UPDATE_ERR_INVAL);
@@ -102,10 +120,8 @@ vs_update_write_firmware_data_hal(uint8_t *manufacture_id,
                                   uint32_t offset,
                                   const void *data,
                                   uint16_t data_sz) {
-
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
-
     char filename[FILENAME_MAX];
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
     CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
     CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
 
