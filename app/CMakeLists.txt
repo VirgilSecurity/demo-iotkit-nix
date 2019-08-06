@@ -63,8 +63,6 @@ target_sources(virgil-iot-gateway-app
 		src/platform/os.c
 		src/update/upd_http_retrieval_thread.c
 		src/update/update_hal.c
-
-		PUBLIC
 		src/platform/platform-hal.c
 		)
 

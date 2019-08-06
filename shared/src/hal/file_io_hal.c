@@ -43,6 +43,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <stdlib-config.h>
+#include <global-hal.h>
 #include <virgil/iot/hsm/hsm_structs.h>
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
@@ -263,10 +265,10 @@ vs_gateway_write_file_data(const char *folder,
         }
 
         new_file_sz = f_sz > offset + data_sz ? f_sz : offset + data_sz;
-        buf = calloc(new_file_sz, 1);
+        buf = VS_IOT_CALLOC(new_file_sz, 1);
+        NOT_ZERO(buf);
 
         if (1 != fread((void *)buf, f_sz, 1, fp)) {
-            fclose(fp);
             VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
             res = false;
             goto terminate;
@@ -277,7 +279,7 @@ vs_gateway_write_file_data(const char *folder,
 
     } else {
         new_file_sz = offset + data_sz;
-        buf = calloc(offset + data_sz, 1);
+        buf = VS_IOT_CALLOC(offset + data_sz, 1);
         VS_IOT_MEMSET(buf, 0xFF, offset);
         VS_IOT_MEMCPY(buf + offset, data, data_sz);
     }
@@ -305,7 +307,7 @@ terminate:
         fclose(fp);
     }
 
-    free(buf);
+    VS_IOT_FREE(buf);
 
     return res;
 }

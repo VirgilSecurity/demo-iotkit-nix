@@ -41,8 +41,6 @@ add_executable(rpi_gw_tests)
 target_sources(rpi_gw_tests
 		PRIVATE
 		main.c
-
-		PUBLIC
 		platform-hal.c
 		)
 

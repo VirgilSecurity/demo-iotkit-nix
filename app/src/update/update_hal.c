@@ -286,6 +286,7 @@ vs_update_delete_firmware(vs_firmware_descriptor_t *descriptor) {
             file_sz -= sizeof(vs_firmware_descriptor_t);
             break;
         }
+        offset += sizeof(vs_firmware_descriptor_t);
     }
 
     if (!vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME)) {
