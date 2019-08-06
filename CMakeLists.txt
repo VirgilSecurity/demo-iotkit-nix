@@ -73,6 +73,28 @@ if (USE_ASAN)
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 endif()
 
+if(UNIX AND NOT APPLE)
+    #
+    #   Address sanitizer
+    #
+    option(USE_MSAN "On/Off Memory sanitizer." OFF)
+    message("-- Memory Sanitizer: ${USE_MSAN}")
+    if (USE_MSAN)
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=memory")
+        set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=memory")
+    endif()
+
+    #
+    #   Leak sanitizer
+    #
+    option(USE_LSAN "On/Off Leak memory sanitizer." OFF)
+    message("-- Leak memory Sanitizer: ${USE_LSAN}")
+    if (USE_LSAN)
+        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=leak")
+        set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=leak")
+    endif()
+endif()
+
 #
 #   Undefined behavior sanitizer
 #
@@ -83,6 +105,20 @@ if (USE_UBSAN)
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=undefined")
 endif()
 
+#
+#   Thread sanitizer
+#
+option(USE_TSAN "On/Off Thread sanitizer." OFF)
+message("-- Thread Sanitizer: ${USE_TSAN}")
+if (USE_TSAN)
+    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=thread")
+    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
+endif()
+
+if(USE_ASAN OR USE_MSAN OR USE_LSAN OR USE_UBSAN OR USE_TSAN)
+    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
+    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
+endif()
 # ---------------------------------------------------------------------------
 #   Format code
 # ---------------------------------------------------------------------------
