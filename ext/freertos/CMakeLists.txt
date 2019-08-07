@@ -49,6 +49,12 @@ set(FREERTOS_INCLUDE  "${FREERTOS_ROOT}/Source/include")
 
 add_library(freertos)
 
+set_target_properties(freertos
+          PROPERTIES
+          C_STANDARD 11
+          C_STANDARD_REQUIRED ON
+          )
+
 target_compile_definitions(freertos
           PRIVATE
           $<$<CONFIG:DEBUG>:DEBUG=1>

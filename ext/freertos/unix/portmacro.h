@@ -84,6 +84,7 @@ extern "C" {
  */
 
 #include <stdint.h>
+#include <stdatomic.h>
 /* Type definitions. */
 #define portCHAR char
 #define portFLOAT float
@@ -93,6 +94,9 @@ extern "C" {
 #define portSTACK_TYPE size_t
 #define portBASE_TYPE long
 #define portPOINTER_SIZE_TYPE uintptr_t
+
+#define portBASE_TYPE_ATOMIC atomic_long
+#define portBASE_UNSIGNED_TYPE_ATOMIC atomic_ulong
 
 typedef portSTACK_TYPE StackType_t;
 typedef long BaseType_t;
