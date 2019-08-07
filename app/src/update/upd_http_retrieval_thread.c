@@ -21,17 +21,24 @@ static bool retrieval_started;
 /*************************************************************************/
 static void
 sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
+    vs_cloud_firmware_header_t header;
     // It should be immediately available given that this starts first
     while (xSemaphoreTake(gtwy->firmware_semaphore, portMAX_DELAY) == pdFALSE) {
     }
     VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
 
     VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
-    if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url)) {
-        VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
-        // TODO: Check for firmware
+    if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header)) {
+        VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
     } else {
         VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
+    }
+
+    if (VS_UPDATE_ERR_OK == vs_update_verify_firmware(&header.descriptor)) {
+        VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
+    } else {
+        VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
+        vs_update_delete_firmware(&header.descriptor);
     }
 
     (void)xSemaphoreGive(gtwy->firmware_semaphore);
