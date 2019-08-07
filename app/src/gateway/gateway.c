@@ -42,6 +42,7 @@
 #include "gateway_macro.h"
 #include "message_bin.h"
 #include "upd_http_retrieval_thread.h"
+#include "test_update_thread.h"
 #include "event_group_bit_flags.h"
 #include "gateway_hal.h"
 
@@ -82,6 +83,9 @@ get_gateway_ctx(void) {
 static void
 _gateway_task(void *pvParameters) {
 
+#if SIMULATOR
+    start_test_update_thread();
+#endif
     start_message_bin_thread();
     start_upd_http_retrieval_thread();
 
