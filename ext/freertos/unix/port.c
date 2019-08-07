@@ -101,7 +101,7 @@ typedef struct XPARAMS {
 typedef struct THREAD_SUSPENSIONS {
     pthread_t hThread;
     xTaskHandle hTask;
-    unsigned portBASE_TYPE uxCriticalNesting;
+    portBASE_UNSIGNED_TYPE_ATOMIC uxCriticalNesting;
 } xThreadState;
 /*-----------------------------------------------------------*/
 
@@ -113,13 +113,13 @@ static pthread_mutex_t xSingleThreadMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t hMainThread = (pthread_t)NULL;
 /*-----------------------------------------------------------*/
 
-static volatile portBASE_TYPE xSentinel = 0;
-static volatile portBASE_TYPE xSchedulerEnd = pdFALSE;
-static volatile portBASE_TYPE xInterruptsEnabled = pdTRUE;
-static volatile portBASE_TYPE xServicingTick = pdFALSE;
-static volatile portBASE_TYPE xPendYield = pdFALSE;
+static volatile portBASE_TYPE_ATOMIC xSentinel = 0;
+static volatile portBASE_TYPE_ATOMIC xSchedulerEnd = pdFALSE;
+static volatile portBASE_TYPE_ATOMIC xInterruptsEnabled = pdTRUE;
+static volatile portBASE_TYPE_ATOMIC xServicingTick = pdFALSE;
+static volatile portBASE_TYPE_ATOMIC xPendYield = pdFALSE;
 static volatile portLONG lIndexOfLastAddedTask = 0;
-static volatile unsigned portBASE_TYPE uxCriticalNesting;
+static volatile portBASE_UNSIGNED_TYPE_ATOMIC uxCriticalNesting;
 /*-----------------------------------------------------------*/
 
 /*
