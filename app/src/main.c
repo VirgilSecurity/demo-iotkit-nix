@@ -34,7 +34,6 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -48,7 +47,7 @@
 #include "hal/file_io_hal.h"
 
 char self_path[FILENAME_MAX];
-char self_name[FILENAME_MAX];
+
 char firmware_name[FILENAME_MAX];
 
 static const char *MAC_SHORT = "-m";
@@ -101,20 +100,13 @@ main(int argc, char *argv[]) {
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
 
-    char buf[FILENAME_MAX];
-
-    VS_IOT_STRCPY(buf, argv[0]);
-    char *ptr = dirname(buf);
-    VS_IOT_STRCPY(self_path, ptr);
-
-    VS_IOT_STRCPY(buf, argv[0]);
-    ptr = basename(buf);
-    VS_IOT_STRCPY(self_name, ptr);
+    VS_IOT_STRCPY(self_path, argv[0]);
 
     char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
     // Check input parameters
     if (!mac_str) {
-        printf("usage: virgil-iot-gateway-app %s/%s <forces MAC address> %s/%s <path to new firmware file (optional) "
+        printf("usage: \n    virgil-iot-gateway-app %s/%s <forces MAC address>\n    %s/%s <path to new firmware file "
+               "(optional) "
                "relative to ~/keystorage/gateway/<mac addr>/sim_fw_images> \n",
                MAC_SHORT,
                MAC_FULL,

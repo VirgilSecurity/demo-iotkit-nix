@@ -9,6 +9,7 @@
 #include "event_group_bit_flags.h"
 
 #include "semphr.h"
+#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/update/update_interface.h>
 
@@ -18,21 +19,39 @@ static const uint16_t upd_retrieval_stack = 10 * 1024;
 
 static bool retrieval_started;
 
+#define FWDIST_QUEUE_SZ 10
+xQueueHandle *fwdist_event_queue;
+
 /*************************************************************************/
 static void
 sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_cloud_firmware_header_t header;
+    vs_firmware_info_t *fw_info = NULL;
+    int res;
     // It should be immediately available given that this starts first
     while (xSemaphoreTake(gtwy->firmware_semaphore, portMAX_DELAY) == pdFALSE) {
     }
     VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
 
     VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
-    if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header)) {
+
+    res = vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header);
+    if (VS_CLOUD_ERR_OK == res) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
 
-        if (VS_UPDATE_ERR_OK == vs_update_verify_firmware(&header.descriptor)) {
+        res = vs_update_verify_firmware(&header.descriptor);
+        if (VS_UPDATE_ERR_OK == res) {
+
             VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
+
+            fw_info = (vs_firmware_info_t *)pvPortMalloc(sizeof(vs_firmware_info_t));
+            VS_IOT_MEMCPY(fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
+
+            if (pdTRUE != xQueueSendToBack(*fwdist_event_queue, &fw_info, OS_NO_WAIT)) {
+                vPortFree(fw_info);
+                VS_LOG_ERROR("[MB] Failed to send fw info to output processing!!!");
+            }
+
         } else {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
             vs_update_delete_firmware(&header.descriptor);
@@ -41,7 +60,6 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     } else {
         VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
     }
-
 
     (void)xSemaphoreGive(gtwy->firmware_semaphore);
     VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
@@ -102,6 +120,9 @@ upd_http_retrieval(void *pvParameters) {
 xTaskHandle *
 start_upd_http_retrieval_thread(void) {
     if (!retrieval_started) {
+        fwdist_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
+        CHECK_NOT_ZERO(fwdist_event_queue, NULL);
+        *fwdist_event_queue = xQueueCreate(FWDIST_QUEUE_SZ, sizeof(vs_firmware_info_t *));
         retrieval_started = (pdTRUE == xTaskCreate(upd_http_retrieval,
                                                    "sw-http-retrieval",
                                                    upd_retrieval_stack,
@@ -110,4 +131,16 @@ start_upd_http_retrieval_thread(void) {
                                                    &upd_retrieval_thread));
     }
     return &upd_retrieval_thread;
+}
+
+/*************************************************************************/
+bool
+upd_http_retrieval_get_request(vs_firmware_info_t **request) {
+
+    if (uxQueueMessagesWaiting(*fwdist_event_queue)) {
+        if (pdTRUE == xQueueReceive(*fwdist_event_queue, request, 0))
+            return true;
+    }
+    *request = NULL;
+    return false;
 }

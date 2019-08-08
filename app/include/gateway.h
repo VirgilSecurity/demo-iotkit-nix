@@ -63,7 +63,6 @@ start_gateway_threads(void);
 
 #if SIM_FETCH_FIRMWARE
 extern char self_path[FILENAME_MAX];
-extern char self_name[FILENAME_MAX];
 extern char firmware_name[FILENAME_MAX];
 #endif
 #endif // GATEWAY_H

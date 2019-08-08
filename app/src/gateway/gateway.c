@@ -46,6 +46,7 @@
 #include "event_group_bit_flags.h"
 #include "gateway_hal.h"
 
+#include <global-hal.h>
 #include <virgil/iot/logger/logger.h>
 
 static gtwy_t _gtwy;
@@ -54,7 +55,9 @@ static bool is_threads_started = false;
 static xTaskHandle gateway_starter_thread;
 static const uint16_t starter_thread_stack_size = 10 * 1024;
 
-xQueueHandle *upd_event_queue;
+#if SIMULATOR
+static const char _test_message[] = TEST_UPDATE_MESSAGE;
+#endif
 
 /******************************************************************************/
 gtwy_t *
@@ -79,26 +82,52 @@ get_gateway_ctx(void) {
     return &_gtwy;
 }
 
+/*************************************************************************/
+static bool
+_is_self_firmware_image(vs_firmware_info_t *fw_info) {
+    const vs_firmware_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
+
+    return (0 == VS_IOT_MEMCMP(desc->info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
+            0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
+}
+
+static void
+_restart_app() {
+}
+
 /******************************************************************************/
 static void
 _gateway_task(void *pvParameters) {
+    vs_firmware_info_t *request;
+    vs_firmware_descriptor_t desc;
 
-#if SIMULATOR
-    start_test_update_thread();
-#if SIM_FETCH_FIRMWARE
+#if SIMULATOR && SIM_FETCH_FIRMWARE
     start_sim_fetch_thread();
-#endif // SIM_FETCH_FIRMWARE
-#endif // SIMULATOR
-
-#if !SIMULATOR || !SIM_FETCH_FIRMWARE
+#else
     start_message_bin_thread();
 #endif
     start_upd_http_retrieval_thread();
 
     while (true) {
-        int32_t thread_sleep = 1000 / configTICK_RATE_HZ; //-V501
+        int32_t thread_sleep = 3000 / portTICK_PERIOD_MS; //-V501
         // TODO: Main loop will be here
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
+
+        while (upd_http_retrieval_get_request(&request)) {
+            if (_is_self_firmware_image(request) &&
+                VS_UPDATE_ERR_OK ==
+                        vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
+                VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
+                _restart_app();
+            }
+            vPortFree(request);
+        }
+
+#if SIMULATOR
+        if (_test_message[0] != 0) {
+            VS_LOG_INFO(_test_message);
+        }
+#endif
     }
 }
 
