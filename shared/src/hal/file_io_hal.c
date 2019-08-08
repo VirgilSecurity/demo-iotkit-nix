@@ -57,6 +57,7 @@ static const char *main_storage_dir = "keystorage/gateway";
 static const char *slots_dir = "slots";
 static const char *tl_dir = "trust_list";
 static const char *firmware_dir = "firmware";
+static const char *sim_fw_images_dir = "sim_fw_images";
 static bool initialized = false;
 static uint8_t mac[6];
 
@@ -137,6 +138,12 @@ _init_fio(void) {
     }
 
     CHECK_SNPRINTF(tmp, "%s/%s", base_dir, firmware_dir);
+
+    if (-1 == _mkdir_recursive(tmp)) {
+        goto terminate;
+    }
+
+    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, sim_fw_images_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
@@ -525,6 +532,11 @@ vs_gateway_get_firmware_dir() {
     return firmware_dir;
 }
 
+/********************************************************************************/
+const char *
+vs_gateway_get_sim_fw_images_dir() {
+    return sim_fw_images_dir;
+}
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {

@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -45,6 +46,35 @@
 #include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"
 #include "hal/file_io_hal.h"
+
+char self_path[FILENAME_MAX];
+char self_name[FILENAME_MAX];
+char firmware_name[FILENAME_MAX];
+
+static const char *MAC_SHORT = "-m";
+static const char *MAC_FULL = "--mac";
+
+static const char *FIRMWARE_SHORT = "-f";
+static const char *FIRMWARE_FULL = "--firmware";
+
+/******************************************************************************/
+static char *
+_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
+    size_t pos;
+
+    if (!(argv && shortname && *shortname && longname && *longname)) {
+        return NULL;
+    }
+
+    for (pos = 0; pos < argc; ++pos) {
+        if (!strcmp(argv[pos], shortname) && (pos + 1) < argc)
+            return argv[pos + 1];
+        if (!strcmp(argv[pos], longname) && (pos + 1) < argc)
+            return argv[pos + 1];
+    }
+
+    return NULL;
+}
 
 /******************************************************************************/
 static bool
@@ -71,14 +101,44 @@ main(int argc, char *argv[]) {
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
 
-    if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
+    char buf[FILENAME_MAX];
+
+    VS_IOT_STRCPY(buf, argv[0]);
+    char *ptr = dirname(buf);
+    VS_IOT_STRCPY(self_path, ptr);
+
+    VS_IOT_STRCPY(buf, argv[0]);
+    ptr = basename(buf);
+    VS_IOT_STRCPY(self_name, ptr);
+
+    char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+    // Check input parameters
+    if (!mac_str) {
+        printf("usage: virgil-iot-gateway-app %s/%s <forces MAC address> %s/%s <path to new firmware file (optional) "
+               "relative to ~/keystorage/gateway/<mac addr>/sim_fw_images> \n",
+               MAC_SHORT,
+               MAC_FULL,
+               FIRMWARE_SHORT,
+               FIRMWARE_FULL);
+        return false;
+    }
+
+    if (_read_mac_address(mac_str, &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
         vs_hal_files_set_mac(forced_mac_addr.bytes);
     } else {
-        printf("\nERROR: need to set MAC address of simulated device\n\n");
+        printf("\nERROR: Error MAC address of simulated device\n\n");
         return -1;
     }
 
+#if SIM_FETCH_FIRMWARE
+    char *firmware_str = _get_commandline_arg(argc, argv, FIRMWARE_SHORT, FIRMWARE_FULL);
+    if (firmware_str) {
+        VS_IOT_STRCPY(firmware_name, firmware_str);
+    } else {
+        firmware_name[0] = 0;
+    }
+#endif
     // Init platform specific hardware
     hardware_init();
 
@@ -91,6 +151,7 @@ main(int argc, char *argv[]) {
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
 
     vs_logger_init(VS_LOGLEV_DEBUG);
+    VS_LOG_DEBUG(self_path);
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());

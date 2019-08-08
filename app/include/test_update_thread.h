@@ -8,5 +8,6 @@
 
 xTaskHandle *
 start_test_update_thread(void);
-
+xTaskHandle *
+start_sim_fetch_thread(void);
 #endif // IOT_RPI_GATEWAY_TEST_UPDATE_THREAD_H

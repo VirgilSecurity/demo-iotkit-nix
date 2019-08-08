@@ -71,6 +71,7 @@ target_sources(virgil-iot-gateway-app
 			PRIVATE
 			TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
 			SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+			SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
 			)
 
 #

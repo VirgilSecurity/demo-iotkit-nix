@@ -30,16 +30,18 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
     if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
+
+        if (VS_UPDATE_ERR_OK == vs_update_verify_firmware(&header.descriptor)) {
+            VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
+        } else {
+            VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
+            vs_update_delete_firmware(&header.descriptor);
+        }
+
     } else {
         VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
     }
 
-    if (VS_UPDATE_ERR_OK == vs_update_verify_firmware(&header.descriptor)) {
-        VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
-    } else {
-        VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
-        vs_update_delete_firmware(&header.descriptor);
-    }
 
     (void)xSemaphoreGive(gtwy->firmware_semaphore);
     VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
@@ -74,6 +76,7 @@ upd_http_retrieval(void *pvParameters) {
 
     // Wait for the sdmp stack and services to be up before looking for new firmware
     wait_indefinitely(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT, pdTRUE);
+    xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
     VS_LOG_DEBUG("upd_http_retrieval thread started");
 
     while (1) {

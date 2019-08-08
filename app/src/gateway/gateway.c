@@ -85,8 +85,14 @@ _gateway_task(void *pvParameters) {
 
 #if SIMULATOR
     start_test_update_thread();
-#endif
+#if SIM_FETCH_FIRMWARE
+    start_sim_fetch_thread();
+#endif // SIM_FETCH_FIRMWARE
+#endif // SIMULATOR
+
+#if !SIMULATOR || !SIM_FETCH_FIRMWARE
     start_message_bin_thread();
+#endif
     start_upd_http_retrieval_thread();
 
     while (true) {

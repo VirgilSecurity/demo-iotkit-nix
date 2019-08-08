@@ -36,6 +36,7 @@
 #define GATEWAY_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -59,4 +60,10 @@ gtwy_t *
 get_gateway_ctx(void);
 void
 start_gateway_threads(void);
+
+#if SIM_FETCH_FIRMWARE
+extern char self_path[FILENAME_MAX];
+extern char self_name[FILENAME_MAX];
+extern char firmware_name[FILENAME_MAX];
+#endif
 #endif // GATEWAY_H
