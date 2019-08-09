@@ -34,6 +34,9 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -48,13 +51,17 @@
 
 char self_path[FILENAME_MAX];
 
+#if SIM_FETCH_FIRMWARE
 char firmware_name[FILENAME_MAX];
+#endif
 
 static const char *MAC_SHORT = "-m";
 static const char *MAC_FULL = "--mac";
 
 static const char *FIRMWARE_SHORT = "-f";
 static const char *FIRMWARE_FULL = "--firmware";
+static const char cmd_str_template[] = "nohup bash -c \"killall %s; sleep 3; mv %s %s; %s ";
+bool is_try_to_update = false;
 
 /******************************************************************************/
 static char *
@@ -156,6 +163,44 @@ main(int argc, char *argv[]) {
 
     // Start app
     start_gateway_threads();
+
+    if (is_try_to_update) {
+        char new_app[FILENAME_MAX];
+        char old_app[FILENAME_MAX];
+        char *old_app_basename;
+        char cmd_str[1024];
+        size_t pos;
+
+        VS_LOG_INFO("Try to update app");
+
+        VS_IOT_STRCPY(new_app, self_path);
+        VS_IOT_STRCPY(old_app, self_path);
+
+        old_app_basename = basename(old_app);
+
+        strcat(new_app, ".new");
+        if (-1 == chmod(new_app, S_IXUSR | S_IWUSR | S_IRUSR)) {
+            VS_LOG_ERROR("Error change permissions for new image. errno = %d (%s)", errno, strerror(errno));
+        }
+
+        snprintf(cmd_str, sizeof(cmd_str), cmd_str_template, old_app_basename, new_app, self_path, self_path);
+
+        for (pos = 1; pos < argc; ++pos) {
+            strcat(cmd_str, argv[pos]);
+            strcat(cmd_str, " ");
+        }
+        strcat(cmd_str, "\"");
+
+        VS_LOG_DEBUG(cmd_str);
+
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error start new process. errno = %d (%s)", errno, strerror(errno));
+        }
+
+        VS_LOG_ERROR("Something wrong");
+    }
+
+    VS_LOG_INFO("App stopped");
     return 0;
 }
 

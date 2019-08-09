@@ -36,6 +36,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "platform/platform_os.h"
 #include "gateway.h"
@@ -91,8 +92,14 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
             0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
 }
 
+/*************************************************************************/
 static void
 _restart_app() {
+    is_try_to_update = true;
+
+    vTaskEndScheduler();
+    while (1)
+        ;
 }
 
 /******************************************************************************/

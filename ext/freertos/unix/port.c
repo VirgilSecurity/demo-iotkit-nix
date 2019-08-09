@@ -272,6 +272,31 @@ xPortStartScheduler(void) {
     xResult = pthread_mutex_destroy(&xSingleThreadMutex);
     vPortFree((void *)pxThreads);
 
+    struct sigaction sigsuspendself, sigresume, sigtick;
+
+    memset(&sigsuspendself, 0, sizeof(sigsuspendself));
+    memset(&sigresume, 0, sizeof(sigresume));
+    memset(&sigtick, 0, sizeof(sigtick));
+
+    sigsuspendself.sa_handler = SIG_DFL;
+    sigfillset(&sigsuspendself.sa_mask);
+
+    sigresume.sa_handler = SIG_DFL;
+    sigfillset(&sigresume.sa_mask);
+
+    sigtick.sa_handler = SIG_DFL;
+    sigfillset(&sigtick.sa_mask);
+
+    if (0 != sigaction(SIG_SUSPEND, &sigsuspendself, NULL)) {
+        printf("Problem installing SIG_SUSPEND_SELF\n");
+    }
+    if (0 != sigaction(SIG_RESUME, &sigresume, NULL)) {
+        printf("Problem installing SIG_RESUME\n");
+    }
+    if (0 != sigaction(SIG_TICK, &sigtick, NULL)) {
+        printf("Problem installing SIG_TICK\n");
+    }
+
     /* Should not get here! */
     return 0;
 }
