@@ -60,7 +60,7 @@ static const char *MAC_FULL = "--mac";
 
 static const char *FIRMWARE_SHORT = "-f";
 static const char *FIRMWARE_FULL = "--firmware";
-static const char cmd_str_template[] = "nohup bash -c \"killall %s; sleep 3; mv %s %s; %s ";
+static const char cmd_str_template[] = " mv %s %s; %s ";
 bool is_try_to_update = false;
 
 /******************************************************************************/
@@ -179,19 +179,13 @@ main(int argc, char *argv[]) {
         old_app_basename = basename(old_app);
 
         strcat(new_app, ".new");
-        if (-1 == chmod(new_app, S_IXUSR | S_IWUSR | S_IRUSR)) {
-            VS_LOG_ERROR("Error change permissions for new image. errno = %d (%s)", errno, strerror(errno));
-        }
 
-        snprintf(cmd_str, sizeof(cmd_str), cmd_str_template, old_app_basename, new_app, self_path, self_path);
+        snprintf(cmd_str, sizeof(cmd_str), cmd_str_template, new_app, self_path, self_path);
 
         for (pos = 1; pos < argc; ++pos) {
             strcat(cmd_str, argv[pos]);
             strcat(cmd_str, " ");
         }
-        strcat(cmd_str, "\"");
-
-        VS_LOG_DEBUG(cmd_str);
 
         if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
             VS_LOG_ERROR("Error start new process. errno = %d (%s)", errno, strerror(errno));
@@ -199,6 +193,7 @@ main(int argc, char *argv[]) {
 
         VS_LOG_ERROR("Something wrong");
     }
+
 
     VS_LOG_INFO("App stopped");
     return 0;
