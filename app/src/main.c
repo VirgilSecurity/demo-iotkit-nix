@@ -55,7 +55,9 @@ char self_path[FILENAME_MAX];
 char firmware_name[FILENAME_MAX];
 #endif
 
-#define CMD_STR_UPDATE_TEMPLATE "mv %s %s; %s %s"
+#define CMD_STR_CPY_TEMPLATE "cp %s %s"
+#define CMD_STR_MV_TEMPLATE "mv %s %s"
+#define CMD_STR_START_TEMPLATE "%s %s"
 
 static const char *MAC_SHORT = "-m";
 static const char *MAC_FULL = "--mac";
@@ -102,6 +104,90 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
+static int
+_try_to_update_app(int argc, char *argv[]) {
+    char old_app[FILENAME_MAX];
+    char new_app[FILENAME_MAX];
+    char cmd_str[FILENAME_MAX];
+
+    size_t pos;
+
+    VS_LOG_INFO("Try to update app");
+
+    VS_IOT_STRCPY(new_app, self_path);
+    VS_IOT_STRCPY(old_app, self_path);
+
+    strcat(old_app, ".old");
+    strcat(new_app, ".new");
+
+    uint32_t args_len = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        args_len += strlen(argv[pos]);
+    }
+
+    char copy_args[args_len + argc + 1];
+    copy_args[0] = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        strcat(copy_args, argv[pos]);
+        strcat(copy_args, " ");
+    }
+
+    // Create backup of current app
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, self_path, old_app);
+    if (-1 == system(cmd_str)) {
+        VS_LOG_ERROR("Error backup current app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Update current app to new
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
+    if (-1 == system(cmd_str)) {
+        VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Start new app
+    if (-1 == execv(self_path, argv)) {
+        VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
+
+        // restore current app
+        VS_LOG_INFO("Restore current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, self_path);
+        if (-1 == system(cmd_str)) {
+            VS_LOG_ERROR("Error restore current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    VS_LOG_ERROR("Something wrong");
+    return -1;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
@@ -134,7 +220,7 @@ main(int argc, char *argv[]) {
 #if SIM_FETCH_FIRMWARE
     char *firmware_str = _get_commandline_arg(argc, argv, FIRMWARE_SHORT, FIRMWARE_FULL);
     if (firmware_str) {
-        VS_IOT_STRCPY(firmware_name, firmware_str);
+        strncpy(firmware_name, firmware_str, sizeof(firmware_name));
     } else {
         firmware_name[0] = 0;
     }
@@ -165,46 +251,14 @@ main(int argc, char *argv[]) {
     // Start app
     start_gateway_threads();
 
+    int res = 0;
     if (is_try_to_update) {
-        char new_app[FILENAME_MAX];
-        char cmd_str[FILENAME_MAX];
-
-        size_t pos;
-
-        VS_LOG_INFO("Try to update app");
-
-        VS_IOT_STRCPY(new_app, self_path);
-
-        strcat(new_app, ".new");
-
-        uint32_t args_len = 0;
-
-        for (pos = 1; pos < argc; ++pos) {
-            args_len += strlen(argv[pos]);
-        }
-
-        char copy_args[args_len + argc + 1];
-        copy_args[0] = 0;
-
-        for (pos = 1; pos < argc; ++pos) {
-            strcat(copy_args, argv[pos]);
-            strcat(copy_args, " ");
-        }
-
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_UPDATE_TEMPLATE, new_app, self_path, self_path, copy_args);
-
-        VS_LOG_DEBUG(cmd_str);
-
-        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
-            VS_LOG_ERROR("Error start new process. errno = %d (%s)", errno, strerror(errno));
-        }
-
-        VS_LOG_ERROR("Something wrong");
+        res = _try_to_update_app(argc, argv);
     }
 
 
-    VS_LOG_INFO("App stopped");
-    return 0;
+    VS_LOG_INFO("Fatal error. App stopped");
+    return res;
 }
 
 /******************************************************************************/
