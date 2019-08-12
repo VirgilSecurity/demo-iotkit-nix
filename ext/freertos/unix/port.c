@@ -297,6 +297,8 @@ xPortStartScheduler(void) {
         printf("Problem installing SIG_TICK\n");
     }
 
+    (void)pthread_sigmask(SIG_SETMASK, &xSignalsBlocked, NULL);
+
     /* Should not get here! */
     return 0;
 }
