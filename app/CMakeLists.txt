@@ -82,6 +82,7 @@ target_compile_options(virgil-iot-gateway-app
 		-Wall
 		-Werror
 		-Wno-multichar
+		-Wno-error=format-truncation
 		)
 
 #
