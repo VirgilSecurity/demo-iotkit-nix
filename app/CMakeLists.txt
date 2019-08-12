@@ -82,7 +82,6 @@ target_compile_options(virgil-iot-gateway-app
 		-Wall
 		-Werror
 		-Wno-multichar
-		-Wno-error=format-truncation
 		)
 
 #
@@ -99,6 +98,11 @@ target_include_directories(virgil-iot-gateway-app
 #	Link libraries
 #
 if(UNIX AND NOT APPLE)
+	target_compile_options(virgil-iot-gateway-app
+			PRIVATE
+			-Wno-error=format-truncation
+			)
+
 	target_link_libraries(virgil-iot-gateway-app
 			-Wl,--whole-archive rpi_gw_shared hsm provision -Wl,--no-whole-archive
 			)

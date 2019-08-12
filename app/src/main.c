@@ -55,12 +55,13 @@ char self_path[FILENAME_MAX];
 char firmware_name[FILENAME_MAX];
 #endif
 
+#define CMD_STR_UPDATE_TEMPLATE "mv %s %s; %s %s"
+
 static const char *MAC_SHORT = "-m";
 static const char *MAC_FULL = "--mac";
 
 static const char *FIRMWARE_SHORT = "-f";
 static const char *FIRMWARE_FULL = "--firmware";
-static const char cmd_str_template[] = "mv %s %s; %s";
 bool is_try_to_update = false;
 
 /******************************************************************************/
@@ -107,7 +108,7 @@ main(int argc, char *argv[]) {
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
 
-    VS_IOT_STRCPY(self_path, argv[0]);
+    strncpy(self_path, argv[0], sizeof(self_path));
 
     char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
     // Check input parameters
@@ -166,24 +167,33 @@ main(int argc, char *argv[]) {
 
     if (is_try_to_update) {
         char new_app[FILENAME_MAX];
-        char old_app[FILENAME_MAX];
-        char cmd_str[1024];
+        char cmd_str[FILENAME_MAX];
+
         size_t pos;
 
         VS_LOG_INFO("Try to update app");
 
         VS_IOT_STRCPY(new_app, self_path);
-        VS_IOT_STRCPY(old_app, self_path);
 
         strcat(new_app, ".new");
 
-        snprintf(cmd_str, sizeof(cmd_str), cmd_str_template, new_app, self_path, self_path);
+        uint32_t args_len = 0;
+
+        for (pos = 1; pos < argc; ++pos) {
+            args_len += strlen(argv[pos]);
+        }
+
+        char copy_args[args_len + argc + 1];
+        copy_args[0] = 0;
+
+        for (pos = 1; pos < argc; ++pos) {
+            strcat(copy_args, argv[pos]);
+            strcat(copy_args, " ");
+        }
+
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_UPDATE_TEMPLATE, new_app, self_path, self_path, copy_args);
 
         VS_LOG_DEBUG(cmd_str);
-        for (pos = 1; pos < argc; ++pos) {
-            strcat(cmd_str, " ");
-            strcat(cmd_str, argv[pos]);
-        }
 
         if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
             VS_LOG_ERROR("Error start new process. errno = %d (%s)", errno, strerror(errno));
