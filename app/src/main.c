@@ -41,6 +41,8 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/protocols/sdmp/fldt.h>
 #include "sdmp_app.h"
 #include "gateway.h"
 #include "platform/platform_hardware.h"
@@ -51,17 +53,8 @@
 
 char self_path[FILENAME_MAX];
 
-#if SIM_FETCH_FIRMWARE
-char firmware_name[FILENAME_MAX];
-#endif
-
 #define CMD_STR_UPDATE_TEMPLATE "mv %s %s; %s %s"
 
-static const char *MAC_SHORT = "-m";
-static const char *MAC_FULL = "--mac";
-
-static const char *FIRMWARE_SHORT = "-f";
-static const char *FIRMWARE_FULL = "--firmware";
 bool is_try_to_update = false;
 
 /******************************************************************************/
@@ -102,56 +95,73 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
+static bool
+_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr) {
+    static const char *PLC_SIM_ADDRESS_SHORT = "-a";
+    static const char *PLC_SIM_ADDRESS_FULL = "--address";
+    static const char *MAC_SHORT = "-m";
+    static const char *MAC_FULL = "--mac";
+    char *mac_str;
+    char *plc_sim_addr_str;
+
+    if (!argv || !argc || !plc_sim_addr || !forced_mac_addr) {
+        printf("Wrong input parameters.");
+        return false;
+    }
+
+    mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+    plc_sim_addr_str = _get_commandline_arg(argc, argv, PLC_SIM_ADDRESS_SHORT, PLC_SIM_ADDRESS_FULL);
+
+    // Check input parameters
+    if (!mac_str || !plc_sim_addr_str) {
+        printf("usage: virgil-iot-gateway-app %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
+               PLC_SIM_ADDRESS_SHORT,
+               PLC_SIM_ADDRESS_FULL,
+               MAC_SHORT,
+               MAC_FULL);
+        return false;
+    }
+
+    if (!inet_aton(plc_sim_addr_str, plc_sim_addr)) {
+        printf("Incorrect PLC simulator IP address \"%s\" was specified", plc_sim_addr_str);
+        return false;
+    }
+
+    if (!_read_mac_address(mac_str, forced_mac_addr)) {
+        printf("Incorrect forced MAC address \"%s\" was specified", mac_str);
+        return false;
+    }
+
+    return true;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
+    struct in_addr plc_sim_addr;
 
     strncpy(self_path, argv[0], sizeof(self_path));
+    vs_logger_init(VS_LOGLEV_DEBUG);
+    VS_LOG_DEBUG(self_path);
 
-    char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
-    // Check input parameters
-    if (!mac_str) {
-        printf("usage: \n    virgil-iot-gateway-app %s/%s <forces MAC address>\n    %s/%s <path to new firmware file "
-               "(optional) "
-               "relative to ~/keystorage/gateway/<mac addr>/sim_fw_images> \n",
-               MAC_SHORT,
-               MAC_FULL,
-               FIRMWARE_SHORT,
-               FIRMWARE_FULL);
-        return false;
-    }
+    CHECK_RET (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
+    vs_hal_netif_plc_force_mac(forced_mac_addr);
+    vs_hal_files_set_mac(forced_mac_addr.bytes);
 
-    if (_read_mac_address(mac_str, &forced_mac_addr)) {
-        vs_hal_netif_plc_force_mac(forced_mac_addr);
-        vs_hal_files_set_mac(forced_mac_addr.bytes);
-    } else {
-        printf("\nERROR: Error MAC address of simulated device\n\n");
-        return -1;
-    }
-
-#if SIM_FETCH_FIRMWARE
-    char *firmware_str = _get_commandline_arg(argc, argv, FIRMWARE_SHORT, FIRMWARE_FULL);
-    if (firmware_str) {
-        VS_IOT_STRCPY(firmware_name, firmware_str);
-    } else {
-        firmware_name[0] = 0;
-    }
-#endif
     // Init platform specific hardware
     hardware_init();
 
-    // Init PLC interface
-    if (0 != vs_sdmp_init(vs_hal_netif_plc())) {
-        return -1;
-    }
+    // Set IP of PLC simulator
+    vs_plc_sim_set_ip(plc_sim_addr);
+
+    // Initialize SDMP
+    CHECK_RET (!vs_sdmp_comm_start_thread(), -1, "Unable to initialize SDMP interface");
 
     // Init gateway object
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
-
-    vs_logger_init(VS_LOGLEV_DEBUG);
-    VS_LOG_DEBUG(self_path);
 
     // Prepare secbox
     vs_secbox_configure_hal(vs_secbox_gateway());
@@ -160,7 +170,6 @@ main(int argc, char *argv[]) {
     // TODO: Need to use freertos interface
     // vs_sdmp_comm_start_thread(plc_netif);
     xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
-
 
     // Start app
     start_gateway_threads();
@@ -201,7 +210,6 @@ main(int argc, char *argv[]) {
 
         VS_LOG_ERROR("Something wrong");
     }
-
 
     VS_LOG_INFO("App stopped");
     return 0;

@@ -121,12 +121,16 @@ _gateway_task(void *pvParameters) {
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
 
         while (upd_http_retrieval_get_request(&request)) {
-            if (_is_self_firmware_image(request) &&
-                VS_UPDATE_ERR_OK ==
-                        vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
-                VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
-                _restart_app();
+            if (_is_self_firmware_image(request)) {
+                if (VS_UPDATE_ERR_OK ==
+                    vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
+                    VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
+                    _restart_app();
+                }
+            } else {
+                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
             }
+
             vPortFree(request);
         }
 

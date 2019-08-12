@@ -64,8 +64,8 @@ static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
 /******************************************************************************/
 static int
 vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
-    CHECK_NOT_ZERO(in_data, VS_HSM_ERR_INVAL);
+    CHECK_RET(element_info, VS_HSM_ERR_INVAL, "element_info pointer must not be null");
+    CHECK_RET(in_data, VS_HSM_ERR_INVAL, "in_data pointer must not be null");
 
     char filename[FILENAME_MAX];
 
@@ -79,8 +79,8 @@ vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in
 /******************************************************************************/
 static int
 vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz) {
-    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
-    CHECK_NOT_ZERO(out_data, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(out_data, VS_HSM_ERR_INVAL);
 
     uint16_t out_sz;
     char filename[FILENAME_MAX];
@@ -96,7 +96,7 @@ vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data
 /******************************************************************************/
 static int
 vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
-    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 

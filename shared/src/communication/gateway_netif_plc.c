@@ -46,7 +46,7 @@
 #include "communication/gateway_netif_plc.h"
 
 static int
-_plc_init(const vs_netif_rx_cb_t rx_cb);
+_plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif);
 static int
 _plc_deinit();
 static int
@@ -191,7 +191,7 @@ _plc_tx(const uint8_t *data, const uint16_t data_sz) {
 
 /******************************************************************************/
 static int
-_plc_init(const vs_netif_rx_cb_t rx_cb) {
+_plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif) {
     assert(rx_cb);
     _netif_plc_rx_cb = rx_cb;
 

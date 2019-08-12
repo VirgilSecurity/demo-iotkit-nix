@@ -143,8 +143,8 @@ vs_cloud_https_hal(vs_http_method_t type,
     uint16_t buf_sz;
     uint8_t *file_buf = NULL;
 
-    CHECK_NOT_ZERO(in_out_size, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
-    CHECK_NOT_ZERO(fetch_handler, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
+    CHECK_NOT_ZERO_RET(in_out_size, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
+    CHECK_NOT_ZERO_RET(fetch_handler, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
 
     file_sz = vs_gateway_get_file_len(vs_gateway_get_sim_fw_images_dir(), firmware_name);
 
@@ -153,7 +153,7 @@ vs_cloud_https_hal(vs_http_method_t type,
     buf_sz = file_sz > UINT16_MAX ? UINT16_MAX : file_sz;
 
     file_buf = VS_IOT_MALLOC(file_sz);
-    CHECK_NOT_ZERO(file_buf, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
+    CHECK_NOT_ZERO_RET(file_buf, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
 
     uint32_t offset = 0;
     while (offset < file_sz) {

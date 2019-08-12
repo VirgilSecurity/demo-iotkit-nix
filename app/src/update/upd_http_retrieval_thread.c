@@ -121,7 +121,7 @@ xTaskHandle *
 start_upd_http_retrieval_thread(void) {
     if (!retrieval_started) {
         fwdist_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
-        CHECK_NOT_ZERO(fwdist_event_queue, NULL);
+        CHECK_NOT_ZERO_RET(fwdist_event_queue, NULL);
         *fwdist_event_queue = xQueueCreate(FWDIST_QUEUE_SZ, sizeof(vs_firmware_info_t *));
         retrieval_started = (pdTRUE == xTaskCreate(upd_http_retrieval,
                                                    "sw-http-retrieval",

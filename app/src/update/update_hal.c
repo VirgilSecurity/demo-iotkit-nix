@@ -67,8 +67,8 @@ vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_ty
     char filename[FILENAME_MAX];
     int file_sz;
 
-    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
               "Error create filename")
@@ -81,8 +81,8 @@ vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_ty
 /******************************************************************************/
 int
 vs_update_read_firmware_descriptor_table_hal(uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(read_sz, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(read_sz, VS_UPDATE_ERR_INVAL);
     return vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, data, buf_sz, read_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -96,13 +96,13 @@ vs_update_read_firmware_data_hal(uint8_t *manufacture_id,
                                  uint8_t *data,
                                  uint16_t buf_sz,
                                  uint16_t *read_sz) {
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(read_sz, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(read_sz, VS_UPDATE_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
-    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
@@ -116,7 +116,7 @@ vs_update_read_firmware_data_hal(uint8_t *manufacture_id,
 int
 vs_update_write_firmware_descriptor_table_hal(const void *data, uint16_t data_sz) {
 
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
     return vs_gateway_write_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, data, data_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -130,9 +130,9 @@ vs_update_write_firmware_data_hal(uint8_t *manufacture_id,
                                   const void *data,
                                   uint16_t data_sz) {
     char filename[FILENAME_MAX];
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
@@ -155,8 +155,8 @@ vs_update_remove_firmware_data_hal(uint8_t *manufacture_id, uint8_t *device_type
 
     char filename[FILENAME_MAX];
 
-    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
@@ -185,7 +185,7 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     char filename[FILENAME_MAX];
     FILE *fp = NULL;
 
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
 
     VS_IOT_STRCPY(filename, self_path);
 

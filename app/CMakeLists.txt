@@ -52,6 +52,16 @@ endif ()
 
 target_sources(virgil-iot-gateway-app
 		PRIVATE
+		include/event_group_bit_flags.h
+		include/gateway.h
+		include/iot_mqtt.h
+		include/message_bin.h
+		include/sdmp_app.h
+		include/test_update_thread.h
+		include/upd_http_retrieval_thread.h
+		include/platform/platform_hardware.h
+		include/platform/platform_os.h
+
 		${GW_PLATFORM_APP_SRC}
 		src/main.c
 		src/cloud/https.c
@@ -67,12 +77,12 @@ target_sources(virgil-iot-gateway-app
 		"$<$<BOOL:${GATEWAY_SIMULATOR}>:src/test_update_thread.c>"
 		)
 
-	target_compile_definitions(virgil-iot-gateway-app
-			PRIVATE
-			TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
-			SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
-			SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
-			)
+target_compile_definitions(virgil-iot-gateway-app
+		PRIVATE
+		TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
+		SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+		SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
+		)
 
 #
 #   -Wall -Werror
@@ -90,6 +100,7 @@ target_compile_options(virgil-iot-gateway-app
 target_include_directories(virgil-iot-gateway-app
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/include
+
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include/platform
 		)
@@ -115,6 +126,7 @@ target_link_libraries (virgil-iot-gateway-app
 		freertos
 		aws-mqtt
 		cloud
-		macros
+		virgil-iot-macros
+		logger
 		update
 		)

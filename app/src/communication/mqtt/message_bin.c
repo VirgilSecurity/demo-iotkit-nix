@@ -155,6 +155,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
 
     res = vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
+    // Like DNID
 
     if (VS_CLOUD_ERR_OK == res) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {

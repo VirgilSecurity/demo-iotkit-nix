@@ -36,14 +36,15 @@
 #include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include "secbox_impl/gateway_secbox_impl.h"
+//#include "secbox_impl/gateway_secbox_impl.h"
 #include <virgil/crypto/foundation/vscf_assert.h>
 
-#include "hal/file_io_hal.h"
-#include "hal/file_io_hal.h"
+//#include "hal/file_io_hal.h"
+//#include "hal/file_io_hal.h"
 #include <sys/stat.h>
 #include <fts.h>
 
+#if 0
 /******************************************************************************/
 static int
 _recursive_delete(const char *dir) {
@@ -137,11 +138,11 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
 
-    vs_hal_files_set_mac(mac);
+    //vs_hal_files_set_mac(mac);
     _remove_keystorage_dir();
 
     // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
+    //vs_secbox_configure_hal(vs_secbox_gateway());
 
     // Prepare TL storage
     vs_tl_init_storage();
@@ -154,3 +155,21 @@ main(int argc, char *argv[]) {
 
     return res;
 }
+#endif
+
+/********************************************************************************/
+int
+main(int argc, char *argv[]) {
+    int res = 0;
+
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
+    vs_tests_begin();
+
+    vs_tests_checks(false);
+
+    vs_tests_end();
+
+    return res;
+}
+

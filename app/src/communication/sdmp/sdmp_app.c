@@ -32,15 +32,28 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <sdmp_app.h>
+#include <communication/gateway_netif_plc.h>
+
+#define PLC_CMD_PRIORITY 0
 
 /******************************************************************************/
 int
-vs_sdmp_comm_start_thread(const vs_netif_t *netif) {
+vs_sdmp_comm_start_thread(void) {
 
-    if (0 != vs_sdmp_init(netif)) {
-        return -1;
-    }
+    CHECK_RET(!vs_sdmp_init(vs_hal_netif_plc()), -1, "Unable to initialize SDMP over PLC interface");
+
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fwdt_service()), -2, "Unable to register FWDT service");
+
+    CHECK_RET(!vs_sdmp_fwdt_configure_hal(vs_fwdt_impl()), -3, "Unable to configure FWDT HAL");
+
+    vs_sdmp_fwdt_manifest_t manifest = {.some_data = {0x01, 0x02, 0x03, 0x04}};
+    vs_sdmp_fwdt_mfst_list_t lst = {.count = 0};
+    vs_sdmp_fwdt_broadcast_manifest(vs_hal_netif_plc(), &manifest, &lst, 1000);
 
     return 0;
 }
