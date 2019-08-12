@@ -278,13 +278,13 @@ xPortStartScheduler(void) {
     memset(&sigresume, 0, sizeof(sigresume));
     memset(&sigtick, 0, sizeof(sigtick));
 
-    sigsuspendself.sa_handler = SIG_DFL;
+    sigsuspendself.sa_handler = SIG_IGN;
     sigfillset(&sigsuspendself.sa_mask);
 
-    sigresume.sa_handler = SIG_DFL;
+    sigresume.sa_handler = SIG_IGN;
     sigfillset(&sigresume.sa_mask);
 
-    sigtick.sa_handler = SIG_DFL;
+    sigtick.sa_handler = SIG_IGN;
     sigfillset(&sigtick.sa_mask);
 
     if (0 != sigaction(SIG_SUSPEND, &sigsuspendself, NULL)) {
