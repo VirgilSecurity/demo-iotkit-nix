@@ -150,7 +150,7 @@ _try_to_update_app(int argc, char *argv[]) {
 
     // Update current app to new
     VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
-    if (-1 == system(cmd_str)) {
+    if (-1 == system(cmd_str) || -1 == chmod(self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
         VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
 
         // restart self
