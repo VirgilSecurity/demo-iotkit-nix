@@ -39,6 +39,7 @@
 #include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
 #include "sdmp_app.h"
@@ -54,6 +55,9 @@ char self_path[FILENAME_MAX];
 #if SIM_FETCH_FIRMWARE
 char firmware_name[FILENAME_MAX];
 #endif
+
+#define NEW_APP_EXTEN ".new"
+#define BACKUP_APP_EXTEN ".old"
 
 #define CMD_STR_CPY_TEMPLATE "cp %s %s"
 #define CMD_STR_MV_TEMPLATE "mv %s %s"
@@ -108,17 +112,17 @@ static int
 _try_to_update_app(int argc, char *argv[]) {
     char old_app[FILENAME_MAX];
     char new_app[FILENAME_MAX];
-    char cmd_str[FILENAME_MAX];
+    char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
 
     size_t pos;
 
     VS_LOG_INFO("Try to update app");
 
-    VS_IOT_STRCPY(new_app, self_path);
-    VS_IOT_STRCPY(old_app, self_path);
+    strncpy(new_app, self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
+    strncpy(old_app, self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
 
-    strcat(old_app, ".old");
-    strcat(new_app, ".new");
+    strcat(old_app, BACKUP_APP_EXTEN);
+    strcat(new_app, NEW_APP_EXTEN);
 
     uint32_t args_len = 0;
 
@@ -126,7 +130,8 @@ _try_to_update_app(int argc, char *argv[]) {
         args_len += strlen(argv[pos]);
     }
 
-    char copy_args[args_len + argc + 1];
+    // argc == number of necessary spaces + \0 (because of we use argv starting from the 1st cell, not zero cell)
+    char copy_args[args_len + argc];
     copy_args[0] = 0;
 
     for (pos = 1; pos < argc; ++pos) {
@@ -194,6 +199,8 @@ main(int argc, char *argv[]) {
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
 
+    CHECK_NOT_ZERO(argv[0], -1);
+
     strncpy(self_path, argv[0], sizeof(self_path));
 
     char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
@@ -206,7 +213,7 @@ main(int argc, char *argv[]) {
                MAC_FULL,
                FIRMWARE_SHORT,
                FIRMWARE_FULL);
-        return false;
+        return -1;
     }
 
     if (_read_mac_address(mac_str, &forced_mac_addr)) {
