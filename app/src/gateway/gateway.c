@@ -57,7 +57,10 @@ static xTaskHandle gateway_starter_thread;
 static const uint16_t starter_thread_stack_size = 10 * 1024;
 
 #if SIMULATOR
+#define MAIN_THREAD_SLEEP_MS (400 / portTICK_PERIOD_MS)
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
+#else
+#define MAIN_THREAD_SLEEP_MS (3000 / portTICK_PERIOD_MS)
 #endif
 
 /******************************************************************************/
@@ -116,7 +119,7 @@ _gateway_task(void *pvParameters) {
     start_upd_http_retrieval_thread();
 
     while (true) {
-        int32_t thread_sleep = 3000 / portTICK_PERIOD_MS; //-V501
+        int32_t thread_sleep = MAIN_THREAD_SLEEP_MS; //-V501
         // TODO: Main loop will be here
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
 
@@ -126,7 +129,10 @@ _gateway_task(void *pvParameters) {
                         vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
                 VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
                 _restart_app();
+            } else {
+                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
             }
+
             vPortFree(request);
         }
 
