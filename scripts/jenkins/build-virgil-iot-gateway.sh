@@ -4,11 +4,6 @@ SCRIPT_FOLDER="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$SCRIPT_FOLDER/../.."
 BUILD_OUTPUT="$PROJECT_ROOT/build-test"
 
-#Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
-
 
 check_error() {
    RETRIES=$?
@@ -50,7 +45,7 @@ echo "------------- Build virgil-iot-gateway-app (initial) -----------------"
 cleanup
 cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
       -DGATEWAY_SIMULATOR=ON \
-      -DTEST_UPDATE_MESSAGE="${RED}[ Hello from initial Gateway firmware ]${NC}" $@ "../"
+      -DTEST_UPDATE_MESSAGE="[ Hello from initial Gateway firmware ]" $@ "../"
 check_error
 make virgil-iot-gateway-app -j 8
 check_error
@@ -61,7 +56,7 @@ echo "------------- Build virgil-iot-gateway-app (update) -----------------"
 cleanup
 cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
       -DGATEWAY_SIMULATOR=ON \
-      -DTEST_UPDATE_MESSAGE="${GREEN}[ Hello from updated Gateway firmware ]${NC}" $@ "../"
+      -DTEST_UPDATE_MESSAGE="[ Hello from updated Gateway firmware ]" $@ "../"
 check_error
 make virgil-iot-gateway-app -j 8
 check_error
