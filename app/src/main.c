@@ -52,10 +52,6 @@
 
 char self_path[FILENAME_MAX];
 
-#if SIM_FETCH_FIRMWARE
-char firmware_name[FILENAME_MAX];
-#endif
-
 #define NEW_APP_EXTEN ".new"
 #define BACKUP_APP_EXTEN ".old"
 
@@ -65,10 +61,6 @@ char firmware_name[FILENAME_MAX];
 
 static const char *MAC_SHORT = "-m";
 static const char *MAC_FULL = "--mac";
-
-static const char *FIRMWARE_SHORT = "-f";
-static const char *FIRMWARE_FULL = "--firmware";
-bool is_try_to_update = false;
 
 /******************************************************************************/
 static char *
@@ -206,13 +198,7 @@ main(int argc, char *argv[]) {
     char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
     // Check input parameters
     if (!mac_str) {
-        printf("usage: \n    virgil-iot-gateway-app %s/%s <forces MAC address>\n    %s/%s <path to new firmware file "
-               "(optional) "
-               "relative to ~/keystorage/gateway/<mac addr>/sim_fw_images> \n",
-               MAC_SHORT,
-               MAC_FULL,
-               FIRMWARE_SHORT,
-               FIRMWARE_FULL);
+        printf("usage: \n    virgil-iot-gateway-app %s/%s <forces MAC address>\n", MAC_SHORT, MAC_FULL);
         return -1;
     }
 
@@ -224,14 +210,6 @@ main(int argc, char *argv[]) {
         return -1;
     }
 
-#if SIM_FETCH_FIRMWARE
-    char *firmware_str = _get_commandline_arg(argc, argv, FIRMWARE_SHORT, FIRMWARE_FULL);
-    if (firmware_str) {
-        strncpy(firmware_name, firmware_str, sizeof(firmware_name));
-    } else {
-        firmware_name[0] = 0;
-    }
-#endif
     // Init platform specific hardware
     hardware_init();
 
@@ -258,11 +236,7 @@ main(int argc, char *argv[]) {
     // Start app
     start_gateway_threads();
 
-    int res = 0;
-    if (is_try_to_update) {
-        res = _try_to_update_app(argc, argv);
-    }
-
+    int res = _try_to_update_app(argc, argv);
 
     VS_LOG_INFO("Fatal error. App stopped");
     return res;
