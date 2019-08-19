@@ -56,6 +56,9 @@ vs_gateway_get_slots_dir(void);
 const char *
 vs_gateway_get_firmware_dir(void);
 
+const char *
+vs_gateway_get_sim_fw_images_dir(void);
+
 bool
 vs_gateway_write_file_data(const char *folder,
                            const char *file_name,

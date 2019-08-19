@@ -66,6 +66,12 @@ target_sources(virgil-iot-gateway-app
 		src/platform/platform-hal.c
 		)
 
+	target_compile_definitions(virgil-iot-gateway-app
+			PRIVATE
+			TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
+			SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+			)
+
 #
 #   -Wall -Werror
 #
@@ -90,6 +96,11 @@ target_include_directories(virgil-iot-gateway-app
 #	Link libraries
 #
 if(UNIX AND NOT APPLE)
+	target_compile_options(virgil-iot-gateway-app
+			PRIVATE
+			-Wno-error=format-truncation
+			)
+
 	target_link_libraries(virgil-iot-gateway-app
 			-Wl,--whole-archive rpi_gw_shared hsm provision -Wl,--no-whole-archive
 			)

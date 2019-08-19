@@ -1,5 +1,14 @@
+#include <errno.h>
+
+#include <pwd.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <libgen.h>
 
 #include "FreeRTOS.h"
+#include "gateway.h"
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/update/update.h>
@@ -153,4 +162,49 @@ vs_update_remove_firmware_data_hal(uint8_t *manufacture_id, uint8_t *device_type
               VS_UPDATE_ERR_FAIL,
               "Error create filename")
     return vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), filename) ? VS_UPDATE_ERR_OK : VS_UPDATE_ERR_FAIL;
+}
+
+
+/******************************************************************************/
+int
+vs_update_install_prepare_space_hal(void) {
+    char filename[FILENAME_MAX];
+
+    VS_IOT_STRCPY(filename, self_path);
+
+    strcat(filename, ".new");
+    remove(filename);
+    return VS_UPDATE_ERR_OK;
+}
+
+/******************************************************************************/
+int
+vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
+
+    int res = VS_UPDATE_ERR_FAIL;
+    char filename[FILENAME_MAX];
+    FILE *fp = NULL;
+
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+
+    VS_IOT_STRCPY(filename, self_path);
+
+    strcat(filename, ".new");
+
+    fp = fopen(filename, "a+b");
+    if (fp) {
+
+        if (1 != fwrite(data, data_sz, 1, fp)) {
+            VS_LOG_ERROR("Unable to write %d bytes to the file %s. errno = %d (%s)",
+                         data_sz,
+                         filename,
+                         errno,
+                         strerror(errno));
+        } else {
+            res = VS_UPDATE_ERR_OK;
+        }
+        fclose(fp);
+    }
+
+    return res;
 }
