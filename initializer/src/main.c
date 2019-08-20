@@ -46,7 +46,6 @@
 #include <virgil/iot/hsm/hsm_interface.h>
 
 #include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_tl_hal.h"
 #include "hal/file_io_hal.h"
 
 /******************************************************************************/
