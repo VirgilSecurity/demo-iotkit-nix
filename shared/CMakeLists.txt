@@ -53,6 +53,7 @@ add_library(rpi_gw_shared
 find_package (Threads)
 target_link_libraries(rpi_gw_shared
 		macros
+		storage_hal
 		converters
 		hsm
 		logger
@@ -73,7 +74,7 @@ set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno
 #
 target_include_directories(rpi_gw_shared
 		PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_LIST_DIR}/include
 		)
 
 #

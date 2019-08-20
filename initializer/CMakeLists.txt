@@ -81,27 +81,21 @@ target_compile_options(virgil-iot-gateway-initializer
 target_include_directories(virgil-iot-gateway-initializer
 		PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../shared/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/protocols/sdmp/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../ap/security-sdk/secbox/include
-		${CMAKE_CURRENT_SOURCE_DIR}/../../sp/crypto/inc
 		)
 
 #
 #	Link libraries
 #
-target_link_libraries (virgil-iot-gateway-initializer
-		foundation
-		sdmp
-		secbox
-		rpi_gw_shared
-		logger
-		)
 if(UNIX AND NOT APPLE)
 	target_link_libraries(virgil-iot-gateway-initializer
-			-Wl,--whole-archive hsm -Wl,--no-whole-archive
+			-Wl,--whole-archive hsm rpi_gw_shared -Wl,--no-whole-archive
+			)
+else()
+	target_link_libraries (virgil-iot-gateway-initializer
+			rpi_gw_shared
 			)
 endif()
+
 
 #
 #	Add cmake test
