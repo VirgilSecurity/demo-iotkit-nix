@@ -46,7 +46,7 @@
 #include <virgil/iot/hsm/hsm_interface.h>
 
 #include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
+#include "secbox_impl/gateway_tl_hal.h"
 #include "hal/file_io_hal.h"
 
 /******************************************************************************/
@@ -144,7 +144,7 @@ main(int argc, char *argv[]) {
         vs_hal_files_set_mac(forced_mac_addr.bytes);
 
         // Prepare secbox
-        vs_secbox_configure_hal(vs_secbox_gateway());
+        vs_tl_init_storage();
 
         // Set IP of PLC simulator
         vs_plc_sim_set_ip(plc_sim_addr);

@@ -36,7 +36,6 @@
 #include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include "secbox_impl/gateway_secbox_impl.h"
 #include <virgil/crypto/foundation/vscf_assert.h>
 
 #include "hal/file_io_hal.h"
@@ -139,9 +138,6 @@ main(int argc, char *argv[]) {
 
     vs_hal_files_set_mac(mac);
     _remove_keystorage_dir();
-
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
 
     // Prepare TL storage
     vs_tl_init_storage();

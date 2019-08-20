@@ -42,7 +42,7 @@ project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 add_library(rpi_gw_shared
 		# Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
-		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/tl_hal/gateway_tl_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
