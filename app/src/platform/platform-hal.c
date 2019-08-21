@@ -40,23 +40,23 @@
 #include <virgil/iot/provision/provision.h>
 
 #define GW_MANUFACTURE_ID                                                                                              \
-    { 0 }
+    { 'V', 'R', 'G', 'L' }
 #define GW_DEVICE_TYPE                                                                                                 \
-    { 'G', 'T', 'W', 'Y' }
+    { 'C', 'f', '0', '1' }
 #define GW_APP_TYPE                                                                                                    \
     { 'A', 'P', 'P', '0' }
 
-// TODO: Need to use real descriptor, which
-static const vs_firmware_descriptor_t _descriptor = {
-        .manufacture_id = GW_MANUFACTURE_ID,
-        .device_type = GW_DEVICE_TYPE,
-        .version.app_type = GW_APP_TYPE,
-        .version.major = 0,
-        .version.minor = 1,
-        .version.patch = 3,
-        .version.dev_milestone = 'm',
-        .version.dev_build = 0,
-        .version.timestamp = 0,
+// TODO: Need to use real descriptor, which can be obtain from footer of self image
+static vs_firmware_descriptor_t _descriptor = {
+        .info.manufacture_id = GW_MANUFACTURE_ID,
+        .info.device_type = GW_DEVICE_TYPE,
+        .info.version.app_type = GW_APP_TYPE,
+        .info.version.major = 0,
+        .info.version.minor = 1,
+        .info.version.patch = 3,
+        .info.version.dev_milestone = 'm',
+        .info.version.dev_build = 0,
+        .info.version.timestamp = 0,
         .padding = 0,
         .chunk_size = 256,
         .firmware_length = 2097152,

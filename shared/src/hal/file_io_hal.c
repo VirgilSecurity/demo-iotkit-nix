@@ -57,6 +57,7 @@ static const char *main_storage_dir = "keystorage/gateway";
 static const char *slots_dir = "slots";
 static const char *tl_dir = "trust_list";
 static const char *firmware_dir = "firmware";
+static const char *secbox_dir = "secbox";
 static bool initialized = false;
 static uint8_t mac[6];
 
@@ -142,6 +143,12 @@ _init_fio(void) {
         goto terminate;
     }
 
+    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, secbox_dir);
+
+    if (-1 == _mkdir_recursive(tmp)) {
+        goto terminate;
+    }
+
     initialized = true;
 
 terminate:
@@ -192,11 +199,11 @@ vs_gateway_get_file_len(const char *folder, const char *file_name) {
 
     if (!initialized && !_init_fio()) {
         VS_LOG_ERROR("Unable to initialize file I/O operations");
-        return false;
+        return 0;
     }
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
-        return false;
+        return 0;
     }
 
     fp = fopen(file_path, "rb");
@@ -525,6 +532,11 @@ vs_gateway_get_firmware_dir() {
     return firmware_dir;
 }
 
+/********************************************************************************/
+const char *
+vs_gateway_get_secbox_dir() {
+    return secbox_dir;
+}
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {

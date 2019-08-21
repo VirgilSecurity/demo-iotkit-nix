@@ -34,17 +34,51 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
 #include "sdmp_app.h"
 #include "gateway.h"
 #include "platform/platform_hardware.h"
 #include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"
 #include "hal/file_io_hal.h"
+
+char self_path[FILENAME_MAX];
+
+#define NEW_APP_EXTEN ".new"
+#define BACKUP_APP_EXTEN ".old"
+
+#define CMD_STR_CPY_TEMPLATE "cp %s %s"
+#define CMD_STR_MV_TEMPLATE "mv %s %s"
+#define CMD_STR_START_TEMPLATE "%s %s"
+
+static const char *MAC_SHORT = "-m";
+static const char *MAC_FULL = "--mac";
+
+/******************************************************************************/
+static char *
+_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
+    size_t pos;
+
+    if (!(argv && shortname && *shortname && longname && *longname)) {
+        return NULL;
+    }
+
+    for (pos = 0; pos < argc; ++pos) {
+        if (!strcmp(argv[pos], shortname) && (pos + 1) < argc)
+            return argv[pos + 1];
+        if (!strcmp(argv[pos], longname) && (pos + 1) < argc)
+            return argv[pos + 1];
+    }
+
+    return NULL;
+}
 
 /******************************************************************************/
 static bool
@@ -65,17 +99,113 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
+static int
+_try_to_update_app(int argc, char *argv[]) {
+    char old_app[FILENAME_MAX];
+    char new_app[FILENAME_MAX];
+    char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
+
+    size_t pos;
+
+    VS_LOG_INFO("Try to update app");
+
+    strncpy(new_app, self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
+    strncpy(old_app, self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
+
+    strcat(old_app, BACKUP_APP_EXTEN);
+    strcat(new_app, NEW_APP_EXTEN);
+
+    uint32_t args_len = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        args_len += strlen(argv[pos]);
+    }
+
+    // argc == number of necessary spaces + \0 (because of we use argv starting from the 1st cell, not zero cell)
+    char copy_args[args_len + argc];
+    copy_args[0] = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        strcat(copy_args, argv[pos]);
+        strcat(copy_args, " ");
+    }
+
+    // Create backup of current app
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, self_path, old_app);
+    if (-1 == system(cmd_str)) {
+        VS_LOG_ERROR("Error backup current app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Update current app to new
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
+    if (-1 == system(cmd_str) || -1 == chmod(self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
+        VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Start new app
+    if (-1 == execv(self_path, argv)) {
+        VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
+
+        // restore current app
+        VS_LOG_INFO("Restore current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, self_path);
+        if (-1 == system(cmd_str)) {
+            VS_LOG_ERROR("Error restore current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    VS_LOG_ERROR("Something wrong");
+    return -1;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     // TODO: Need to use real mac
     vs_mac_addr_t forced_mac_addr;
 
-    if (argc == 2 && _read_mac_address(argv[1], &forced_mac_addr)) {
+    CHECK_NOT_ZERO(argv[0], -1);
+
+    strncpy(self_path, argv[0], sizeof(self_path));
+
+    char *mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+    // Check input parameters
+    if (!mac_str) {
+        printf("usage: \n    virgil-iot-gateway-app %s/%s <forces MAC address>\n", MAC_SHORT, MAC_FULL);
+        return -1;
+    }
+
+    if (_read_mac_address(mac_str, &forced_mac_addr)) {
         vs_hal_netif_plc_force_mac(forced_mac_addr);
         vs_hal_files_set_mac(forced_mac_addr.bytes);
     } else {
-        printf("\nERROR: need to set MAC address of simulated device\n\n");
+        printf("\nERROR: Error MAC address of simulated device\n\n");
         return -1;
     }
 
@@ -91,9 +221,10 @@ main(int argc, char *argv[]) {
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
 
     vs_logger_init(VS_LOGLEV_DEBUG);
+    VS_LOG_DEBUG(self_path);
 
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
+    // Prepare tl storage
+    vs_tl_init_storage();
 
     // Start SDMP protocol over PLC interface
     // TODO: Need to use freertos interface
@@ -103,7 +234,11 @@ main(int argc, char *argv[]) {
 
     // Start app
     start_gateway_threads();
-    return 0;
+
+    int res = _try_to_update_app(argc, argv);
+
+    VS_LOG_INFO("Fatal error. App stopped");
+    return res;
 }
 
 /******************************************************************************/

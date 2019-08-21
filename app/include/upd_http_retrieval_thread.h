@@ -12,9 +12,13 @@
 #include "task.h"
 #include "queue.h"
 #include "event_groups.h"
+#include <global-hal.h>
 
 xTaskHandle *
-start_upd_http_retrieval_thread(void);
+vs_start_upd_http_retrieval_thread(void);
+
+bool
+vs_upd_http_retrieval_get_request(vs_firmware_info_t **request);
 
 #define MINS_TO_S(mins) (mins * 60)
 #define HOURS_TO_S(hours) (hours * MINS_TO_S(60))

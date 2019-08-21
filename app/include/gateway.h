@@ -36,6 +36,7 @@
 #define GATEWAY_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -59,4 +60,7 @@ gtwy_t *
 get_gateway_ctx(void);
 void
 start_gateway_threads(void);
+
+extern char self_path[FILENAME_MAX];
+
 #endif // GATEWAY_H
