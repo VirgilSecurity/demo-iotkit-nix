@@ -32,12 +32,16 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_HAL_SECBOX_H
-#define GATEWAY_HAL_SECBOX_H
+#ifndef IOT_RPI_GATEWAY_STORAGE_HAL_H
+#define IOT_RPI_GATEWAY_STORAGE_HAL_H
 
-#include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
+#include "hal/file_io_hal.h"
 
-const vs_secbox_hal_impl_t *
-vs_secbox_gateway();
+vs_storage_hal_ctx_t
+vs_gateway_storage_init(const char *dir);
 
-#endif // GATEWAY_HAL_SECBOX_H
+int
+vs_gateway_get_storage_impl(vs_storage_op_impl_t *impl);
+
+#endif // IOT_RPI_GATEWAY_STORAGE_HAL_H

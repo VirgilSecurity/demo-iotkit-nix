@@ -46,7 +46,6 @@
 #include "gateway.h"
 #include "platform/platform_hardware.h"
 #include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"
 #include "hal/file_io_hal.h"
 
@@ -224,8 +223,8 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
     VS_LOG_DEBUG(self_path);
 
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
+    // Prepare tl storage
+    vs_tl_init_storage();
 
     // Start SDMP protocol over PLC interface
     // TODO: Need to use freertos interface

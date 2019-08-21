@@ -42,7 +42,8 @@ project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 add_library(rpi_gw_shared
 		# Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
-		${CMAKE_CURRENT_LIST_DIR}/src/secbox_impl/gateway_secbox_impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/tl_hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_storage_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
@@ -52,6 +53,7 @@ add_library(rpi_gw_shared
 find_package (Threads)
 target_link_libraries(rpi_gw_shared
 		macros
+		storage_hal
 		converters
 		hsm
 		logger
@@ -72,7 +74,7 @@ set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno
 #
 target_include_directories(rpi_gw_shared
 		PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_LIST_DIR}/include
 		)
 
 #
