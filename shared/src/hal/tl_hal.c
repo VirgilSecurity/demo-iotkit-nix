@@ -37,35 +37,19 @@
 #include <stdio.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/secbox/secbox.h>
+
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/tl_hal.h>
 
 #include "gateway_macro.h"
 #include "hal/file_io_hal.h"
 
-static int
-vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz);
-
-static int
-vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz);
-
-static int
-vs_secbox_gateway_del(vs_secbox_element_info_t *element_info);
-
-static int
-vs_secbox_gateway_init();
-
-static vs_secbox_hal_impl_t _secbox_gateway = {.save = vs_secbox_gateway_save,
-                                               .load = vs_secbox_gateway_load,
-                                               .del = vs_secbox_gateway_del,
-                                               .init = vs_secbox_gateway_init};
-
 /******************************************************************************/
-static int
-vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    CHECK_RET(element_info, VS_HSM_ERR_INVAL, "element_info pointer must not be null");
-    CHECK_RET(in_data, VS_HSM_ERR_INVAL, "in_data pointer must not be null");
+int
+vs_tl_save_hal(vs_tl_element_info_hal_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
+    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO_RET(in_data, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
@@ -77,8 +61,8 @@ vs_secbox_gateway_save(vs_secbox_element_info_t *element_info, const uint8_t *in
 }
 
 /******************************************************************************/
-static int
-vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data, uint16_t data_sz) {
+int
+vs_tl_load_hal(vs_tl_element_info_hal_t *element_info, uint8_t *out_data, uint16_t data_sz) {
     CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
     CHECK_NOT_ZERO_RET(out_data, VS_HSM_ERR_INVAL);
 
@@ -94,8 +78,8 @@ vs_secbox_gateway_load(vs_secbox_element_info_t *element_info, uint8_t *out_data
 }
 
 /******************************************************************************/
-static int
-vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
+int
+vs_tl_del_hal(vs_tl_element_info_hal_t *element_info) {
     CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
@@ -103,17 +87,4 @@ vs_secbox_gateway_del(vs_secbox_element_info_t *element_info) {
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
     return vs_gateway_remove_file_data(vs_gateway_get_trust_list_dir(), filename) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
-}
-
-/******************************************************************************/
-static int
-vs_secbox_gateway_init() {
-    vs_tl_init_storage();
-    return GATEWAY_OK;
-}
-
-/******************************************************************************/
-const vs_secbox_hal_impl_t *
-vs_secbox_gateway() {
-    return &_secbox_gateway;
 }

@@ -24,7 +24,7 @@ xQueueHandle *fwdist_event_queue;
 
 /*************************************************************************/
 static void
-sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
+_sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_cloud_firmware_header_t header;
     vs_firmware_info_t *fw_info = NULL;
     int res;
@@ -71,7 +71,7 @@ sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
 /*************************************************************************/
 static void
-tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
+_tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     while (xSemaphoreTake(gtwy->tl_semaphore, portMAX_DELAY) == pdFALSE) {
     }
     VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
@@ -89,26 +89,26 @@ tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
 /*************************************************************************/
 static void
-upd_http_retrieval(void *pvParameters) {
+vs_upd_http_retrieval(void *pvParameters) {
     gtwy_t *gtwy = get_gateway_ctx();
 
     // Wait for the sdmp stack and services to be up before looking for new firmware
     wait_indefinitely(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT, pdTRUE);
     xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
-    VS_LOG_DEBUG("upd_http_retrieval thread started");
+    VS_LOG_DEBUG("vs_upd_http_retrieval thread started");
 
     while (1) {
         upd_request_t *request;
 
         xEventGroupWaitBits(gtwy->firmware_event_group, MSG_BIN_RECEIVE_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        VS_LOG_DEBUG("upd_http_retrieval thread resume");
+        VS_LOG_DEBUG("vs_upd_http_retrieval thread resume");
 
         while (message_bin_get_request(&request)) {
             if (MSG_BIN_UPD_TYPE_FW == request->upd_type) {
-                sw_retrieval_mb_notify(gtwy, request);
+                _sw_retrieval_mb_notify(gtwy, request);
             } else if (MSG_BIN_UPD_TYPE_TL == request->upd_type) {
-                tl_retrieval_mb_notify(gtwy, request);
+                _tl_retrieval_mb_notify(gtwy, request);
             } else {
                 vPortFree(request);
             }
@@ -118,12 +118,12 @@ upd_http_retrieval(void *pvParameters) {
 
 /*************************************************************************/
 xTaskHandle *
-start_upd_http_retrieval_thread(void) {
+vs_start_upd_http_retrieval_thread(void) {
     if (!retrieval_started) {
         fwdist_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
         CHECK_NOT_ZERO_RET(fwdist_event_queue, NULL);
         *fwdist_event_queue = xQueueCreate(FWDIST_QUEUE_SZ, sizeof(vs_firmware_info_t *));
-        retrieval_started = (pdTRUE == xTaskCreate(upd_http_retrieval,
+        retrieval_started = (pdTRUE == xTaskCreate(vs_upd_http_retrieval,
                                                    "sw-http-retrieval",
                                                    upd_retrieval_stack,
                                                    0,
@@ -135,7 +135,7 @@ start_upd_http_retrieval_thread(void) {
 
 /*************************************************************************/
 bool
-upd_http_retrieval_get_request(vs_firmware_info_t **request) {
+vs_upd_http_retrieval_get_request(vs_firmware_info_t **request) {
 
     if (uxQueueMessagesWaiting(*fwdist_event_queue)) {
         if (pdTRUE == xQueueReceive(*fwdist_event_queue, request, 0))

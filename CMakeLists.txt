@@ -60,7 +60,6 @@ project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C Go)
 #   Enable/Disable simulator
 #
 option(GATEWAY_SIMULATOR "On/Off code for simulator." OFF)
-option(SIM_FETCH_FIRMWARE "On/Off code for simulate of fetching firmware." OFF)
 option(VIRGIL_IOT_MCU_BUILD "Enable build for MCU" OFF)
 
 #

@@ -61,10 +61,6 @@ get_gateway_ctx(void);
 void
 start_gateway_threads(void);
 
-extern bool is_try_to_update;
 extern char self_path[FILENAME_MAX];
 
-#if SIM_FETCH_FIRMWARE
-extern char firmware_name[FILENAME_MAX];
-#endif
 #endif // GATEWAY_H

@@ -78,7 +78,6 @@ target_sources(virgil-iot-gateway-app
 		src/update/upd_http_retrieval_thread.c
 		src/update/update_hal.c
 		src/platform/platform-hal.c
-		"$<$<BOOL:${GATEWAY_SIMULATOR}>:src/test_update_thread.c>"
 		)
 
 target_compile_definitions(virgil-iot-gateway-app

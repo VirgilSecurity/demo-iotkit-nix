@@ -43,8 +43,6 @@
 #include <string.h>
 #include <curl/curl.h>
 
-#if !SIMULATOR || !SIM_FETCH_FIRMWARE
-
 typedef struct resp_buff_s {
     uint8_t *buff;
     size_t buff_sz;
@@ -121,57 +119,3 @@ cleanup:
     curl_global_cleanup();
     return res;
 }
-#else
-
-#include "hal/file_io_hal.h"
-#include "gateway.h"
-#include <stdlib-config.h>
-#include <virgil/iot/logger/logger.h>
-#include <virgil/iot/macros/macros.h>
-
-uint16_t
-vs_cloud_https_hal(vs_http_method_t type,
-                   const char *url,
-                   const char *data,
-                   size_t data_size,
-                   char *out_data,
-                   vs_fetch_handler_func_t fetch_handler,
-                   void *hander_data,
-                   size_t *in_out_size) {
-
-    int file_sz;
-    uint16_t buf_sz;
-    uint8_t *file_buf = NULL;
-
-    CHECK_NOT_ZERO_RET(in_out_size, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
-    CHECK_NOT_ZERO_RET(fetch_handler, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
-
-    file_sz = vs_gateway_get_file_len(vs_gateway_get_sim_fw_images_dir(), firmware_name);
-
-    CHECK_RET(file_sz > 0, HTTPS_RET_CODE_ERROR_PREPARE_REQ, "Error firmware file size")
-
-    buf_sz = file_sz > UINT16_MAX ? UINT16_MAX : file_sz;
-
-    file_buf = VS_IOT_MALLOC(file_sz);
-    CHECK_NOT_ZERO_RET(file_buf, HTTPS_RET_CODE_ERROR_PREPARE_REQ);
-
-    uint32_t offset = 0;
-    while (offset < file_sz) {
-        uint16_t read_sz;
-        uint16_t required_sz = file_sz - offset > buf_sz ? buf_sz : file_sz - offset;
-        if (!vs_gateway_read_file_data(
-                    vs_gateway_get_sim_fw_images_dir(), firmware_name, offset, file_buf, required_sz, &read_sz) ||
-            required_sz != fetch_handler((char *)file_buf, required_sz, hander_data)) {
-            VS_IOT_FREE(file_buf);
-            return HTTPS_RET_CODE_ERROR_GET;
-        }
-
-        offset += required_sz;
-    }
-
-
-    VS_IOT_FREE(file_buf);
-    return HTTPS_RET_CODE_OK;
-}
-
-#endif // SIM_FETCH_FIRMWARE

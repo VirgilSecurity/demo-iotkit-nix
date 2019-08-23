@@ -39,23 +39,24 @@
 #include <libgen.h>
 
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/macros/macros.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
 #include "sdmp_app.h"
 #include "gateway.h"
 #include "platform/platform_hardware.h"
 #include "communication/gateway_netif_plc.h"
-#include "secbox_impl/gateway_secbox_impl.h"
 #include "event_group_bit_flags.h"
 #include "hal/file_io_hal.h"
 
 char self_path[FILENAME_MAX];
 
-#define CMD_STR_UPDATE_TEMPLATE "mv %s %s; %s %s"
+#define NEW_APP_EXTEN ".new"
+#define BACKUP_APP_EXTEN ".old"
 
-bool is_try_to_update = false;
+#define CMD_STR_CPY_TEMPLATE "cp %s %s"
+#define CMD_STR_MV_TEMPLATE "mv %s %s"
+#define CMD_STR_START_TEMPLATE "%s %s"
 
 /******************************************************************************/
 static char *
@@ -136,6 +137,91 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 }
 
 /******************************************************************************/
+static int
+_try_to_update_app(int argc, char *argv[]) {
+    char old_app[FILENAME_MAX];
+    char new_app[FILENAME_MAX];
+    char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
+
+    size_t pos;
+
+    VS_LOG_INFO("Try to update app");
+
+    strncpy(new_app, self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
+    strncpy(old_app, self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
+
+    strcat(old_app, BACKUP_APP_EXTEN);
+    strcat(new_app, NEW_APP_EXTEN);
+
+    uint32_t args_len = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        args_len += strlen(argv[pos]);
+    }
+
+    // argc == number of necessary spaces + \0 (because of we use argv starting from the 1st cell, not zero cell)
+    char copy_args[args_len + argc];
+    copy_args[0] = 0;
+
+    for (pos = 1; pos < argc; ++pos) {
+        strcat(copy_args, argv[pos]);
+        strcat(copy_args, " ");
+    }
+
+    // Create backup of current app
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, self_path, old_app);
+    if (-1 == system(cmd_str)) {
+        VS_LOG_ERROR("Error backup current app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Update current app to new
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
+    if (-1 == system(cmd_str) || -1 == chmod(self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
+        VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    // Start new app
+    if (-1 == execv(self_path, argv)) {
+        VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
+
+        // restore current app
+        VS_LOG_INFO("Restore current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, self_path);
+        if (-1 == system(cmd_str)) {
+            VS_LOG_ERROR("Error restore current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+
+        // restart self
+        VS_LOG_INFO("Restart current app");
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
+            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+    }
+
+    VS_LOG_ERROR("Something wrong");
+    return -1;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     // Setup forced mac address
@@ -143,10 +229,13 @@ main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
 
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
+    VS_LOG_INFO("%s", argv[0]);
+
+    CHECK_NOT_ZERO_RET(argv[0], -1);
 
     strncpy(self_path, argv[0], sizeof(self_path));
-    vs_logger_init(VS_LOGLEV_DEBUG);
-    VS_LOG_DEBUG(self_path);
 
     CHECK_RET (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
     vs_hal_netif_plc_force_mac(forced_mac_addr);
@@ -164,57 +253,25 @@ main(int argc, char *argv[]) {
     // Init gateway object
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
 
-    // Prepare secbox
-    vs_secbox_configure_hal(vs_secbox_gateway());
+    VS_LOG_DEBUG(self_path);
+
+    // Prepare tl storage
+    vs_tl_init_storage();
 
     // Start SDMP protocol over PLC interface
-
     // TODO: Need to use freertos interface
     // vs_sdmp_comm_start_thread(plc_netif);
     xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
 
+
     // Start app
     start_gateway_threads();
 
-    if (is_try_to_update) {
-        char new_app[FILENAME_MAX];
-        char cmd_str[FILENAME_MAX];
+    int res = _try_to_update_app(argc, argv);
 
-        size_t pos;
+    VS_LOG_INFO("Fatal error. App stopped");
 
-        VS_LOG_INFO("Try to update app");
-
-        VS_IOT_STRCPY(new_app, self_path);
-
-        strcat(new_app, ".new");
-
-        uint32_t args_len = 0;
-
-        for (pos = 1; pos < argc; ++pos) {
-            args_len += strlen(argv[pos]);
-        }
-
-        char copy_args[args_len + argc + 1];
-        copy_args[0] = 0;
-
-        for (pos = 1; pos < argc; ++pos) {
-            strcat(copy_args, argv[pos]);
-            strcat(copy_args, " ");
-        }
-
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_UPDATE_TEMPLATE, new_app, self_path, self_path, copy_args);
-
-        VS_LOG_DEBUG(cmd_str);
-
-        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
-            VS_LOG_ERROR("Error start new process. errno = %d (%s)", errno, strerror(errno));
-        }
-
-        VS_LOG_ERROR("Something wrong");
-    }
-
-    VS_LOG_INFO("App stopped");
-    return 0;
+    return res;
 }
 
 /******************************************************************************/
