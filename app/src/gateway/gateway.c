@@ -128,6 +128,7 @@ _gateway_task(void *pvParameters) {
                     _restart_app();
                 }
             } else {
+
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
             }
 

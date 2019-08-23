@@ -32,13 +32,71 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_COMMUNICATION_H
-#define GATEWAY_COMMUNICATION_H
+#include <stdint.h>
+#include <virgil/iot/macros/macros.h>
+#include <FreeRTOS.h>
+#include <queue.h>
+#include <msg_queue.h>
 
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+static QueueHandle_t _queue = NULL;
 
+#define QUEUE_SIZE  (64)
+
+/******************************************************************************/
 int
-vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac);
+vs_msg_queue_init(void){
 
-#endif // GATEWAY_COMMUNICATION_H
+    _queue = xQueueCreate(QUEUE_SIZE, sizeof(vs_msg_queue_item_s));
+    CHECK_RET(_queue, -1, "Unable to create messages queue");
+
+    return 0;
+}
+
+/******************************************************************************/
+void
+vs_msg_queue_free(void){
+
+    if(_queue){
+        vQueueDelete(_queue);
+    }
+}
+
+/******************************************************************************/
+int
+vs_msg_queue_push(vs_msg_queue_item_s *item, size_t wait_ticks){
+    BaseType_t res;
+
+    CHECK_NOT_ZERO_RET(item, -1);
+    CHECK_NOT_ZERO_RET(_queue, -2);
+
+    res = xQueueSend(_queue, item, wait_ticks);
+
+    if( res == pdTRUE) {
+        return 0;
+    }
+
+    return res;
+}
+
+/******************************************************************************/
+int
+vs_msg_queue_pop(vs_msg_queue_item_s *item, bool *has_read, size_t wait_ticks){
+    BaseType_t res;
+
+    CHECK_NOT_ZERO_RET(item, -1);
+    CHECK_NOT_ZERO_RET(has_read, -2);
+    CHECK_NOT_ZERO_RET(_queue, -3);
+
+    *has_read = false;
+
+    res = xQueueReceive(_queue, item, wait_ticks);
+
+    if(res == pdTRUE){
+        *has_read = true;
+        return 0;
+    } else if (res == pdFALSE && uxQueueMessagesWaiting(_queue) == 0) {
+        return 0;
+    }
+
+    return -1;
+}

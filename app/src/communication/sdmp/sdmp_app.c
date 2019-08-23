@@ -35,25 +35,171 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
+#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include <sdmp_app.h>
+#include <fldt_implementation.h>
 #include <communication/gateway_netif_plc.h>
+#include <msg_queue.h>
+#include <platform/platform_os.h>
 
-#define PLC_CMD_PRIORITY 0
+#include <FreeRTOS.h>
+#include <task.h>
+#include <timers.h>
+
+// The maximum amount of time the task should block waiting
+// for space to become available on the queue,
+// should it already be full
+
+// TODO : check pdMS_TO_TICKS!!!
+#define MSG_SEND_TIMEOUT_TICKS pdMS_TO_TICKS( 10 )
+
+// The maximum amount of time the task should block waiting
+// for an item to receive should the queue be empty
+// at the time of the call
+
+// TODO : check pdMS_TO_TICKS!!!
+#define MSG_READ_TIMEOUT_TICKS pdMS_TO_TICKS( 100 )
+
+#define MSG_TASK_DEPTH  ( 2 * configMINIMAL_STACK_SIZE )
+#define MSG_TASK_PRIORITY   ( OS_PRIO_3 )
+
+static vs_netif_init_t _plc_init;
+static vs_netif_deinit_t _plc_deinit;
+static vs_netif_rx_cb_t _sdmp_rx;
+static TaskHandle_t _msg_process_task = NULL;
+
+/******************************************************************************/
+static int
+_rx_to_queue(const struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz){
+    vs_msg_queue_item_s item;
+
+    item.netif = netif;
+    item.data = malloc(data_sz);
+    item.size = data_sz;
+
+    if(item.data) {
+        memcpy(item.data, data, data_sz);
+        return vs_msg_queue_push(&item, MSG_SEND_TIMEOUT_TICKS);
+    }
+
+    return -1;
+}
+
+/******************************************************************************/
+static int
+_init_with_queue(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif){
+    vs_msg_queue_init();
+
+    _sdmp_rx = rx_cb;
+
+    return _plc_init(_rx_to_queue, netif);
+}
+
+/******************************************************************************/
+static int
+_deinit_with_queue(){
+    int res;
+
+    res = _plc_deinit();
+
+    vs_msg_queue_free();
+
+    return res;
+}
+
+/******************************************************************************/
+static const vs_netif_t *
+_init_msg_queued_netif(void){
+    static vs_netif_t netif;
+
+    memcpy(&netif, vs_hal_netif_plc(), sizeof(netif));
+
+    _plc_init = netif.init;
+    _plc_deinit = netif.deinit;
+
+    netif.init = _init_with_queue;
+    netif.deinit = _deinit_with_queue;
+
+    return &netif;
+}
+
+/******************************************************************************/
+static void
+_msg_processing(void *data){
+    vs_msg_queue_item_s item;
+    bool has_read;
+    int res;
+
+    while(true){
+        CHECK(!vs_msg_queue_pop(&item, &has_read, MSG_READ_TIMEOUT_TICKS), "Error while reading message from queue");
+
+        if(has_read){
+            res = _sdmp_rx(item.netif, item.data, item.size);
+            free(item.data);
+            CHECK(!res, "Error while processing message");
+        }
+
+        terminate:  ;
+    }
+}
+
+/******************************************************************************/
+static int
+_create_msg_processing_thread(void){
+
+    CHECK_RET(pdPASS == xTaskCreate(_msg_processing, "MsgProc", MSG_TASK_DEPTH, NULL, MSG_TASK_PRIORITY, &_msg_process_task),
+              -1,
+              "Unable to create messages processing task");
+
+    return 0;
+}
 
 /******************************************************************************/
 int
-vs_sdmp_comm_start_thread(void) {
+vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac) {
 
-    CHECK_RET(!vs_sdmp_init(vs_hal_netif_plc()), -1, "Unable to initialize SDMP over PLC interface");
+    const vs_netif_t *plc_netif = _init_msg_queued_netif();
 
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fwdt_service()), -2, "Unable to register FWDT service");
+    CHECK_RET(!_create_msg_processing_thread(), -1, "Unable to create SDMP messages processing task");
 
-    CHECK_RET(!vs_sdmp_fwdt_configure_hal(vs_fwdt_impl()), -3, "Unable to configure FWDT HAL");
+    CHECK_RET(!vs_sdmp_init(plc_netif), -2, "Unable to initialize SDMP over PLC interface");
 
-    vs_sdmp_fwdt_manifest_t manifest = {.some_data = {0x01, 0x02, 0x03, 0x04}};
-    vs_sdmp_fwdt_mfst_list_t lst = {.count = 0};
-    vs_sdmp_fwdt_broadcast_manifest(vs_hal_netif_plc(), &manifest, &lst, 1000);
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service(plc_netif)), -3, "Unable to register FLDT service");
+
+    CHECK_RET(!vs_fldt_init(), -4, "Unable to initialize FLDT");
+
+    // TODO : remove !!! Just for debugging!!!
+    vs_fldt_infv_new_file_request_t nfvi = {
+            .version = {
+                    .timestamp = 10457,
+                    .file_type = {
+                            .file_type = 1,
+                            .add_info = {0x10, 0x20, 0x30, 0x40},
+                            },
+                    .dev_build = 10,
+                    .major = 4,
+                    .patch = 123,
+                    .minor = 2
+            },
+            .file_specific_info = {"Some file specific information"}
+    };
+    memcpy(&nfvi.gateway_mac, mac, sizeof (*mac));
+    uint8_t buf_header[145];
+    vs_fldt_gnfh_header_response_t *header = (vs_fldt_gnfh_header_response_t *)buf_header;
+    memcpy(&header->version, &nfvi.version, sizeof(nfvi.version));
+    header->chunk_size = 10;
+    header->chunks_amount = 3;
+    header->header_size = 6;
+    memcpy(header->header_data, "12345", header->header_size);
+    header->footer_size = 6;
+    uint8_t buf_footer[145];
+    vs_fldt_gnff_footer_response_t *footer = (vs_fldt_gnff_footer_response_t *)buf_footer;
+    memcpy(&footer->version, &nfvi.version, sizeof(nfvi.version));
+    footer->footer_size = 6;
+    memcpy(footer->footer_data, "ABCDE", footer->footer_size);
+
+    vs_fldt_new_file_available(&nfvi, header, footer, (const uint8_t*)"12345678911234567892123456789");
 
     return 0;
 }

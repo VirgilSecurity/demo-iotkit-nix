@@ -32,13 +32,27 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_COMMUNICATION_H
-#define GATEWAY_COMMUNICATION_H
+#ifndef RPI_MESSAGE_QUEUE_H
+#define RPI_MESSAGE_QUEUE_H
 
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <FreeRTOS.h>
+
+typedef struct {
+    const struct vs_netif_t *netif;
+    uint8_t *data;
+    size_t size;
+} vs_msg_queue_item_s;
 
 int
-vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac);
+vs_msg_queue_init(void);
 
-#endif // GATEWAY_COMMUNICATION_H
+int
+vs_msg_queue_push(vs_msg_queue_item_s *item, size_t timeout_ms);
+
+int
+vs_msg_queue_pop(vs_msg_queue_item_s *item, bool *has_read, size_t wait_ms);
+
+void
+vs_msg_queue_free(void);
+
+#endif // RPI_MESSAGE_QUEUE_H

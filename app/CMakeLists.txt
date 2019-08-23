@@ -57,6 +57,8 @@ target_sources(virgil-iot-gateway-app
 		include/iot_mqtt.h
 		include/message_bin.h
 		include/sdmp_app.h
+		include/fldt_implementation.h
+		include/msg_queue.h
 		include/test_update_thread.h
 		include/upd_http_retrieval_thread.h
 		include/platform/platform_hardware.h
@@ -64,11 +66,13 @@ target_sources(virgil-iot-gateway-app
 
 		${GW_PLATFORM_APP_SRC}
 		src/main.c
+		src/msg_queue.c
 		src/cloud/https.c
 		src/communication/mqtt/message_bin.c
 		src/communication/mqtt/msg-bin-root-ca.c
 		src/communication/mqtt/iot_mqtt.c
 		src/communication/sdmp/sdmp_app.c
+		src/communication/sdmp/fldt_implementation.c
 		src/gateway/gateway.c
 		src/platform/os.c
 		src/update/upd_http_retrieval_thread.c

@@ -143,6 +143,7 @@ main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
 
+
     strncpy(self_path, argv[0], sizeof(self_path));
     vs_logger_init(VS_LOGLEV_DEBUG);
     VS_LOG_DEBUG(self_path);
@@ -158,7 +159,7 @@ main(int argc, char *argv[]) {
     vs_plc_sim_set_ip(plc_sim_addr);
 
     // Initialize SDMP
-    CHECK_RET (!vs_sdmp_comm_start_thread(), -1, "Unable to initialize SDMP interface");
+    CHECK_RET (!vs_sdmp_comm_start_thread(&forced_mac_addr), -1, "Unable to initialize SDMP interface");
 
     // Init gateway object
     gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
@@ -167,6 +168,7 @@ main(int argc, char *argv[]) {
     vs_secbox_configure_hal(vs_secbox_gateway());
 
     // Start SDMP protocol over PLC interface
+
     // TODO: Need to use freertos interface
     // vs_sdmp_comm_start_thread(plc_netif);
     xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);

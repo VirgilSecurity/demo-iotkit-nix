@@ -32,13 +32,15 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_COMMUNICATION_H
-#define GATEWAY_COMMUNICATION_H
+#ifndef RPI_SDMP_FLDT_IMPLEMENTATION_H
+#define RPI_SDMP_FLDT_IMPLEMENTATION_H
 
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <virgil/iot/protocols/sdmp/fldt.h>
 
 int
-vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac);
+vs_fldt_init(void);
 
-#endif // GATEWAY_COMMUNICATION_H
+int
+vs_fldt_new_file_available(const vs_fldt_infv_new_file_request_t *file_ver, const vs_fldt_gnfh_header_response_t *header, const vs_fldt_gnff_footer_response_t *footer, const uint8_t *data);
+
+#endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

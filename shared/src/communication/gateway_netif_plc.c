@@ -197,7 +197,7 @@ _plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif) {
 
     memset(&_iot_plc_app, 0, sizeof(_iot_plc_app));
 
-    _iot_plc_app.param = (void *)&_netif_plc;
+    _iot_plc_app.param = (void *)netif;
     _iot_plc_app.recv = _gateway_plc_recv;
 
     _plc_connect();
