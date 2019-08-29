@@ -62,7 +62,7 @@ node ("$BUILD_HOST") {
 
         try {
             stage(STAGE_CPP_CHECK) {
-                if (STATIC_ANALISE != "true") {
+                if (STATIC_ANALYZE != "true") {
                     ConcatState(STAGE_CPP_CHECK, "SKIPPED")
                     return
                 }
@@ -78,7 +78,7 @@ node ("$BUILD_HOST") {
 
         try {
             stage(STAGE_PVS_STUDIO) {
-                if (STATIC_ANALISE != "true") {
+                if (STATIC_ANALYZE != "true") {
                     ConcatState(STAGE_PVS_STUDIO, "SKIPPED")
                     return
                 }
