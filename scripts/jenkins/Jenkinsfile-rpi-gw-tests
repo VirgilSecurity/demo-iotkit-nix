@@ -129,7 +129,7 @@ node ("$BUILD_HOST") {
                     cmake-build-debug/tests/rpi_gw_tests
                 """
                 sh "sudo docker exec -u jenkins ${CONTAINER_NAME} bash -c \'cd  ~/iotl &&\
-                 ${valgrind_cmd} 2>&1 | tee artifacts/rpi-gw-tests-valgrind.log; exit \${PIPESTATUS[0]} \'"
+                 ${valgrind_cmd}\' 2>&1 | tee artifacts/rpi-gw-tests-valgrind.log; exit \${PIPESTATUS[0]}"
 
                 ConcatState(STAGE_RPI_GW_TESTS_VALGRIND, "OK")
             }
