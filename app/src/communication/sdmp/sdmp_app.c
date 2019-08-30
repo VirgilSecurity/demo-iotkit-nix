@@ -167,40 +167,6 @@ vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac) {
 
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service(plc_netif)), -3, "Unable to register FLDT service");
 
-    CHECK_RET(!vs_fldt_init(), -4, "Unable to initialize FLDT");
-
-    // TODO : remove !!! Just for debugging!!!
-    vs_fldt_infv_new_file_request_t nfvi = {
-            .version = {
-                    .timestamp = 10457,
-                    .file_type = {
-                            .file_type = 1,
-                            .add_info = {0x10, 0x20, 0x30, 0x40},
-                            },
-                    .dev_build = 10,
-                    .major = 4,
-                    .patch = 123,
-                    .minor = 2
-            },
-            .file_specific_info = {"Some file specific information"}
-    };
-    memcpy(&nfvi.gateway_mac, mac, sizeof (*mac));
-    uint8_t buf_header[145];
-    vs_fldt_gnfh_header_response_t *header = (vs_fldt_gnfh_header_response_t *)buf_header;
-    memcpy(&header->version, &nfvi.version, sizeof(nfvi.version));
-    header->chunk_size = 10;
-    header->chunks_amount = 3;
-    header->header_size = 6;
-    memcpy(header->header_data, "12345", header->header_size);
-    header->footer_size = 6;
-    uint8_t buf_footer[145];
-    vs_fldt_gnff_footer_response_t *footer = (vs_fldt_gnff_footer_response_t *)buf_footer;
-    memcpy(&footer->version, &nfvi.version, sizeof(nfvi.version));
-    footer->footer_size = 6;
-    memcpy(footer->footer_data, "ABCDE", footer->footer_size);
-
-    vs_fldt_new_file_available(&nfvi, header, footer, (const uint8_t*)"12345678911234567892123456789");
-
     return 0;
 }
 

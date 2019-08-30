@@ -45,10 +45,12 @@
 #include "upd_http_retrieval_thread.h"
 #include "test_update_thread.h"
 #include "event_group_bit_flags.h"
+#include "fldt_implementation.h"
 #include "gateway_hal.h"
 
 #include <global-hal.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 
 static gtwy_t _gtwy;
 
@@ -60,7 +62,8 @@ static const uint16_t starter_thread_stack_size = 10 * 1024;
 #define MAIN_THREAD_SLEEP_MS (400 / portTICK_PERIOD_MS)
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #else
-#define MAIN_THREAD_SLEEP_MS (3000 / portTICK_PERIOD_MS)
+// TODO : sleep until new broadcast message
+#define MAIN_THREAD_SLEEP_MS (300 / portTICK_PERIOD_MS)
 #endif
 
 /******************************************************************************/
@@ -95,14 +98,6 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
             0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
 }
 
-/*************************************************************************/
-static void
-_restart_app() {
-    vTaskEndScheduler();
-    while (1)
-        ;
-}
-
 /******************************************************************************/
 static void
 _gateway_task(void *pvParameters) {
@@ -123,8 +118,18 @@ _gateway_task(void *pvParameters) {
                 VS_UPDATE_ERR_OK ==
                         vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
                 VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
-                _restart_app();
+                if(VS_UPDATE_ERR_OK != vs_update_restart_application()) {
+                    VS_LOG_ERROR("Unable to restart application");
+                    assert(false);
+                }
             } else {
+                // TODO : process downloaded firmware and trust list, i. e. send FLDT message
+                // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header (vs_tl_header_t(pub_keys_count - chunks amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)
+                // vs_update_load_firmware_descriptor( manufacturer, device) ==> descriptor
+                if(vs_fldt_new_firmware_available(request)){
+                    VS_LOG_ERROR("Error processing new firmware available");
+                }
+
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
             }
 

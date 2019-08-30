@@ -78,6 +78,8 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
     if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
+        // TODO : notify main thread about new trust list (like for FW above)
+
     } else {
         VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new TL\r\n");
     }

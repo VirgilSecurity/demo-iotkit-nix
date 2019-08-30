@@ -73,6 +73,7 @@ target_sources(virgil-iot-gateway-app
 		src/communication/mqtt/iot_mqtt.c
 		src/communication/sdmp/sdmp_app.c
 		src/communication/sdmp/fldt_implementation.c
+		src/communication/sdmp/fldt_firmware.c
 		src/gateway/gateway.c
 		src/platform/os.c
 		src/update/upd_http_retrieval_thread.c
@@ -129,7 +130,7 @@ target_link_libraries (virgil-iot-gateway-app
 		freertos
 		aws-mqtt
 		cloud
-		virgil-iot-macros
+		macros
 		logger
 		update
 		)

@@ -35,12 +35,15 @@
 #ifndef RPI_SDMP_FLDT_IMPLEMENTATION_H
 #define RPI_SDMP_FLDT_IMPLEMENTATION_H
 
+#include <global-hal.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
 
-int
-vs_fldt_init(void);
+vs_mac_addr_t vs_fldt_gateway_mac;
+
+void
+vs_fldt_init(const vs_mac_addr_t *gateway_mac);
 
 int
-vs_fldt_new_file_available(const vs_fldt_infv_new_file_request_t *file_ver, const vs_fldt_gnfh_header_response_t *header, const vs_fldt_gnff_footer_response_t *footer, const uint8_t *data);
+vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

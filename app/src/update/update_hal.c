@@ -208,3 +208,11 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
 
     return res;
 }
+
+/******************************************************************************/
+int
+vs_update_restart_app_hal(void){
+    vTaskEndScheduler();
+    while (1)
+        ;
+}

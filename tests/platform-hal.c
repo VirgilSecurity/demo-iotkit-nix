@@ -36,12 +36,6 @@
 
 /******************************************************************************/
 void *
-platform_calloc(size_t num, size_t size) {
-    return calloc(num, size);
-}
-
-/******************************************************************************/
-void *
 platform_malloc(size_t size) {
     return malloc(size);
 }

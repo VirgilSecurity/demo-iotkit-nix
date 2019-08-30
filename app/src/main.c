@@ -44,6 +44,7 @@
 #include <virgil/iot/secbox/secbox.h>
 #include "sdmp_app.h"
 #include "gateway.h"
+#include "fldt_implementation.h"
 #include "platform/platform_hardware.h"
 #include "communication/gateway_netif_plc.h"
 #include "event_group_bit_flags.h"
@@ -240,6 +241,7 @@ main(int argc, char *argv[]) {
     CHECK_RET (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
     vs_hal_netif_plc_force_mac(forced_mac_addr);
     vs_hal_files_set_mac(forced_mac_addr.bytes);
+    vs_fldt_init(&forced_mac_addr);
 
     // Init platform specific hardware
     hardware_init();
