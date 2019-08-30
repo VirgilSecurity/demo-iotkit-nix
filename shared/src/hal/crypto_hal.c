@@ -293,29 +293,16 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
 
     CHECK_BOOL(_set_hash_info(hash_type, &hash_id, &hash_sz), "Unable to set hash info");
 
-    CHECK_HSM(_load_prvkey(key_slot, &prvkey, &keypair_type),
-              "Unable to load private key from slot %d (%s)",
-              key_slot,
-              get_slot_name((key_slot)));
+    CHECK_BOOL(VS_HSM_ERR_OK == _load_prvkey(key_slot, &prvkey, &keypair_type),
+               "Unable to load private key from slot %d (%s)",
+               key_slot,
+               get_slot_name((key_slot)));
 
     required_sign_sz = vscf_sign_hash_signature_len(prvkey);
 
-    CHECK_BOOL(signature_buf_sz >= required_sign_sz,
-               "Signature buffer size %d is less that required size %d",
-               signature_buf_sz,
-               required_sign_sz);
-
-    vsc_buffer_use(&sign_data, signature, required_sign_sz);
+    vsc_buffer_alloc(&sign_data, required_sign_sz);
 
     CHECK_VSCF(vscf_sign_hash(prvkey, vsc_data(hash, hash_sz), hash_id, &sign_data), "Unable to sign data");
-
-    if (vsc_buffer_len(&sign_data) > signature_buf_sz) {
-        VS_LOG_ERROR("Generated signature's size %d is bigger that buffer size %d",
-                     (int)vsc_buffer_len(&sign_data),
-                     signature_buf_sz);
-        res = VS_HSM_ERR_NOMEM;
-        goto terminate;
-    }
 
     *signature_sz = vsc_buffer_len(&sign_data);
 
@@ -336,10 +323,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     res = VS_HSM_ERR_OK;
 
 terminate:
-
-    if (VS_HSM_ERR_OK != res) {
-        vsc_buffer_cleanup(&sign_data);
-    }
+    vsc_buffer_release(&sign_data);
 
     if (prvkey) {
         vscf_impl_destroy(&prvkey);

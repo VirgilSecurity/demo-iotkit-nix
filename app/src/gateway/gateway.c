@@ -66,6 +66,8 @@ static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #define MAIN_THREAD_SLEEP_MS (300 / portTICK_PERIOD_MS)
 #endif
 
+extern const vs_firmware_descriptor_t *
+vs_global_hal_get_own_firmware_descriptor(void);
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {

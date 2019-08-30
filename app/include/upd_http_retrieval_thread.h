@@ -12,7 +12,7 @@
 #include "task.h"
 #include "queue.h"
 #include "event_groups.h"
-#include <global-hal.h>
+#include <virgil/iot/update/update.h>
 
 xTaskHandle *
 vs_start_upd_http_retrieval_thread(void);

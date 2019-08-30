@@ -287,6 +287,7 @@ vs_gateway_write_file_data(const char *folder,
     } else {
         new_file_sz = offset + data_sz;
         buf = VS_IOT_CALLOC(offset + data_sz, 1);
+        NOT_ZERO(buf);
         VS_IOT_MEMSET(buf, 0xFF, offset);
         VS_IOT_MEMCPY(buf + offset, data, data_sz);
     }

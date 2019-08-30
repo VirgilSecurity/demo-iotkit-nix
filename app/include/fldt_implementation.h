@@ -37,6 +37,7 @@
 
 #include <global-hal.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
+#include <virgil/iot/update/update.h>
 
 vs_mac_addr_t vs_fldt_gateway_mac;
 
