@@ -45,7 +45,7 @@ _create_firmware_filename(uint8_t *uuid, uint8_t *dev_type, char *filename, uint
                        dev_type[2],
                        dev_type[3]);
 
-    CHECK_RET(res > 0, VS_UPDATE_ERR_FAIL, "snprintf error result %d", res)
+    CHECK_RET(res > 0, VS_UPDATE_ERR_FAIL, "snprintf error result %d", res);
 
     return VS_UPDATE_ERR_OK;
 }
@@ -71,7 +71,7 @@ vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_ty
     CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename")
+              "Error create filename");
 
     file_sz = vs_gateway_get_file_len(vs_gateway_get_firmware_dir(), filename);
 
@@ -106,7 +106,7 @@ vs_update_read_firmware_data_hal(uint8_t *manufacture_id,
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename")
+              "Error create filename");
     return vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), filename, offset, data, buf_sz, read_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -136,7 +136,7 @@ vs_update_write_firmware_data_hal(uint8_t *manufacture_id,
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename")
+              "Error create filename");
     return vs_gateway_write_file_data(vs_gateway_get_firmware_dir(), filename, offset, data, data_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -160,7 +160,7 @@ vs_update_remove_firmware_data_hal(uint8_t *manufacture_id, uint8_t *device_type
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename")
+              "Error create filename");
     return vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), filename) ? VS_UPDATE_ERR_OK : VS_UPDATE_ERR_FAIL;
 }
 
