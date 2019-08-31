@@ -39,9 +39,7 @@ project(virgil-iot-gateway-initializer VERSION 0.1.0 LANGUAGES C)
 #
 #	MCU Initializer
 #
-add_executable(virgil-iot-gateway-initializer
-		${GW_INITIALIZER_SRC}
-		)
+add_executable(virgil-iot-gateway-initializer)
 
 #
 #	Define variables
@@ -54,13 +52,13 @@ set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
 #
 target_sources(virgil-iot-gateway-initializer
 		PRIVATE
+
 		# Headers
 		include/virgil/iot/initializer/communication/sdmp_initializer.h
 		include/virgil/iot/initializer/sdmp/prvs_implementation.h
 
 		# Sources
 		src/main.c
-		src/platform-hal.c
 		src/communication/sdmp_initializer.c
 		src/sdmp/prvs_implementation.c
 		)
