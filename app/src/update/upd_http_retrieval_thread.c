@@ -34,11 +34,11 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
     VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
 
-    res = vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header);
+    res = vs_cloud_fetch_and_store_fw_file(&get_gateway_ctx()->fw_update_ctx, request->upd_file_url, &header);
     if (VS_CLOUD_ERR_OK == res) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
 
-        res = vs_update_verify_firmware(&header.descriptor);
+        res = vs_update_verify_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
         if (VS_UPDATE_ERR_OK == res) {
 
             VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
@@ -53,7 +53,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
         } else {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
-            vs_update_delete_firmware(&header.descriptor);
+            vs_update_delete_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
         }
 
     } else {

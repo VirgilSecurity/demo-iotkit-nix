@@ -151,16 +151,20 @@ start_message_bin_thread() {
 static void
 _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
     int res;
+    gtwy_t *gtwy = get_gateway_ctx();
     upd_request_t *fw_url = (upd_request_t *)pvPortMalloc(sizeof(upd_request_t));
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
 
-    res = vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
+    while (xSemaphoreTake(gtwy->firmware_semaphore, portMAX_DELAY) == pdFALSE) {
+    }
+    res = vs_cloud_parse_firmware_manifest(&gtwy->fw_update_ctx, (char *)p_data, (int)length, fw_url->upd_file_url);
+    (void)xSemaphoreGive(gtwy->firmware_semaphore);
 
     if (VS_CLOUD_ERR_OK == res) {
         if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
             VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
         } else {
-            xEventGroupSetBits(get_gateway_ctx()->firmware_event_group, MSG_BIN_RECEIVE_BIT);
+            xEventGroupSetBits(gtwy->firmware_event_group, MSG_BIN_RECEIVE_BIT);
             return;
         }
 
