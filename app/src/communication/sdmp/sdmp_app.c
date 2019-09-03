@@ -51,17 +51,16 @@
 // for space to become available on the queue,
 // should it already be full
 
-// TODO : check pdMS_TO_TICKS!!!
 #define MSG_SEND_TIMEOUT_TICKS pdMS_TO_TICKS( 10 )
 
 // The maximum amount of time the task should block waiting
 // for an item to receive should the queue be empty
 // at the time of the call
 
-// TODO : check pdMS_TO_TICKS!!!
 #define MSG_READ_TIMEOUT_TICKS pdMS_TO_TICKS( 100 )
 
-#define MSG_TASK_DEPTH  ( 2 * configMINIMAL_STACK_SIZE )
+// TODO : check msg task depth!
+#define MSG_TASK_DEPTH  ( 3 * configMINIMAL_STACK_SIZE )
 #define MSG_TASK_PRIORITY   ( OS_PRIO_3 )
 
 static vs_netif_init_t _plc_init;

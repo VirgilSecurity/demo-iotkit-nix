@@ -269,6 +269,8 @@ main(int argc, char *argv[]) {
     // Start app
     start_gateway_threads();
 
+    vs_fldt_destroy();
+
     int res = _try_to_update_app(argc, argv);
 
     VS_LOG_INFO("Fatal error. App stopped");

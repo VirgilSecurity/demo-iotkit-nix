@@ -40,23 +40,25 @@
 #include <fldt_implementation.h>
 #include <global-hal.h>
 
-static bool _initialized = false;
 vs_mac_addr_t vs_fldt_gateway_mac;
 
 /******************************************************************************/
-void
+vs_fldt_ret_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac){
-    if(_initialized){
-        assert(false && "FLDT is already initialized. Ambiguous call");
-        return;
-    }
+    vs_fldt_ret_code_e fldt_ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
     memcpy(&vs_fldt_gateway_mac, gateway_mac, sizeof(vs_fldt_gateway_mac));
-    vs_fldt_set_is_gateway(true);
+    FLDT_CHECK(vd_fldt_init_server(), "Unable to initialize FLDT's server service");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
-    _initialized = true;
+    return VS_FLDT_ERR_OK;
+}
+
+/******************************************************************************/
+void
+vs_fldt_destroy(void){
+    vd_fldt_destroy_server();
 }

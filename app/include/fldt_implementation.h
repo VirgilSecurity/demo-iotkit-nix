@@ -41,10 +41,13 @@
 
 vs_mac_addr_t vs_fldt_gateway_mac;
 
-void
+vs_fldt_ret_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac);
 
-int
+vs_fldt_ret_code_e
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
+
+void
+vs_fldt_destroy(void);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H
