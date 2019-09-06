@@ -25,18 +25,18 @@ vs_update_install_prepare_space_hal(void) {
 
     strcat(filename, ".new");
     remove(filename);
-    return VS_UPDATE_ERR_OK;
+    return VS_STORAGE_OK;
 }
 
 /******************************************************************************/
 int
 vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
 
-    int res = VS_UPDATE_ERR_FAIL;
+    int res = VS_STORAGE_ERROR_GENERAL;
     char filename[FILENAME_MAX];
     FILE *fp = NULL;
 
-    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_STORAGE_ERROR_PARAMS);
 
     VS_IOT_STRCPY(filename, self_path);
 
@@ -52,7 +52,7 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
                          errno,
                          strerror(errno));
         } else {
-            res = VS_UPDATE_ERR_OK;
+            res = VS_STORAGE_OK;
         }
         fclose(fp);
     }

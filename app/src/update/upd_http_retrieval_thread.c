@@ -39,7 +39,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
 
         res = vs_update_verify_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
-        if (VS_UPDATE_ERR_OK == res) {
+        if (VS_STORAGE_OK == res) {
 
             VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 

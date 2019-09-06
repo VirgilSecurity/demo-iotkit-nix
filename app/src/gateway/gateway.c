@@ -130,10 +130,10 @@ _gateway_task(void *pvParameters) {
             if (_is_self_firmware_image(request)) {
                 while (xSemaphoreTake(_gtwy.firmware_semaphore, portMAX_DELAY) == pdFALSE) {
                 }
-                if (VS_UPDATE_ERR_OK ==
+                if (VS_STORAGE_OK ==
                             vs_update_load_firmware_descriptor(
                                     &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
-                    VS_UPDATE_ERR_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                    VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
                     (void)xSemaphoreGive(_gtwy.firmware_semaphore);
                     _restart_app();
                 }
