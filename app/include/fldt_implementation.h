@@ -42,6 +42,12 @@
 vs_mac_addr_t vs_fldt_gateway_mac;
 
 vs_fldt_ret_code_e
+vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type);
+
+vs_fldt_ret_code_e
+vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type);
+
+vs_fldt_ret_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac);
 
 vs_fldt_ret_code_e

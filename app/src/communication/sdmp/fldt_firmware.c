@@ -208,7 +208,7 @@ get_footer(void **storage_context,
 
     response->footer_size = data_sz;
 
-    VS_LOG_DEBUG("[FLDT:get_chunk] <== Send footer for file version %s, %d bytes size", vs_fldt_file_version_descr(file_descr, &response->version), data_sz);
+    VS_LOG_DEBUG("[FLDT:get_footer] <== Send footer for file version %s, %d bytes size", vs_fldt_file_version_descr(file_descr, &response->version), data_sz);
 
     return VS_FLDT_ERR_OK;
 
@@ -238,7 +238,25 @@ _prepare_storage_context(vs_firmware_info_t *firmware_info, vs_firmware_descript
 
 /******************************************************************************/
 static vs_fldt_ret_code_e
+_set_file_mapping_callback(vs_firmware_descriptor_t *fw_descript, vs_fldt_server_file_type_mapping_t *file_mapping){
+
+    CHECK_NOT_ZERO_RET(fw_descript, VS_FLDT_ERR_INCORRECT_ARGUMENT);
+    CHECK_NOT_ZERO_RET(file_mapping, VS_FLDT_ERR_INCORRECT_ARGUMENT);
+
+    file_mapping->storage_context = fw_descript;
+    file_mapping->get_version = get_version;
+    file_mapping->get_header = get_header;
+    file_mapping->get_chunk = get_chunk;
+    file_mapping->get_footer = get_footer;
+    file_mapping->destroy = destroy;
+
+    return VS_FLDT_ERR_OK;
+}
+
+/******************************************************************************/
+static vs_fldt_ret_code_e
 _prepare_file_mapping(vs_firmware_info_t *firmware_info, vs_firmware_descriptor_t *fw_descript, vs_fldt_server_file_type_mapping_t *file_mapping){
+    vs_fldt_ret_code_e fldt_ret_code;
 
     CHECK_NOT_ZERO_RET(firmware_info, VS_FLDT_ERR_INCORRECT_ARGUMENT);
     CHECK_NOT_ZERO_RET(fw_descript, VS_FLDT_ERR_INCORRECT_ARGUMENT);
@@ -248,12 +266,7 @@ _prepare_file_mapping(vs_firmware_info_t *firmware_info, vs_firmware_descriptor_
 
     _make_fw_file_type(&file_mapping->file_type, firmware_info->manufacture_id, firmware_info->device_type);
 
-    file_mapping->storage_context = fw_descript;
-    file_mapping->get_version = get_version;
-    file_mapping->get_header = get_header;
-    file_mapping->get_chunk = get_chunk;
-    file_mapping->get_footer = get_footer;
-    file_mapping->destroy = destroy;
+    FLDT_CHECK(_set_file_mapping_callback(fw_descript, file_mapping), "Unable to prepare file mapping");
 
     return VS_FLDT_ERR_OK;
 }
@@ -276,12 +289,36 @@ _prepare_new_file_request(vs_firmware_info_t *firmware_info, vs_firmware_descrip
 }
 
 /******************************************************************************/
+vs_fldt_ret_code_e
+vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type){
+    vs_firmware_descriptor_t fw_descript;
+    vs_fldt_server_file_type_mapping_t file_mapping;
+    vs_fldt_ret_code_e fldt_ret_code;
+    int update_ret_code;
+    vs_update_firmware_add_data_t *fw_add_data = (vs_update_firmware_add_data_t *) file_type->add_info;
+
+    assert(file_type);
+
+    memset(&fw_descript, 0, sizeof(fw_descript));
+
+    UPDATE_CHECK(vs_update_load_firmware_descriptor(fw_add_data->manufacture_id, fw_add_data->device_type, &fw_descript),
+                 "Unable to load firmware descriptor");
+
+    memcpy(&file_mapping.file_type, file_type, sizeof(*file_type));
+    FLDT_CHECK(_set_file_mapping_callback(&fw_descript, &file_mapping), "Unable to prepare file mapping");
+
+    FLDT_CHECK(vs_fldt_update_server_file_type(&file_mapping), "Unable to update firmware file mapping");
+
+    return VS_FLDT_ERR_OK;
+}
+
+/******************************************************************************/
 int
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info){
     vs_firmware_descriptor_t *fw_descript = NULL;
     vs_fldt_server_file_type_mapping_t file_mapping;
     vs_fldt_infv_new_file_request_t new_file_request;
-    int fldt_ret_code;
+    vs_fldt_ret_code_e fldt_ret_code;
 
     CHECK_NOT_ZERO_RET(firmware_info, VS_FLDT_ERR_INCORRECT_ARGUMENT);
 
@@ -291,7 +328,7 @@ vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info){
 
     FLDT_CHECK(_prepare_file_mapping(firmware_info, fw_descript, &file_mapping), "Unable to prepare storage context");
 
-    FLDT_CHECK(vs_fldt_update_server_file_type(&file_mapping), "Unable to update firmave file mapping");
+    FLDT_CHECK(vs_fldt_update_server_file_type(&file_mapping), "Unable to update firmware file mapping");
 
     FLDT_CHECK(_prepare_new_file_request(firmware_info, fw_descript, &new_file_request), "Unable to prepare storage context");
 

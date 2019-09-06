@@ -44,13 +44,28 @@ vs_mac_addr_t vs_fldt_gateway_mac;
 
 /******************************************************************************/
 vs_fldt_ret_code_e
+vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type){
+    char file_descr[FLDT_FILEVER_BUF];
+
+    assert(file_type);
+
+    switch(file_type->file_type_id){
+    case VS_UPDATE_FIRMWARE : return vs_fldt_add_fw_filetype(file_type);
+    default :
+        VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
+        return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
+    }
+}
+
+/******************************************************************************/
+vs_fldt_ret_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac){
     vs_fldt_ret_code_e fldt_ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
     memcpy(&vs_fldt_gateway_mac, gateway_mac, sizeof(vs_fldt_gateway_mac));
-    FLDT_CHECK(vd_fldt_init_server(), "Unable to initialize FLDT's server service");
+    FLDT_CHECK(vd_fldt_init_server(vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
