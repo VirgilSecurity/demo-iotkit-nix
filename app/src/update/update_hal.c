@@ -45,7 +45,7 @@ _create_firmware_filename(uint8_t *uuid, uint8_t *dev_type, char *filename, uint
                        dev_type[2],
                        dev_type[3]);
 
-    CHECK_RET(res > 0, VS_UPDATE_ERR_FAIL, "snprintf error result %d", res);
+    CHECK_RET(res > 0, VS_UPDATE_ERR_FAIL, "snprintf error result %d", res)
 
     return VS_UPDATE_ERR_OK;
 }
@@ -67,11 +67,11 @@ vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_ty
     char filename[FILENAME_MAX];
     int file_sz;
 
-    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename");
+              "Error create filename")
 
     file_sz = vs_gateway_get_file_len(vs_gateway_get_firmware_dir(), filename);
 
@@ -81,8 +81,8 @@ vs_update_get_firmware_image_len_hal(uint8_t *manufacture_id, uint8_t *device_ty
 /******************************************************************************/
 int
 vs_update_read_firmware_descriptor_table_hal(uint8_t *data, uint16_t buf_sz, uint16_t *read_sz) {
-    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(read_sz, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(read_sz, VS_UPDATE_ERR_INVAL);
     return vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, data, buf_sz, read_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -96,17 +96,17 @@ vs_update_read_firmware_data_hal(uint8_t *manufacture_id,
                                  uint8_t *data,
                                  uint16_t buf_sz,
                                  uint16_t *read_sz) {
-    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(read_sz, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(read_sz, VS_UPDATE_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
-    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename");
+              "Error create filename")
     return vs_gateway_read_file_data(vs_gateway_get_firmware_dir(), filename, offset, data, buf_sz, read_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -116,7 +116,7 @@ vs_update_read_firmware_data_hal(uint8_t *manufacture_id,
 int
 vs_update_write_firmware_descriptor_table_hal(const void *data, uint16_t data_sz) {
 
-    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
     return vs_gateway_write_file_data(vs_gateway_get_firmware_dir(), DESCRIPTORS_FILENAME, 0, data, data_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -130,13 +130,13 @@ vs_update_write_firmware_data_hal(uint8_t *manufacture_id,
                                   const void *data,
                                   uint16_t data_sz) {
     char filename[FILENAME_MAX];
-    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename");
+              "Error create filename")
     return vs_gateway_write_file_data(vs_gateway_get_firmware_dir(), filename, offset, data, data_sz)
                    ? VS_UPDATE_ERR_OK
                    : VS_UPDATE_ERR_FAIL;
@@ -155,12 +155,12 @@ vs_update_remove_firmware_data_hal(uint8_t *manufacture_id, uint8_t *device_type
 
     char filename[FILENAME_MAX];
 
-    CHECK_NOT_ZERO_RET(manufacture_id, VS_UPDATE_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(device_type, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(manufacture_id, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(device_type, VS_UPDATE_ERR_INVAL);
 
     CHECK_RET(VS_UPDATE_ERR_OK == _create_firmware_filename(manufacture_id, device_type, filename, sizeof(filename)),
               VS_UPDATE_ERR_FAIL,
-              "Error create filename");
+              "Error create filename")
     return vs_gateway_remove_file_data(vs_gateway_get_firmware_dir(), filename) ? VS_UPDATE_ERR_OK : VS_UPDATE_ERR_FAIL;
 }
 
@@ -185,7 +185,7 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     char filename[FILENAME_MAX];
     FILE *fp = NULL;
 
-    CHECK_NOT_ZERO_RET(data, VS_UPDATE_ERR_INVAL);
+    CHECK_NOT_ZERO(data, VS_UPDATE_ERR_INVAL);
 
     VS_IOT_STRCPY(filename, self_path);
 
@@ -207,106 +207,4 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     }
 
     return res;
-}
-
-/******************************************************************************/
-static int _argc = 0;
-static char **_argv = NULL;
-
-void
-vs_iotelic_restart_settings(int argc, char *argv[]){
-    _argc = argc;
-    _argv = argv;
-}
-
-/******************************************************************************/
-#define NEW_APP_EXTEN ".new"
-#define BACKUP_APP_EXTEN ".old"
-#define CMD_STR_CPY_TEMPLATE "cp %s %s"
-#define CMD_STR_MV_TEMPLATE "mv %s %s"
-#define CMD_STR_START_TEMPLATE "%s %s"
-
-int
-vs_update_restart_app_hal(void){
-    char old_app[FILENAME_MAX];
-    char new_app[FILENAME_MAX];
-    char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
-
-    size_t pos;
-
-    VS_LOG_INFO("Try to update app");
-
-    strncpy(new_app, self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
-    strncpy(old_app, self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
-
-    strcat(old_app, BACKUP_APP_EXTEN);
-    strcat(new_app, NEW_APP_EXTEN);
-
-    uint32_t args_len = 0;
-
-    for (pos = 1; pos < _argc; ++pos) {
-        args_len += strlen(_argv[pos]);
-    }
-
-    // argc == number of necessary spaces + \0 (because of we use argv starting from the 1st cell, not zero cell)
-    char copy_args[args_len + _argc];
-    copy_args[0] = 0;
-
-    for (pos = 1; pos < _argc; ++pos) {
-        strcat(copy_args, _argv[pos]);
-        strcat(copy_args, " ");
-    }
-
-    // Create backup of current app
-    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, self_path, old_app);
-    if (-1 == system(cmd_str)) {
-        VS_LOG_ERROR("Error backup current app. errno = %d (%s)", errno, strerror(errno));
-
-        // restart self
-        VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
-        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
-            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
-            return -1;
-        }
-    }
-
-    // Update current app to new
-    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
-    if (-1 == system(cmd_str) || -1 == chmod(self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
-        VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
-
-        // restart self
-        VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
-        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
-            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
-            return -1;
-        }
-    }
-
-    // Start new app
-    if (-1 == execv(self_path, _argv)) {
-        VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
-
-        // restore current app
-        VS_LOG_INFO("Restore current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, self_path);
-        if (-1 == system(cmd_str)) {
-            VS_LOG_ERROR("Error restore current app. errno = %d (%s)", errno, strerror(errno));
-            return -1;
-        }
-
-        // restart self
-        VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
-        if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
-            VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
-            return -1;
-        }
-    }
-
-    VS_LOG_ERROR("Something wrong");
-    return -1;
-
 }

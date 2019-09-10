@@ -36,7 +36,7 @@
 #include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/initializer/sdmp/prvs_implementation.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <virgil/iot/protocols/sdmp/PRVS.h>
 
 #include <unistd.h>
 

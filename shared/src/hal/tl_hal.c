@@ -48,8 +48,8 @@
 /******************************************************************************/
 int
 vs_tl_save_hal(vs_tl_element_info_hal_t *element_info, const uint8_t *in_data, uint16_t data_sz) {
-    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(in_data, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(in_data, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 
@@ -63,8 +63,8 @@ vs_tl_save_hal(vs_tl_element_info_hal_t *element_info, const uint8_t *in_data, u
 /******************************************************************************/
 int
 vs_tl_load_hal(vs_tl_element_info_hal_t *element_info, uint8_t *out_data, uint16_t data_sz) {
-    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
-    CHECK_NOT_ZERO_RET(out_data, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(out_data, VS_HSM_ERR_INVAL);
 
     uint16_t out_sz;
     char filename[FILENAME_MAX];
@@ -80,7 +80,7 @@ vs_tl_load_hal(vs_tl_element_info_hal_t *element_info, uint8_t *out_data, uint16
 /******************************************************************************/
 int
 vs_tl_del_hal(vs_tl_element_info_hal_t *element_info) {
-    CHECK_NOT_ZERO_RET(element_info, VS_HSM_ERR_INVAL);
+    CHECK_NOT_ZERO(element_info, VS_HSM_ERR_INVAL);
 
     char filename[FILENAME_MAX];
 

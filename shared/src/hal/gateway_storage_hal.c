@@ -67,12 +67,12 @@ _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *
 /******************************************************************************/
 vs_storage_hal_ctx_t
 vs_gateway_storage_init(const char *relative_dir) {
-    CHECK_NOT_ZERO_RET(relative_dir, NULL);
+    CHECK_NOT_ZERO(relative_dir, NULL);
     vs_gateway_storage_ctx_t *ctx = VS_IOT_CALLOC(1, sizeof(vs_gateway_storage_ctx_t));
-    CHECK_NOT_ZERO_RET(ctx, NULL);
+    CHECK_NOT_ZERO(ctx, NULL);
 
     ctx->dir = (char *)VS_IOT_CALLOC(1, strlen(relative_dir) + 1);
-    CHECK_NOT_ZERO_RET(ctx->dir, NULL);
+    CHECK_NOT_ZERO(ctx->dir, NULL);
     VS_IOT_STRCPY(ctx->dir, relative_dir);
 
     return ctx;
@@ -81,9 +81,9 @@ vs_gateway_storage_init(const char *relative_dir) {
 /******************************************************************************/
 int
 vs_gateway_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(ctx->dir, VS_STORAGE_ERROR_PARAMS);
 
     VS_IOT_FREE(ctx->dir);
     VS_IOT_FREE(ctx);
@@ -93,14 +93,14 @@ vs_gateway_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
 /******************************************************************************/
 vs_storage_file_t
 vs_gateway_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    CHECK_NOT_ZERO_RET(id, NULL);
-    CHECK_NOT_ZERO_RET(storage_ctx, NULL);
+    CHECK_NOT_ZERO(id, NULL);
+    CHECK_NOT_ZERO(storage_ctx, NULL);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, NULL);
+    CHECK_NOT_ZERO(ctx->dir, NULL);
 
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t *file = (uint8_t *)VS_IOT_CALLOC(1, len);
-    CHECK_NOT_ZERO_RET(file, NULL);
+    CHECK_NOT_ZERO(file, NULL);
 
     _data_to_hex(id, sizeof(vs_storage_element_id_t), file, &len);
 
@@ -110,7 +110,7 @@ vs_gateway_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_sto
 /******************************************************************************/
 int
 vs_gateway_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file_t file) {
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(file, VS_STORAGE_ERROR_PARAMS);
 
     VS_IOT_FREE(file);
 
@@ -125,9 +125,9 @@ vs_gateway_storage_save_hal_t(const vs_storage_hal_ctx_t storage_ctx,
                               const uint8_t *data,
                               size_t data_sz) {
 
-    CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(data, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(file, VS_STORAGE_ERROR_PARAMS);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
 
     return vs_gateway_write_file_data(ctx->dir, (char *)file, offset, data, data_sz) ? VS_STORAGE_OK
@@ -142,11 +142,11 @@ vs_gateway_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
                             uint8_t *out_data,
                             size_t data_sz) {
     uint16_t read_sz;
-    CHECK_NOT_ZERO_RET(out_data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(out_data, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(file, VS_STORAGE_ERROR_PARAMS);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(ctx->dir, VS_STORAGE_ERROR_PARAMS);
 
     if (vs_gateway_read_file_data(ctx->dir, (char *)file, offset, out_data, data_sz, &read_sz) && read_sz == data_sz) {
         return VS_STORAGE_OK;
@@ -158,10 +158,10 @@ vs_gateway_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
 /*******************************************************************************/
 int
 vs_gateway_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    CHECK_NOT_ZERO_RET(id, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(id, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(ctx->dir, VS_STORAGE_ERROR_PARAMS);
 
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t file[len];
@@ -174,10 +174,10 @@ vs_gateway_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const v
 /******************************************************************************/
 int
 vs_gateway_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    CHECK_NOT_ZERO_RET(id, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(id, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_gateway_storage_ctx_t *ctx = (vs_gateway_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(ctx->dir, VS_STORAGE_ERROR_PARAMS);
 
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t file[len];
@@ -190,7 +190,7 @@ vs_gateway_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_stor
 /******************************************************************************/
 int
 vs_gateway_get_storage_impl(vs_storage_op_impl_t *impl) {
-    CHECK_NOT_ZERO_RET(impl, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO(impl, VS_STORAGE_ERROR_PARAMS);
 
     impl->size = vs_gateway_storage_file_size_hal;
     impl->deinit = vs_gateway_storage_deinit_hal;

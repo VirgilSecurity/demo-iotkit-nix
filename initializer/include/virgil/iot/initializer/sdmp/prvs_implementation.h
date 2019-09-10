@@ -35,7 +35,7 @@
 #ifndef GATEWAY_PRVS_IMPLEMENTATION_H
 #define GATEWAY_PRVS_IMPLEMENTATION_H
 
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <virgil/iot/protocols/sdmp/PRVS.h>
 
 vs_sdmp_prvs_impl_t
 vs_prvs_impl();

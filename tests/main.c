@@ -42,7 +42,6 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
 #include <update-config.h>
-#include <virgil/iot/tests/helpers.h>
 
 #include "hal/file_io_hal.h"
 #include "hal/gateway_storage_hal.h"
@@ -132,7 +131,7 @@ _assert_handler_fn(const char *message, const char *file, int line) {
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
-    int failed_test_result = 0;
+    int res = 0;
     uint8_t mac[6];
     vs_storage_op_ctx_t storage_op_ctx;
 
@@ -148,23 +147,21 @@ main(int argc, char *argv[]) {
     vs_tl_init_storage();
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
-    START_TESTS;
 
-    failed_test_result = vs_tests_checks(false);
+    res = vs_tests_checks();
 
     vs_gateway_get_storage_impl(&storage_op_ctx.impl);
     storage_op_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_secbox_dir());
 
     if (NULL == storage_op_ctx.storage_ctx) {
-        failed_test_result += 1;
+        res += 1;
     }
 
     storage_op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
 
-    failed_test_result += vs_secbox_test(&storage_op_ctx);
+    res += vs_secbox_test(&storage_op_ctx);
 
-    FINISH_TESTS;
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
-    return failed_test_result;
+    return res;
 }

@@ -38,7 +38,4 @@
 void
 hardware_init(void);
 
-void
-vs_iotelic_restart_settings(int argc, char *argv[]);
-
 #endif // GATEWAY_PLATFORM_HARDWARE_H

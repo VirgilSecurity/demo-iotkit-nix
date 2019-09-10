@@ -36,7 +36,7 @@
 #define GATEWAY_COMMUNICATION_H
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <virgil/iot/protocols/sdmp/PRVS.h>
 
 int
 vs_sdmp_comm_start_thread(const vs_netif_t *netif);
