@@ -75,5 +75,5 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac){
 /******************************************************************************/
 void
 vs_fldt_destroy(void){
-    vd_fldt_destroy_server();
+    vs_fldt_destroy_server();
 }
