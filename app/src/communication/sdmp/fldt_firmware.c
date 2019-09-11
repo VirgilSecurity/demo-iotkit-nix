@@ -291,7 +291,7 @@ _prepare_new_file_request(vs_firmware_info_t *firmware_info, vs_firmware_descrip
 /******************************************************************************/
 vs_fldt_ret_code_e
 vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type){
-    vs_firmware_descriptor_t fw_descript;
+    vs_firmware_descriptor_t *fw_descript;
     vs_fldt_server_file_type_mapping_t file_mapping;
     vs_fldt_ret_code_e fldt_ret_code;
     int update_ret_code;
@@ -299,13 +299,14 @@ vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type){
 
     assert(file_type);
 
-    memset(&fw_descript, 0, sizeof(fw_descript));
+    CHECK_RET(fw_descript = malloc(sizeof(*fw_descript)), VS_FLDT_ERR_NO_MEMORY, "Unable to allocate memory for firmware descriptor");
+    memset(fw_descript, 0, sizeof(*fw_descript));
 
-    UPDATE_CHECK(vs_update_load_firmware_descriptor(fw_add_data->manufacture_id, fw_add_data->device_type, &fw_descript),
+    UPDATE_CHECK(vs_update_load_firmware_descriptor(fw_add_data->manufacture_id, fw_add_data->device_type, fw_descript),
                  "Unable to load firmware descriptor");
 
     memcpy(&file_mapping.file_type, file_type, sizeof(*file_type));
-    FLDT_CHECK(_set_file_mapping_callback(&fw_descript, &file_mapping), "Unable to prepare file mapping");
+    FLDT_CHECK(_set_file_mapping_callback(fw_descript, &file_mapping), "Unable to prepare file mapping");
 
     FLDT_CHECK(vs_fldt_update_server_file_type(&file_mapping), "Unable to update firmware file mapping");
 

@@ -63,7 +63,7 @@ static const uint16_t starter_thread_stack_size = 10 * 1024;
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #else
 // TODO : sleep until new broadcast message
-#define MAIN_THREAD_SLEEP_MS (300 / portTICK_PERIOD_MS)
+#define MAIN_THREAD_SLEEP_MS (3000 / portTICK_PERIOD_MS)
 #endif
 
 extern const vs_firmware_descriptor_t *
