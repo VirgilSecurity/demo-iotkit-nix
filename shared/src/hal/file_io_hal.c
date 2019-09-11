@@ -61,6 +61,9 @@ static const char *secbox_dir = "secbox";
 static bool initialized = false;
 static uint8_t mac[6];
 
+#define VS_IO_BUF_SZ (2048 * 1024)
+static char file_io_buffer[VS_IO_BUF_SZ];
+
 #define CHECK_SNPRINTF(BUF, FORMAT, ...)                                                                               \
     do {                                                                                                               \
         int snprintf_res;                                                                                              \
@@ -293,6 +296,7 @@ vs_gateway_write_file_data(const char *folder,
     }
 
     fp = fopen(file_path, "wb");
+    setvbuf(fp, file_io_buffer, _IOFBF, VS_IO_BUF_SZ);
 
     if (fp) {
 
