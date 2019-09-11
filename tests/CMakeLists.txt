@@ -62,3 +62,7 @@ endif()
 target_link_libraries(rpi_gw_tests
 		virgil-iot-sdk-tests
 		)
+
+if (COMMAND add_clangformat)
+	add_clangformat(rpi_gw_tests)
+endif ()

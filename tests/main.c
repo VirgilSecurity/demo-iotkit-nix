@@ -148,7 +148,7 @@ main(int argc, char *argv[]) {
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
 
-    res = vs_tests_checks(false);//, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
+    res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
     vs_gateway_get_storage_impl(&storage_op_ctx.impl);
     storage_op_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_secbox_dir());
