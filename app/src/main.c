@@ -265,7 +265,6 @@ main(int argc, char *argv[]) {
     // vs_sdmp_comm_start_thread(plc_netif);
     xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
 
-
     // Start app
     start_gateway_threads();
 
@@ -273,7 +272,7 @@ main(int argc, char *argv[]) {
 
     int res = _try_to_update_app(argc, argv);
 
-    VS_LOG_INFO("Fatal error. App stopped");
+    VS_LOG_ERROR("Fatal error. App stopped");
 
     return res;
 }
