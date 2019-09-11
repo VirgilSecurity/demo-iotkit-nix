@@ -46,8 +46,10 @@
 #include "test_update_thread.h"
 #include "event_group_bit_flags.h"
 #include "gateway_hal.h"
+#include "hal/gateway_storage_hal.h"
 
 #include <global-hal.h>
+#include <update-config.h>
 #include <virgil/iot/logger/logger.h>
 
 static gtwy_t _gtwy;
@@ -78,6 +80,10 @@ init_gateway_ctx(vs_mac_addr_t *mac_addr) {
 
     _gtwy.firmware_semaphore = xSemaphoreCreateMutex();
     _gtwy.tl_semaphore = xSemaphoreCreateMutex();
+
+    _gtwy.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    vs_gateway_get_storage_impl(&_gtwy.fw_update_ctx.impl);
+    _gtwy.fw_update_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
 
     return &_gtwy;
 }
@@ -121,11 +127,17 @@ _gateway_task(void *pvParameters) {
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
 
         while (vs_upd_http_retrieval_get_request(&request)) {
-            if (_is_self_firmware_image(request) &&
-                VS_UPDATE_ERR_OK ==
-                        vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
-                VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
-                _restart_app();
+            if (_is_self_firmware_image(request)) {
+                while (xSemaphoreTake(_gtwy.firmware_semaphore, portMAX_DELAY) == pdFALSE) {
+                }
+                if (VS_STORAGE_OK ==
+                            vs_update_load_firmware_descriptor(
+                                    &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
+                    VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                    (void)xSemaphoreGive(_gtwy.firmware_semaphore);
+                    _restart_app();
+                }
+                (void)xSemaphoreGive(_gtwy.firmware_semaphore);
             } else {
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
             }
