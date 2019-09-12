@@ -67,6 +67,8 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac){
     memcpy(&vs_fldt_gateway_mac, gateway_mac, sizeof(vs_fldt_gateway_mac));
     FLDT_CHECK(vs_fldt_init_server(vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
 
+    vs_fldt_fw_init();
+
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
     return VS_FLDT_ERR_OK;
