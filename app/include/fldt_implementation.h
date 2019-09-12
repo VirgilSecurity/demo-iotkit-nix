@@ -54,6 +54,9 @@ vs_fldt_ret_code_e
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
 
 void
+vs_fldt_fw_init(void);
+
+void
 vs_fldt_destroy(void);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

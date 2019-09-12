@@ -72,7 +72,12 @@ vs_gateway_storage_init(const char *relative_dir) {
     CHECK_NOT_ZERO_RET(ctx, NULL);
 
     ctx->dir = (char *)VS_IOT_CALLOC(1, strlen(relative_dir) + 1);
-    CHECK_NOT_ZERO_RET(ctx->dir, NULL);
+    if (NULL == ctx->dir) {
+        VS_LOG_ERROR("Can't allocate memory");
+        VS_IOT_FREE(ctx);
+        return NULL;
+    }
+
     VS_IOT_STRCPY(ctx->dir, relative_dir);
 
     return ctx;

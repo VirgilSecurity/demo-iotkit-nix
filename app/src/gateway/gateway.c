@@ -47,8 +47,10 @@
 #include "event_group_bit_flags.h"
 #include "fldt_implementation.h"
 #include "gateway_hal.h"
+#include "hal/gateway_storage_hal.h"
 
 #include <global-hal.h>
+#include <update-config.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 
@@ -82,6 +84,10 @@ init_gateway_ctx(vs_mac_addr_t *mac_addr) {
     _gtwy.firmware_semaphore = xSemaphoreCreateMutex();
     _gtwy.tl_semaphore = xSemaphoreCreateMutex();
 
+    _gtwy.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    vs_gateway_get_storage_impl(&_gtwy.fw_update_ctx.impl);
+    _gtwy.fw_update_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
+
     return &_gtwy;
 }
 
@@ -100,6 +106,14 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
             0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
 }
 
+/*************************************************************************/
+static void
+_restart_app() {
+    vTaskEndScheduler();
+    while (1)
+        ;
+}
+
 /******************************************************************************/
 static void
 _gateway_task(void *pvParameters) {
@@ -116,14 +130,17 @@ _gateway_task(void *pvParameters) {
         xEventGroupWaitBits(_gtwy.incoming_data_event_group, EID_BITS_ALL, pdTRUE, pdFALSE, thread_sleep);
 
         while (vs_upd_http_retrieval_get_request(&request)) {
-            if (_is_self_firmware_image(request) &&
-                VS_UPDATE_ERR_OK ==
-                        vs_update_load_firmware_descriptor(request->manufacture_id, request->device_type, &desc) &&
-                VS_UPDATE_ERR_OK == vs_update_install_firmware(&desc)) {
-                if(VS_UPDATE_ERR_OK != vs_update_restart_application()) {
-                    VS_LOG_ERROR("Unable to restart application");
-                    assert(false);
+            if (_is_self_firmware_image(request)) {
+                while (xSemaphoreTake(_gtwy.firmware_semaphore, portMAX_DELAY) == pdFALSE) {
                 }
+                if (VS_STORAGE_OK ==
+                            vs_update_load_firmware_descriptor(
+                                    &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
+                    VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                    (void)xSemaphoreGive(_gtwy.firmware_semaphore);
+                    _restart_app();
+                }
+                (void)xSemaphoreGive(_gtwy.firmware_semaphore);
             } else {
                 // TODO : process downloaded firmware and trust list, i. e. send FLDT message
                 // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header (vs_tl_header_t(pub_keys_count - chunks amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)

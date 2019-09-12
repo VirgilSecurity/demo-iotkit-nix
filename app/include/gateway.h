@@ -43,10 +43,12 @@
 #include "semphr.h"
 #include "event_groups.h"
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
 #include <global-hal.h>
 
 typedef struct gtwy_s {
     uint8_t udid_of_device[SERIAL_SIZE];
+    vs_storage_op_ctx_t fw_update_ctx;
     EventGroupHandle_t shared_event_group;
     EventGroupHandle_t incoming_data_event_group;
     EventGroupHandle_t firmware_event_group;

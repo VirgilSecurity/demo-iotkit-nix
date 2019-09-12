@@ -37,10 +37,13 @@
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
 #include <virgil/iot/update/update.h>
-#include <fldt_implementation.h>
-#include <global-hal.h>
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <hal/gateway_storage_hal.h>
+#include <global-hal.h>
+#include <update-config.h>
+#include <fldt_implementation.h>
 
+vs_storage_op_ctx_t storage_ctx;
 
 /******************************************************************************/
 static void
@@ -161,7 +164,8 @@ get_chunk(void **storage_context,
     data_sz = VS_UPDATE_FIRMWARE_CHUNK_SIZE;
     offset = VS_UPDATE_FIRMWARE_CHUNK_SIZE * request->chunk_id;
 
-    UPDATE_CHECK(vs_update_load_firmware_chunk(fw_descr,
+    UPDATE_CHECK(vs_update_load_firmware_chunk(&storage_ctx,
+            fw_descr,
                                   offset,
                                   response->chunk_data,
                                   data_sz,
@@ -199,7 +203,8 @@ get_footer(void **storage_context,
 
     data_sz = fw_descr->chunk_size;
 
-    UPDATE_CHECK(vs_update_load_firmware_footer(fw_descr,
+    UPDATE_CHECK(vs_update_load_firmware_footer(&storage_ctx,
+            fw_descr,
                                             response->footer_data,
                                             data_sz,
                                             &data_sz),
@@ -230,7 +235,7 @@ _prepare_storage_context(vs_firmware_info_t *firmware_info, vs_firmware_descript
 
     memset(fw_descript, 0, sizeof(*fw_descript));
 
-    UPDATE_CHECK(vs_update_load_firmware_descriptor(firmware_info->manufacture_id, firmware_info->device_type, fw_descript),
+    UPDATE_CHECK(vs_update_load_firmware_descriptor(&storage_ctx, firmware_info->manufacture_id, firmware_info->device_type, fw_descript),
             "Unable to load firmware descriptor");
 
     return VS_FLDT_ERR_OK;
@@ -302,7 +307,7 @@ vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type){
     CHECK_RET(fw_descript = malloc(sizeof(*fw_descript)), VS_FLDT_ERR_NO_MEMORY, "Unable to allocate memory for firmware descriptor");
     memset(fw_descript, 0, sizeof(*fw_descript));
 
-    UPDATE_CHECK(vs_update_load_firmware_descriptor(fw_add_data->manufacture_id, fw_add_data->device_type, fw_descript),
+    UPDATE_CHECK(vs_update_load_firmware_descriptor(&storage_ctx, fw_add_data->manufacture_id, fw_add_data->device_type, fw_descript),
                  "Unable to load firmware descriptor");
 
     memcpy(&file_mapping.file_type, file_type, sizeof(*file_type));
@@ -336,4 +341,12 @@ vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info){
     FLDT_CHECK(vs_fldt_broadcast_new_file(&new_file_request), "Unable to process new firmware");
 
     return VS_FLDT_ERR_OK;
+}
+
+/******************************************************************************/
+void
+vs_fldt_fw_init(void){
+    vs_gateway_get_storage_impl(&storage_ctx.impl);
+    storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    storage_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
 }
