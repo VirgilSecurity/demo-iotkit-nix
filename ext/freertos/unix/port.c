@@ -787,7 +787,7 @@ vAssertCalled(const char *pcFile, unsigned long ulLine) {
 
 /*-----------------------------------------------------------*/
 void vApplicationIdleHook( void ) {
-    usleep(10 * 1000);
+    //usleep(10 * 1000);
 }
 
 /*-----------------------------------------------------------*/
