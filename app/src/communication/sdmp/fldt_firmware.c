@@ -48,7 +48,7 @@ vs_storage_op_ctx_t storage_ctx;
 /******************************************************************************/
 static void
 _make_fw_file_type(vs_fldt_file_type_t *file_type, const uint8_t *manufacture_id, const uint8_t *device_type) {
-    vs_update_firmware_add_data_t *fw_add_data = (vs_update_firmware_add_data_t *) file_type->add_info;
+    vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *) file_type->add_info;
 
     memcpy(fw_add_data->manufacture_id, manufacture_id, sizeof(fw_add_data->manufacture_id));
     memcpy(fw_add_data->device_type, device_type, sizeof(fw_add_data->device_type));
@@ -119,6 +119,9 @@ get_header(void **storage_context,
     assert(response_buf_sz);
     assert(response);
 
+    response->header_size = 0;
+    response->file_size = 0;
+
     fw_header_size = sizeof(*fw_descr);
 
     VS_LOG_DEBUG("[FLDT:get_header] ==> Get header for file version %s",
@@ -126,56 +129,60 @@ get_header(void **storage_context,
 
     CHECK_RET(response_buf_sz >= fw_header_size, VS_FLDT_ERR_INCORRECT_ARGUMENT,
             "Response's buffer size %d is not enough to store firmware descriptor. Increase header_buf_size to fill vs_fldt_gnfh_header_response_t",
-            response_buf_sz, fw_header_size);
+            response_buf_sz);
 
     _fill_ver(&response->version, &fw_descr->info);
+    response->file_size = fw_descr->firmware_length;
+    response->has_footer = true;
     response->header_size = fw_header_size;
     memcpy(response->header_data, fw_descr, fw_header_size);
 
-    VS_LOG_DEBUG("[FLDT:get_header] <== Send header : padding = %d, chunk_size = %d, firmware_length = %d, app_size = %d",
-                 fw_descr->padding, fw_descr->chunk_size, fw_descr->firmware_length, fw_descr->app_size);
+    VS_LOG_DEBUG("[FLDT:get_header] <== Send header : file size = %d bytes, has footer",
+                 response->file_size);
 
     return VS_FLDT_ERR_OK;
 }
 
 /******************************************************************************/
 static vs_fldt_ret_code_e
-get_chunk(void **storage_context,
-          const vs_fldt_gnfc_chunk_request_t *request,
+get_data(void **storage_context,
+          const vs_fldt_gnfd_data_request_t *request,
           uint16_t response_buf_sz,
-          vs_fldt_gnfc_chunk_response_t *response){
+          vs_fldt_gnfd_data_response_t *response){
+    static const uint16_t DATA_SZ = 512;
     vs_firmware_descriptor_t *fw_descr = (vs_firmware_descriptor_t *) *storage_context;
     char file_descr[FLDT_FILEVER_BUF];
-    uint16_t data_sz = 0;
-    uint32_t offset = 0;
     int update_ret_code;
+    uint16_t data_sz;
 
+    assert(DATA_SZ + sizeof(*response) <= response_buf_sz);
     assert(storage_context);
     assert(request);
     assert(response_buf_sz);
     assert(response);
 
-    VS_LOG_DEBUG("[FLDT:get_chunk] ==> Get chunk %d for file : %s",
-                 request->chunk_id, vs_fldt_file_version_descr(file_descr, &request->version));
+    response->data_size = 0;
+
+    VS_LOG_DEBUG("[FLDT:get_data] ==> Get data offset %d bytes for file : %s",
+                 request->offset, vs_fldt_file_version_descr(file_descr, &request->version));
 
     _fill_ver(&response->version, &fw_descr->info);
-    response->chunk_id = request->chunk_id;
+    response->offset = request->offset;
 
-    data_sz = VS_UPDATE_FIRMWARE_CHUNK_SIZE;
-    offset = VS_UPDATE_FIRMWARE_CHUNK_SIZE * request->chunk_id;
-
+    // TODO : make size dependant on buffer size !!!
+    data_sz = DATA_SZ;
     UPDATE_CHECK(vs_update_load_firmware_chunk(&storage_ctx,
             fw_descr,
-                                  offset,
-                                  response->chunk_data,
-                                  data_sz,
-                                  &data_sz),
-    "Unable to get firmware chunk %d (offset %lu) for file version %s",
-              request->chunk_id, offset, vs_fldt_file_version_descr(file_descr, &request->version));
+            request->offset,
+            response->data,
+            data_sz,
+            &data_sz),
+    "Unable to get firmware data with offset %d size %d for file version %s",
+              request->offset, response_buf_sz, vs_fldt_file_version_descr(file_descr, &request->version));
 
-    response->chunk_size = data_sz;
+    response->data_size = data_sz;
 
-    VS_LOG_DEBUG("[FLDT:get_chunk] <== Send chunk %d (offset %d), %d bytes size", response->chunk_id, offset, data_sz);
+    VS_LOG_DEBUG("[FLDT:get_data] <== Send data offset %d size %d", response->offset, response->data_size);
 
     return VS_FLDT_ERR_OK;
 
@@ -251,7 +258,7 @@ _set_file_mapping_callback(vs_firmware_descriptor_t *fw_descript, vs_fldt_server
     file_mapping->storage_context = fw_descript;
     file_mapping->get_version = get_version;
     file_mapping->get_header = get_header;
-    file_mapping->get_chunk = get_chunk;
+    file_mapping->get_data = get_data;
     file_mapping->get_footer = get_footer;
     file_mapping->destroy = destroy;
 
@@ -300,7 +307,7 @@ vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type){
     vs_fldt_server_file_type_mapping_t file_mapping;
     vs_fldt_ret_code_e fldt_ret_code;
     int update_ret_code;
-    vs_update_firmware_add_data_t *fw_add_data = (vs_update_firmware_add_data_t *) file_type->add_info;
+    vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *) file_type->add_info;
 
     assert(file_type);
 
