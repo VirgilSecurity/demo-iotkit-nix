@@ -1,9 +1,6 @@
 [submodule "ext/virgil-iot-sdk"]
 	path = ext/virgil-iot-sdk
 	url = https://github.com/VirgilSecurity/virgil-iot-sdk.git
-[submodule "ext/freertos/freertos"]
-	path = ext/freertos/freertos
-	url = https://github.com/VirgilSecurity/freertos
 [submodule "ext/virgil-crypto-c"]
 	path = ext/virgil-crypto-c
 	url = https://github.com/VirgilSecurity/virgil-crypto-c

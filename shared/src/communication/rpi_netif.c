@@ -43,7 +43,7 @@
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-#include "communication/gateway_netif_plc.h"
+#include "communication/rpi_netif.h"
 
 static int
 _plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif);

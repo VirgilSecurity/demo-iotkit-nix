@@ -35,17 +35,16 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 
-#include <virgil/crypto/common/vsc_buffer.h>
-
-#include <virgil/iot/initializer/communication/sdmp_initializer.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/hsm/hsm_interface.h>
+#include <prvs_implementation.h>
+#include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/prvs.h>
 
-#include "communication/gateway_netif_plc.h"
+#include "communication/rpi_netif.h"
 #include "hal/file_io_hal.h"
 
 /******************************************************************************/
@@ -127,6 +126,22 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 }
 
 /******************************************************************************/
+static int
+_sdmp_start(const vs_netif_t *netif) {
+
+    if (0 != vs_sdmp_init(netif)) {
+        return -1;
+    }
+
+    if (0 != vs_sdmp_register_service(vs_sdmp_prvs_service())) {
+        return -1;
+    }
+
+    return vs_sdmp_prvs_configure_hal(vs_prvs_impl());
+}
+
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
@@ -152,9 +167,9 @@ main(int argc, char *argv[]) {
         plc_netif = vs_hal_netif_plc();
 
         // Start SDMP protocol over PLC interface
-        vs_sdmp_comm_start(plc_netif);
+        _sdmp_start(plc_netif);
 
-        sleep(300);
+        pause();
     } else {
         VS_LOG_ERROR("Need to set MAC address of simulated device");
         return -1;
@@ -162,3 +177,5 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+/******************************************************************************/

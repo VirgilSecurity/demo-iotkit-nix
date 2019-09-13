@@ -32,7 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <virgil/iot/initializer/sdmp/prvs_implementation.h>
+#include <prvs_implementation.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
@@ -106,8 +106,6 @@ vs_prvs_impl() {
 
     res.dnid_func = vs_prvs_dnid;
     res.device_info_func = vs_prvs_device_info;
-    res.wait_func = NULL;
-    res.stop_wait_func = NULL;
 
     return res;
 }

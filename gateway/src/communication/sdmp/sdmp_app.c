@@ -39,7 +39,7 @@
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include <sdmp_app.h>
 #include <fldt_implementation.h>
-#include <communication/gateway_netif_plc.h>
+#include <communication/rpi_netif.h>
 #include <msg_queue.h>
 #include <platform/platform_os.h>
 

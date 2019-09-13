@@ -53,10 +53,10 @@ target_compile_options(rpi_gw_tests
 
 if(UNIX AND NOT APPLE)
 	target_link_libraries(rpi_gw_tests
-			-Wl,--whole-archive rpi_gw_shared -Wl,--no-whole-archive
+			-Wl,--whole-archive rpi_shared -Wl,--no-whole-archive
 			)
 else()
-	target_link_libraries(rpi_gw_tests rpi_gw_shared)
+	target_link_libraries(rpi_gw_tests rpi_shared)
 endif()
 
 target_link_libraries(rpi_gw_tests

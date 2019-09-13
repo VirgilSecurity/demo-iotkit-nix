@@ -49,7 +49,7 @@ cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
 check_error
 make virgil-iot-gateway-app -j 8
 check_error
-mv app/virgil-iot-gateway-app $BUILD_OUTPUT/virgil-iot-gateway-app-initial
+mv gateway/virgil-iot-gateway-gateway $BUILD_OUTPUT/virgil-iot-gateway-gateway-initial
 check_error
 
 echo "------------- Build virgil-iot-gateway-app (update) -----------------"
@@ -60,7 +60,7 @@ cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
 check_error
 make virgil-iot-gateway-app -j 8
 check_error
-mv app/virgil-iot-gateway-app $BUILD_OUTPUT/virgil-iot-gateway-app-update
+mv gateway/virgil-iot-gateway-gateway $BUILD_OUTPUT/virgil-iot-gateway-gateway-update
 check_error
 
 echo "----------------------------------------------------------------------"

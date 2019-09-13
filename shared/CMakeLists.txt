@@ -39,9 +39,9 @@ project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
 #
 #   RaspberryPi gateway library
 #
-add_library(rpi_gw_shared
+add_library(rpi_shared
 		# Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/gateway_netif_plc.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/rpi_netif.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/tl_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_storage_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
@@ -51,7 +51,7 @@ add_library(rpi_gw_shared
 		)
 
 find_package (Threads)
-target_link_libraries(rpi_gw_shared
+target_link_libraries(rpi_shared
 		macros
 		storage_hal
 		converters
@@ -67,12 +67,12 @@ target_link_libraries(rpi_gw_shared
 #
 #   -Wall -Werror
 #
-set_target_properties(rpi_gw_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
+set_target_properties(rpi_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
 
 #
 #   Common include directories
 #
-target_include_directories(rpi_gw_shared
+target_include_directories(rpi_shared
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
 		)
@@ -81,5 +81,5 @@ target_include_directories(rpi_gw_shared
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi_gw_shared)
+	add_clangformat(rpi_shared)
 endif()

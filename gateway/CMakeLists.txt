@@ -119,10 +119,10 @@ if(UNIX AND NOT APPLE)
 			)
 
 	target_link_libraries(virgil-iot-gateway-app
-			-Wl,--whole-archive rpi_gw_shared hsm provision -Wl,--no-whole-archive
+			-Wl,--whole-archive rpi_shared hsm provision -Wl,--no-whole-archive
 			)
 else()
-	target_link_libraries(virgil-iot-gateway-app rpi_gw_shared)
+	target_link_libraries(virgil-iot-gateway-app rpi_shared)
 endif()
 
 target_link_libraries (virgil-iot-gateway-app

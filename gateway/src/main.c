@@ -46,7 +46,7 @@
 #include "gateway.h"
 #include "fldt_implementation.h"
 #include "platform/platform_hardware.h"
-#include "communication/gateway_netif_plc.h"
+#include "communication/rpi_netif.h"
 #include "event_group_bit_flags.h"
 #include "hal/file_io_hal.h"
 
