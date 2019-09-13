@@ -32,25 +32,19 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <virgil/iot/macros/macros.h>
-#include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
-#include <virgil/iot/update/update.h>
 #include <fldt_implementation.h>
-#include <global-hal.h>
-
-vs_mac_addr_t vs_fldt_gateway_mac;
 
 /******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type){
+vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx){
     char file_descr[FLDT_FILEVER_BUF];
 
     assert(file_type);
 
     switch(file_type->file_type_id){
-    case VS_UPDATE_FIRMWARE : return vs_fldt_add_fw_filetype(file_type);
+    case VS_UPDATE_FIRMWARE : return vs_fldt_add_fw_filetype(file_type, storage_ctx);
     default :
         VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
         return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
@@ -64,8 +58,7 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac){
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
-    memcpy(&vs_fldt_gateway_mac, gateway_mac, sizeof(vs_fldt_gateway_mac));
-    FLDT_CHECK(vs_fldt_init_server(vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
+    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
 
     vs_fldt_fw_init();
 
