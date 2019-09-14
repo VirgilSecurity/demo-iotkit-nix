@@ -91,8 +91,13 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     target_link_libraries(${_targetname}
             PRIVATE
-            $<$<NOT:$<BOOL:${APPLE}>>: -Wl,--whole-archive hsm rpi_shared -Wl,--no-whole-archive>
-            $<$<BOOL:${APPLE}>: rpi_shared>
+            $<$<NOT:${APPLE}>:"-Wl,--whole-archive hsm rpi_shared -Wl,--no-whole-archive">
+            $<$<BOOL:${APPLE}>:rpi_shared>
+
+            $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>
+            $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
+            $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
+
             enable_pedantic_mode
             )
     #

@@ -57,7 +57,10 @@ target_link_libraries(rpi_shared
 		converters
 		hsm
 		logger
-		foundation
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_foundation.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_common.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libmbedcrypto.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libed25519.a
 		provision
 		sdmp
 		secbox
@@ -75,6 +78,8 @@ set_target_properties(rpi_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-mu
 target_include_directories(rpi_shared
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/include
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/include/virgil/crypto/common
 		)
 
 #
