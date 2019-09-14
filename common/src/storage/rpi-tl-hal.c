@@ -40,10 +40,9 @@
 
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/trust_list/tl_hal.h>
+#include <virgil/iot/trust_list/rpi-tl-hal.h>
 
-#include "gateway_macro.h"
-#include "hal/file_io_hal.h"
+#include "hal/storage/rpi-file-io.h"
 
 /******************************************************************************/
 int
@@ -55,9 +54,8 @@ vs_tl_save_hal(vs_tl_element_info_hal_t *element_info, const uint8_t *in_data, u
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
-    return vs_gateway_write_file_data(vs_gateway_get_trust_list_dir(), filename, 0, in_data, data_sz)
-                   ? VS_HSM_ERR_OK
-                   : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_write_file_data(vs_rpi_get_trust_list_dir(), filename, 0, in_data, data_sz) ? VS_HSM_ERR_OK
+                                                                                              : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
@@ -72,7 +70,7 @@ vs_tl_load_hal(vs_tl_element_info_hal_t *element_info, uint8_t *out_data, uint16
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
     // TODO: RETURN REAL SIZE OF READ DATA
-    return vs_gateway_read_file_data(vs_gateway_get_trust_list_dir(), filename, 0, out_data, data_sz, &out_sz)
+    return vs_rpi_read_file_data(vs_rpi_get_trust_list_dir(), filename, 0, out_data, data_sz, &out_sz)
                    ? VS_HSM_ERR_OK
                    : VS_HSM_ERR_FILE_IO;
 }
@@ -86,5 +84,5 @@ vs_tl_del_hal(vs_tl_element_info_hal_t *element_info) {
 
     snprintf(filename, sizeof(filename), "%u_%u_%u", element_info->storage_type, element_info->id, element_info->index);
 
-    return vs_gateway_remove_file_data(vs_gateway_get_trust_list_dir(), filename) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_remove_file_data(vs_rpi_get_trust_list_dir(), filename) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }

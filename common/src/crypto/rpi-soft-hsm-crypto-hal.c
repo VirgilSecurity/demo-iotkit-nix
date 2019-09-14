@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "private/helpers.h"
+#include "../private/helpers.h"
 
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>

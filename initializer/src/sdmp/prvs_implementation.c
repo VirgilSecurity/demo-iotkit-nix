@@ -32,23 +32,16 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <prvs_implementation.h>
+#include "prvs_implementation.h"
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
 
-#include <virgil/crypto/foundation/vscf_key_provider.h>
-#include <virgil/crypto/foundation/vscf_private_key.h>
-#include <virgil/crypto/foundation/vscf_public_key.h>
-#include <virgil/crypto/foundation/vscf_sha256.h>
-#include <virgil/crypto/foundation/vscf_impl.h>
-
-#include <virgil/crypto/common/private/vsc_buffer_defs.h>
 
 #include <virgil/iot/secbox/secbox.h>
 
-#include <gateway_hal.h>
+#include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
 static int
@@ -72,7 +65,7 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     // TODO: Fix this hardcode
     device_info->manufacturer = 0x89abcdef;
     device_info->model = 0x12345678;
-    vs_gateway_hal_get_udid(device_info->udid_of_device);
+    vs_rpi_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key
     if (VS_HSM_ERR_OK !=

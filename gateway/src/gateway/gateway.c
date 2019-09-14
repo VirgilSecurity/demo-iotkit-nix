@@ -46,8 +46,8 @@
 #include "test_update_thread.h"
 #include "event_group_bit_flags.h"
 #include "fldt_implementation.h"
-#include "gateway_hal.h"
-#include "hal/gateway_storage_hal.h"
+#include "gateway-hal.h"
+#include "hal/rpi-storage-hal.h"
 
 #include <global-hal.h>
 #include <update-config.h>
@@ -75,7 +75,7 @@ gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
     memset(&_gtwy, 0x00, sizeof(_gtwy));
 
-    vs_gateway_hal_get_udid(_gtwy.udid_of_device);
+    vs_rpi_hal_get_udid(_gtwy.udid_of_device);
 
     _gtwy.shared_event_group = xEventGroupCreate();
     _gtwy.incoming_data_event_group = xEventGroupCreate();
@@ -85,8 +85,8 @@ init_gateway_ctx(vs_mac_addr_t *mac_addr) {
     _gtwy.tl_semaphore = xSemaphoreCreateMutex();
 
     _gtwy.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    vs_gateway_get_storage_impl(&_gtwy.fw_update_ctx.impl);
-    _gtwy.fw_update_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
+    vs_rpi_get_storage_impl(&_gtwy.fw_update_ctx.impl);
+    _gtwy.fw_update_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 
     return &_gtwy;
 }

@@ -32,10 +32,39 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_GATEWAY_HAL_H
-#define IOT_RPI_GATEWAY_HAL_H
+#ifndef VS_HAL_NETIF_PLC_H
+#define VS_HAL_NETIF_PLC_H
+
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <arpa/inet.h>
+
+typedef struct _iot_pkt {
+    uint8_t *head;
+    uint8_t *data;
+    uint8_t *tail;
+    uint8_t *end;
+} iot_pkt_t;
+
+typedef void (*iot_plc_recv_func_t)(void *param, iot_pkt_t *pkt);
+
+typedef struct _iot_plc_app {
+    /* application id */
+    uint8_t app_id;
+    /* default priority */
+    uint8_t prio;
+    /* callback to receive event from plc */
+    iot_plc_recv_func_t recv;
+    /* parameter that will be transferred back alone with the callback */
+    void *param;
+} iot_plc_app_t;
+
+const vs_netif_t *
+vs_hal_netif_plc();
 
 void
-vs_gateway_hal_get_udid(uint8_t *udid);
+vs_hal_netif_plc_force_mac(vs_mac_addr_t mac_addr);
 
-#endif // IOT_RPI_GATEWAY_HAL_H
+void
+vs_plc_sim_set_ip(struct in_addr address);
+
+#endif // VS_HAL_NETIF_PLC_H

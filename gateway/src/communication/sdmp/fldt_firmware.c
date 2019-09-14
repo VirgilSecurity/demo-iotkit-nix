@@ -38,7 +38,7 @@
 #include <virgil/iot/protocols/sdmp/fldt.h>
 #include <virgil/iot/update/update.h>
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
-#include <hal/gateway_storage_hal.h>
+#include <hal/rpi-storage-hal.h>
 #include <global-hal.h>
 #include <update-config.h>
 #include <fldt_implementation.h>
@@ -353,7 +353,7 @@ vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info){
 /******************************************************************************/
 void
 vs_fldt_fw_init(void){
-    vs_gateway_get_storage_impl(&storage_ctx.impl);
+    vs_rpi_get_storage_impl(&storage_ctx.impl);
     storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    storage_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
+    storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 }

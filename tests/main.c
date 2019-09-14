@@ -45,8 +45,8 @@
 #include <virgil/crypto/foundation/vscf_assert.h>
 #include <update-config.h>
 
-#include "hal/file_io_hal.h"
-#include "hal/gateway_storage_hal.h"
+#include "hal/rpi-file-io.h"
+#include "hal/rpi-storage-hal.h"
 
 static char _self_path[FILENAME_MAX];
 /******************************************************************************/
@@ -119,7 +119,7 @@ static void
 _remove_keystorage_dir() {
     char folder[FILENAME_MAX];
 
-    if (!vs_gateway_get_keystorage_base_dir(folder)) {
+    if (!vs_rpi_get_keystorage_base_dir(folder)) {
         return;
     }
     _recursive_delete(folder);
@@ -181,7 +181,7 @@ main(int argc, char *argv[]) {
     int res = 0;
     uint8_t mac[6];
     vs_storage_op_ctx_t storage_ctx;
-    vs_gateway_get_storage_impl(&storage_ctx.impl);
+    vs_rpi_get_storage_impl(&storage_ctx.impl);
     storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
 
     memset(mac, 0, sizeof(mac));
@@ -199,14 +199,14 @@ main(int argc, char *argv[]) {
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
-    storage_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_secbox_dir());
+    storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
     if (NULL == storage_ctx.storage_ctx) {
         res += 1;
     }
 
     res += vs_secbox_test(&storage_ctx);
 
-    storage_ctx.storage_ctx = vs_gateway_storage_init(vs_gateway_get_firmware_dir());
+    storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
     if (NULL == storage_ctx.storage_ctx) {
         res += 1;
     }

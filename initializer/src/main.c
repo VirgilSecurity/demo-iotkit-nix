@@ -44,8 +44,9 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/prvs.h>
 
-#include "communication/rpi_netif.h"
-#include "hal/file_io_hal.h"
+#include "hal/netif/rpi-plc-sim.h"
+#include "hal/netif/rpi-udp-broadcast.h"
+#include "hal/storage/rpi-file-io.h"
 
 /******************************************************************************/
 static bool
@@ -104,7 +105,7 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 
     // Check input parameters
     if (!mac_str || !plc_sim_addr_str) {
-        printf("usage: virgil-iot-mcu-initializer %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
+        printf("usage: virgil-iot-XXX-initializer %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
                PLC_SIM_ADDRESS_SHORT,
                PLC_SIM_ADDRESS_FULL,
                MAC_SHORT,
@@ -145,29 +146,49 @@ _sdmp_start(const vs_netif_t *netif) {
 int
 main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
-    const vs_netif_t *plc_netif = NULL;
+    const vs_netif_t * netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
-    VS_LOG_INFO("Start gateway initializer");
 
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
 
     if (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
-        vs_hal_netif_plc_force_mac(forced_mac_addr);
+
+        // Set storage HAL folder
+#if GATEWAY
+        VS_LOG_INFO("Start gateway initializer");
+        vs_hal_files_set_dir("gateway");
+#else
+        VS_LOG_INFO("Start thing initializer");
+        vs_hal_files_set_dir("thing");
+#endif
+
+        // Set MAC for emulated device
         vs_hal_files_set_mac(forced_mac_addr.bytes);
 
         // Prepare secbox
         vs_tl_init_storage();
 
-        // Set IP of PLC simulator
-        vs_plc_sim_set_ip(plc_sim_addr);
+        if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
+            // Setup UDP Broadcast as network interface
+            vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
 
-        // Get PLC Network interface
-        plc_netif = vs_hal_netif_plc();
+            // Get PLC Network interface
+            netif = vs_hal_netif_udp_bcast();
+        } else {
+            // Setup PLC simulator as network interface
+            vs_hal_netif_plc_force_mac(forced_mac_addr);
 
-        // Start SDMP protocol over PLC interface
-        _sdmp_start(plc_netif);
+            // Set IP of PLC simulator
+            vs_plc_sim_set_ip(plc_sim_addr);
+
+            // Get PLC Network interface
+            netif = vs_hal_netif_plc();
+        }
+
+        // Start SDMP protocol
+        _sdmp_start(netif);
 
         pause();
     } else {

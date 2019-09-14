@@ -34,48 +34,40 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi_gw_lib VERSION 0.1.0 LANGUAGES C)
+project(rpi-common VERSION 0.1.0 LANGUAGES C)
 
 #
-#   RaspberryPi gateway library
+#   RaspberryPi common code library
 #
-add_library(rpi_shared
-		# Sources
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/rpi_netif.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/tl_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_storage_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/crypto_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/file_io_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/keypair_hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/hal/gateway_hal.c
+add_library(rpi-common)
+
+#
+#	Header/Source files
+#
+target_sources(rpi-common
+		PRIVATE
+
+		#	Headers
+		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-plc-sim.h
+		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
+		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
+		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
+
+		#	Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
+		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-tl-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
+		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
 		)
 
-find_package (Threads)
-target_link_libraries(rpi_shared
-		macros
-		storage_hal
-		converters
-		hsm
-		logger
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_foundation.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_common.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libmbedcrypto.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libed25519.a
-		provision
-		sdmp
-		secbox
-		trust_list
-		${CMAKE_THREAD_LIBS_INIT}
-		)
 #
-#   -Wall -Werror
+#   Include directories
 #
-set_target_properties(rpi_shared PROPERTIES COMPILE_FLAGS "-Wall -Werror -Wno-multichar")
-
-#
-#   Common include directories
-#
-target_include_directories(rpi_shared
+target_include_directories(rpi-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/include
@@ -83,8 +75,27 @@ target_include_directories(rpi_shared
 		)
 
 #
+#	Link libraries
+#
+find_package (Threads)
+target_link_libraries(rpi-common
+		PUBLIC
+		converters
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_foundation.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_common.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libmbedcrypto.a
+		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libed25519.a
+		sdmp
+		secbox
+		trust_list
+		${CMAKE_THREAD_LIBS_INIT}
+
+		PRIVATE
+		enable_pedantic_mode
+		)
+#
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi_shared)
+	add_clangformat(rpi-common)
 endif()

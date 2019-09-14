@@ -14,7 +14,7 @@
 #include <virgil/iot/update/update.h>
 #include <virgil/iot/update/update_interface.h>
 
-#include <hal/file_io_hal.h>
+#include <hal/rpi-file-io.h>
 
 /******************************************************************************/
 int

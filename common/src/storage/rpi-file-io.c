@@ -50,10 +50,10 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 
-#include "hal/file_io_hal.h"
+#include "hal/storage/rpi-file-io.h"
 
 static char base_dir[FILENAME_MAX] = {0};
-static const char *main_storage_dir = "keystorage/gateway";
+static char *main_storage_dir = 0;
 static const char *slots_dir = "slots";
 static const char *tl_dir = "trust_list";
 static const char *firmware_dir = "firmware";
@@ -124,7 +124,7 @@ static bool
 _init_fio(void) {
     char tmp[FILENAME_MAX];
 
-    vs_gateway_get_keystorage_base_dir(base_dir);
+    vs_rpi_get_keystorage_base_dir(base_dir);
 
     VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
 
@@ -194,7 +194,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
 
 /******************************************************************************/
 int
-vs_gateway_get_file_len(const char *folder, const char *file_name) {
+vs_rpi_get_file_len(const char *folder, const char *file_name) {
 
     int res = -1;
     char file_path[FILENAME_MAX];
@@ -234,11 +234,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_gateway_write_file_data(const char *folder,
-                           const char *file_name,
-                           uint32_t offset,
-                           const void *data,
-                           uint16_t data_sz) {
+vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, uint16_t data_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -326,12 +322,12 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_gateway_read_file_data(const char *folder,
-                          const char *file_name,
-                          uint32_t offset,
-                          uint8_t *data,
-                          uint16_t buf_sz,
-                          uint16_t *read_sz) {
+vs_rpi_read_file_data(const char *folder,
+                      const char *file_name,
+                      uint32_t offset,
+                      uint8_t *data,
+                      uint16_t buf_sz,
+                      uint16_t *read_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -386,7 +382,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_gateway_remove_file_data(const char *folder, const char *file_name) {
+vs_rpi_remove_file_data(const char *folder, const char *file_name) {
     char file_path[FILENAME_MAX];
 
     if (!folder || !file_name) {
@@ -405,15 +401,21 @@ vs_gateway_remove_file_data(const char *folder, const char *file_name) {
 
 /******************************************************************************/
 bool
-vs_gateway_get_keystorage_base_dir(char *dir) {
+vs_rpi_get_keystorage_base_dir(char *dir) {
     struct passwd *pwd = NULL;
+
+    assert(main_storage_dir);
+    if (!main_storage_dir) {
+        return false;
+    }
 
     pwd = getpwuid(getuid());
 
     if (VS_IOT_SNPRINTF(dir,
                         FILENAME_MAX,
-                        "%s/%s/%x:%x:%x:%x:%x:%x",
+                        "%s/%s/%s/%x:%x:%x:%x:%x:%x",
                         pwd->pw_dir,
+                        "keystorage",
                         main_storage_dir,
                         mac[0],
                         mac[1],
@@ -521,43 +523,57 @@ get_slot_name(vs_iot_hsm_slot_e slot) {
 
 /********************************************************************************/
 const char *
-vs_gateway_get_trust_list_dir() {
+vs_rpi_get_trust_list_dir() {
     return tl_dir;
 }
 
 /********************************************************************************/
 const char *
-vs_gateway_get_slots_dir() {
+vs_rpi_get_slots_dir() {
     return slots_dir;
 }
 
 /********************************************************************************/
 const char *
-vs_gateway_get_firmware_dir() {
+vs_rpi_get_firmware_dir() {
     return firmware_dir;
 }
 
 /********************************************************************************/
 const char *
-vs_gateway_get_secbox_dir() {
+vs_rpi_get_secbox_dir() {
     return secbox_dir;
 }
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return vs_gateway_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) ? VS_HSM_ERR_OK
-                                                                                        : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) ? VS_HSM_ERR_OK
+                                                                                    : VS_HSM_ERR_FILE_IO;
 }
 
 /********************************************************************************/
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    return vs_gateway_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, out_sz) ? VS_HSM_ERR_OK
-                                                                                              : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, out_sz) ? VS_HSM_ERR_OK
+                                                                                          : VS_HSM_ERR_FILE_IO;
 }
 
 /******************************************************************************/
 int
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return vs_gateway_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
 }
+
+/******************************************************************************/
+void
+vs_hal_files_set_dir(const char *dir_name) {
+    assert(dir_name && dir_name[0]);
+
+    if (main_storage_dir) {
+        free(main_storage_dir);
+        main_storage_dir = 0;
+    }
+
+    main_storage_dir = strdup(dir_name);
+}
+/******************************************************************************/

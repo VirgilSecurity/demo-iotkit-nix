@@ -125,7 +125,7 @@ endif()
 clangformat_folder(
         ${CMAKE_CURRENT_SOURCE_DIR}/gateway
         ${CMAKE_CURRENT_SOURCE_DIR}/initializer
-        ${CMAKE_CURRENT_SOURCE_DIR}/shared
+        ${CMAKE_CURRENT_SOURCE_DIR}/common
         ${CMAKE_CURRENT_SOURCE_DIR}/tests
         ${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk/platform
         ${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos/unix
@@ -146,7 +146,7 @@ add_subdirectory(${VIRGIL_IOT_DIRECTORY})
 #
 #   Gateway library
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shared)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
 
 #
 #   Initalizer

@@ -46,9 +46,9 @@
 #include "gateway.h"
 #include "fldt_implementation.h"
 #include "platform/platform_hardware.h"
-#include "communication/rpi_netif.h"
+#include "communication/rpi-netif-plc-sim.h"
 #include "event_group_bit_flags.h"
-#include "hal/file_io_hal.h"
+#include "hal/rpi-file-io.h"
 
 char self_path[FILENAME_MAX];
 

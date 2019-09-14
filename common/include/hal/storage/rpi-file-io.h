@@ -32,46 +32,48 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <assert.h>
+#ifndef IOT_RPI_FILE_IO_HAL_H
+#define IOT_RPI_FILE_IO_HAL_H
+
 #include <stdint.h>
-#include <unistd.h>
-#include <stdbool.h>
 #include <stdio.h>
 
-#include <virgil/iot/protocols/sdmp.h>
-#include <stdlib-config.h>
-
-/******************************************************************************/
 void
-vs_iot_assert(int exp) {
-    assert(exp);
-}
+vs_hal_files_set_mac(uint8_t mac_addr[6]);
 
-/******************************************************************************/
 void
-vs_global_hal_msleep(size_t msec) {
-    usleep(msec * 1000);
-}
+vs_hal_files_set_dir(const char *dir_name);
 
-/******************************************************************************/
+int
+vs_rpi_get_file_len(const char *folder, const char *file_name);
+
 bool
-vs_logger_output_hal(const char *buffer) {
-    if (!buffer) {
-        return false;
-    }
+vs_rpi_get_keystorage_base_dir(char *dir);
 
-    int res = printf("%s", buffer) != 0;
-    fflush(stdout);
-    return res != 0;
-}
+const char *
+vs_rpi_get_trust_list_dir(void);
 
-/******************************************************************************/
-void
-vs_gateway_hal_get_udid(uint8_t *udid) {
-    vs_mac_addr_t mac;
-    vs_sdmp_mac_addr(0, &mac);
+const char *
+vs_rpi_get_slots_dir(void);
 
-    // TODO: Need to use real serial
-    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
-    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
-}
+const char *
+vs_rpi_get_firmware_dir(void);
+
+const char *
+vs_rpi_get_secbox_dir(void);
+
+bool
+vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, uint16_t data_sz);
+
+bool
+vs_rpi_read_file_data(const char *folder,
+                      const char *file_name,
+                      uint32_t offset,
+                      uint8_t *data,
+                      uint16_t buf_sz,
+                      uint16_t *read_sz);
+
+bool
+vs_rpi_remove_file_data(const char *folder, const char *file_name);
+
+#endif // IOT_RPI_FILE_IO_HAL_H

@@ -32,39 +32,48 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef KUNLUN_HAL_NETIF_PLC_H
-#define KUNLUN_HAL_NETIF_PLC_H
+#include <assert.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <stdio.h>
 
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
-#include <arpa/inet.h>
+#include <virgil/iot/protocols/sdmp.h>
+#include <stdlib-config.h>
 
-typedef struct _iot_pkt {
-    uint8_t *head;
-    uint8_t *data;
-    uint8_t *tail;
-    uint8_t *end;
-} iot_pkt_t;
-
-typedef void (*iot_plc_recv_func_t)(void *param, iot_pkt_t *pkt);
-
-typedef struct _iot_plc_app {
-    /* application id */
-    uint8_t app_id;
-    /* default priority */
-    uint8_t prio;
-    /* callback to receive event from plc */
-    iot_plc_recv_func_t recv;
-    /* parameter that will be transferred back alone with the callback */
-    void *param;
-} iot_plc_app_t;
-
-const vs_netif_t *
-vs_hal_netif_plc();
-
+/******************************************************************************/
 void
-vs_hal_netif_plc_force_mac(vs_mac_addr_t mac_addr);
+vs_iot_assert(int exp) {
+    assert(exp);
+}
 
+/******************************************************************************/
 void
-vs_plc_sim_set_ip(struct in_addr address);
+vs_global_hal_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
 
-#endif // KUNLUN_HAL_NETIF_PLC_H
+/******************************************************************************/
+bool
+vs_logger_output_hal(const char *buffer) {
+    if (!buffer) {
+        return false;
+    }
+
+    int res = printf("%s", buffer) != 0;
+    fflush(stdout);
+    return res != 0;
+}
+
+/******************************************************************************/
+void
+vs_rpi_hal_get_udid(uint8_t *udid) {
+    vs_mac_addr_t mac;
+    vs_sdmp_mac_addr(0, &mac);
+
+    // TODO: Need to use real serial
+    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
+    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
+}
+
+/******************************************************************************/

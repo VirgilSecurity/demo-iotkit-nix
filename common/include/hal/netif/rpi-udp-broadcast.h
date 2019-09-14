@@ -32,16 +32,24 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_GATEWAY_STORAGE_HAL_H
-#define IOT_RPI_GATEWAY_STORAGE_HAL_H
+#ifndef VS_NETIF_UDP_BCAST_H
+#define VS_NETIF_UDP_BCAST_H
 
-#include <virgil/iot/storage_hal/storage_hal.h>
-#include "hal/file_io_hal.h"
 
-vs_storage_hal_ctx_t
-vs_gateway_storage_init(const char *dir);
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-int
-vs_gateway_get_storage_impl(vs_storage_op_impl_t *impl);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#endif // IOT_RPI_GATEWAY_STORAGE_HAL_H
+const vs_netif_t *
+vs_hal_netif_udp_bcast();
+
+void
+vs_hal_netif_udp_bcast_force_mac(vs_mac_addr_t mac_addr);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // VS_NETIF_UDP_BCAST_H
