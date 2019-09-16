@@ -25,3 +25,7 @@ pushd "${BUILD_DIR}"
   cmake --build build
   cmake --build build --target install
 popd
+
+if [ -d "${INSTALL_DIR}/lib64" ]; then
+    mv -f "${INSTALL_DIR}/lib64" "${INSTALL_DIR}/lib"
+fi
