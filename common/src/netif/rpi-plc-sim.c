@@ -46,7 +46,7 @@
 #include "hal/netif/rpi-plc-sim.h"
 
 static int
-_plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif);
+_plc_init(const vs_netif_rx_cb_t rx_cb);
 static int
 _plc_deinit();
 static int
@@ -191,13 +191,12 @@ _plc_tx(const uint8_t *data, const uint16_t data_sz) {
 
 /******************************************************************************/
 static int
-_plc_init(const vs_netif_rx_cb_t rx_cb, const struct vs_netif_t *netif) {
+_plc_init(const vs_netif_rx_cb_t rx_cb) {
     assert(rx_cb);
     _netif_plc_rx_cb = rx_cb;
 
     memset(&_iot_plc_app, 0, sizeof(_iot_plc_app));
 
-    _iot_plc_app.param = (void *)netif;
     _iot_plc_app.recv = _gateway_plc_recv;
 
     _plc_connect();

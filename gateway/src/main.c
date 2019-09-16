@@ -43,9 +43,10 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
-#include "sdmp_app.h"
+#include <virgil/iot/protocols/sdmp.h>
 #include "gateway.h"
 #include "fldt_implementation.h"
+#include "hal/netif/netif-queue.h"
 #include "hal/netif/rpi-plc-sim.h"
 #include "hal/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
@@ -270,7 +271,8 @@ main(int argc, char *argv[]) {
     }
 
     // Initialize SDMP
-     CHECK_RET(!vs_sdmp_comm_start_thread(netif), -1, "Unable to initialize SDMP interface");
+    CHECK_RET(!vs_sdmp_init(vs_netif_queued(netif)), -1, "Unable to initialize SDMP");
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
 
     // Init gateway object
     //    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);

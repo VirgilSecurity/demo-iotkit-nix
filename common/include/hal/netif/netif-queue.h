@@ -32,13 +32,13 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_COMMUNICATION_H
-#define GATEWAY_COMMUNICATION_H
 
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#ifndef IOT_RPI_NETIF_QUEUE_H
+#define IOT_RPI_NETIF_QUEUE_H
 
-int
-vs_sdmp_comm_start_thread(const vs_netif_t *default_netif);
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-#endif // GATEWAY_COMMUNICATION_H
+const vs_netif_t *
+vs_netif_queued(const vs_netif_t *base_netif);
+
+#endif // IOT_RPI_NETIF_QUEUE_H

@@ -37,16 +37,16 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 # ---------------------------------------------------------------------------
 #   Enable Golang
 # ---------------------------------------------------------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/golang.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/flags.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/golang.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/flags.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 #
 #   Clang format
 #
-include(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 
 #
 #   Setup project
@@ -119,17 +119,6 @@ if(USE_ASAN OR USE_MSAN OR USE_LSAN OR USE_UBSAN OR USE_TSAN)
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
 endif()
-# ---------------------------------------------------------------------------
-#   Format code
-# ---------------------------------------------------------------------------
-clangformat_folder(
-        ${CMAKE_CURRENT_SOURCE_DIR}/gateway
-        ${CMAKE_CURRENT_SOURCE_DIR}/initializer
-        ${CMAKE_CURRENT_SOURCE_DIR}/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-        ${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk/platform
-        ${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos/unix
-)
 
 # ---------------------------------------------------------------------------
 #   Folders with targets

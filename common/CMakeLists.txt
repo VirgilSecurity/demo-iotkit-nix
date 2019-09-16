@@ -48,12 +48,15 @@ target_sources(rpi-common
 		PRIVATE
 
 		#	Headers
+		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/netif-queue.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-plc-sim.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/msg-queue.h
 
 		#	Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-tl-hal.c
@@ -62,6 +65,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
 		)
 
 #
