@@ -39,6 +39,6 @@
 #include <virgil/iot/protocols/sdmp/prvs.h>
 
 int
-vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac);
+vs_sdmp_comm_start_thread(const vs_netif_t *default_netif);
 
 #endif // GATEWAY_COMMUNICATION_H

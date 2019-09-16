@@ -146,7 +146,7 @@ _sdmp_start(const vs_netif_t *netif) {
 int
 main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
-    const vs_netif_t * netif = NULL;
+    const vs_netif_t *netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
