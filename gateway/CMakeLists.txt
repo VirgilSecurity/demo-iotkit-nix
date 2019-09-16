@@ -92,13 +92,6 @@ target_include_directories(gateway
         ${CMAKE_CURRENT_LIST_DIR}/include
         )
 
-#
-#	Compile options
-#
-target_compile_options(gateway
-		PRIVATE
-		$<$<NOT:${APPLE}>:"-Wno-error=format-truncation">
-		)
 
 #
 #	Link libraries
@@ -106,7 +99,7 @@ target_compile_options(gateway
 target_link_libraries(gateway
         PRIVATE
 
-        $<$<NOT:${APPLE}>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
+        $<$<NOT:$<BOOL:${APPLE}>>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
         $<$<BOOL:${APPLE}>:rpi-common>
 
 		curl
