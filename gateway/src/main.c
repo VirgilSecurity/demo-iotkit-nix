@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <libgen.h>
+#include <arpa/inet.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
@@ -45,10 +46,10 @@
 #include "sdmp_app.h"
 #include "gateway.h"
 #include "fldt_implementation.h"
-#include "platform/platform_hardware.h"
-#include "communication/rpi-netif-plc-sim.h"
+#include "hal/netif/rpi-udp-broadcast.h"
+#include "hal/storage/rpi-file-io.h"
 #include "event_group_bit_flags.h"
-#include "hal/rpi-file-io.h"
+
 
 char self_path[FILENAME_MAX];
 
@@ -116,7 +117,7 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 
     // Check input parameters
     if (!mac_str || !plc_sim_addr_str) {
-        printf("usage: virgil-iot-gateway-app %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
+        printf("usage: gateway %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
                PLC_SIM_ADDRESS_SHORT,
                PLC_SIM_ADDRESS_FULL,
                MAC_SHORT,
@@ -238,22 +239,20 @@ main(int argc, char *argv[]) {
 
     strncpy(self_path, argv[0], sizeof(self_path));
 
-    CHECK_RET (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
-    vs_hal_netif_plc_force_mac(forced_mac_addr);
+    CHECK_RET(
+            _process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
+    //    vs_hal_netif_plc_force_mac(forced_mac_addr);
     vs_hal_files_set_mac(forced_mac_addr.bytes);
-    vs_fldt_init(&forced_mac_addr);
-
-    // Init platform specific hardware
-    hardware_init();
+    // vs_fldt_init(&forced_mac_addr);
 
     // Set IP of PLC simulator
-    vs_plc_sim_set_ip(plc_sim_addr);
+    //    vs_plc_sim_set_ip(plc_sim_addr);
 
     // Initialize SDMP
-    CHECK_RET (!vs_sdmp_comm_start_thread(&forced_mac_addr), -1, "Unable to initialize SDMP interface");
+    // CHECK_RET(!vs_sdmp_comm_start_thread(&forced_mac_addr), -1, "Unable to initialize SDMP interface");
 
     // Init gateway object
-    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
+    //    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
 
     VS_LOG_DEBUG(self_path);
 
@@ -263,12 +262,12 @@ main(int argc, char *argv[]) {
     // Start SDMP protocol over PLC interface
     // TODO: Need to use freertos interface
     // vs_sdmp_comm_start_thread(plc_netif);
-    xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
+    //    xEventGroupSetBits(gtwy->shared_event_group, SDMP_INIT_FINITE_BIT);
 
     // Start app
-    start_gateway_threads();
+    //    start_gateway_threads();
 
-    vs_fldt_destroy();
+    // vs_fldt_destroy();
 
     int res = _try_to_update_app(argc, argv);
 

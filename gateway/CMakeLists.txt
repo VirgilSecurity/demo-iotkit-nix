@@ -32,105 +32,97 @@
 #
 #   Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(virgil-iot-gateway-app VERSION 0.1.0 LANGUAGES C)
-
-add_executable(virgil-iot-gateway-app)
-#
-#	Source files
-#
-if (APPLE)
-	set (GW_PLATFORM_APP_SRC
-			${CMAKE_CURRENT_SOURCE_DIR}/src/platform/mac/hardware.c
-			)
-elseif(UNIX)
-	set (GW_PLATFORM_APP_SRC
-			${CMAKE_CURRENT_SOURCE_DIR}/src/platform/unix/hardware.c
-			)
-endif ()
-
-target_sources(virgil-iot-gateway-app
-		PRIVATE
-		include/event_group_bit_flags.h
-		include/gateway.h
-		include/iot_mqtt.h
-		include/message_bin.h
-		include/sdmp_app.h
-		include/fldt_implementation.h
-		include/msg_queue.h
-		include/test_update_thread.h
-		include/upd_http_retrieval_thread.h
-		include/platform/platform_hardware.h
-		include/platform/platform_os.h
-
-		${GW_PLATFORM_APP_SRC}
-		src/main.c
-		src/msg_queue.c
-		src/cloud/https.c
-		src/communication/mqtt/message_bin.c
-		src/communication/mqtt/msg-bin-root-ca.c
-		src/communication/mqtt/iot_mqtt.c
-		src/communication/sdmp/sdmp_app.c
-		src/communication/sdmp/fldt_implementation.c
-		src/communication/sdmp/fldt_firmware.c
-		src/gateway/gateway.c
-		src/platform/os.c
-		src/update/upd_http_retrieval_thread.c
-		src/update/update_hal.c
-		src/platform/platform-hal.c
-		)
-
-target_compile_definitions(virgil-iot-gateway-app
-		PRIVATE
-		TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
-		SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
-		SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
-		)
+project(gateway VERSION 0.1.0 LANGUAGES C)
 
 #
-#   -Wall -Werror
+#	Gateway application
 #
-target_compile_options(virgil-iot-gateway-app
-		PRIVATE
-		-Wall
-		-Werror
-		-Wno-multichar
-		)
+add_executable(gateway)
+
+#
+#	Header/Source files
+#
+target_sources(gateway
+        PRIVATE
+
+        # Headers
+        ${CMAKE_CURRENT_LIST_DIR}/include/event_group_bit_flags.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/iot_mqtt.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/sdmp_app.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/fldt_implementation.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/msg_queue.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/test_update_thread.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/upd_http_retrieval_thread.h
+
+        # Sources
+        ${CMAKE_CURRENT_LIST_DIR}/src/main.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/msg_queue.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/cloud/https.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/sdmp_app.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+        )
+
+#
+#	Definitions
+#
+target_compile_definitions(gateway
+        PRIVATE
+        TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
+        SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+        SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
+        )
 
 #
 #   Include directories
 #
-target_include_directories(virgil-iot-gateway-app
-		PRIVATE
-		${CMAKE_CURRENT_LIST_DIR}/include
+target_include_directories(gateway
+        PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        )
 
-		PUBLIC
-		${CMAKE_CURRENT_LIST_DIR}/include/platform
+#
+#	Compile options
+#
+target_compile_options(gateway
+		PRIVATE
+		$<$<NOT:${APPLE}>:"-Wno-error=format-truncation">
 		)
 
 #
 #	Link libraries
 #
-if(UNIX AND NOT APPLE)
-	target_compile_options(virgil-iot-gateway-app
-			PRIVATE
-			-Wno-error=format-truncation
-			)
+target_link_libraries(gateway
+        PRIVATE
 
-	target_link_libraries(virgil-iot-gateway-app
-			-Wl,--whole-archive rpi_shared hsm provision -Wl,--no-whole-archive
-			)
-else()
-	target_link_libraries(virgil-iot-gateway-app rpi_shared)
-endif()
+        $<$<NOT:${APPLE}>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
+        $<$<BOOL:${APPLE}>:rpi-common>
 
-target_link_libraries (virgil-iot-gateway-app
 		curl
-		freertos
 		aws-mqtt
 		cloud
-		macros
-		logger
 		update
-		)
+
+        $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
+        $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
+
+        enable_pedantic_mode
+        )
+
+#
+# Format code
+#
+if(COMMAND add_clangformat)
+	add_clangformat(gateway)
+endif()

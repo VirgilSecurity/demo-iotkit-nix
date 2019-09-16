@@ -42,8 +42,8 @@ project(virgil-iot-initializer VERSION 0.1.0 LANGUAGES C)
 set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
 set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
 
-set(THING_MANUFACTURE "0x89abcdef" CACHE STRING "Thing manufacture code")
-set(THING_MODEL "0x12345678" CACHE STRING "Thing model code")
+set(THING_MANUFACTURE "0xaaabcdef" CACHE STRING "Thing manufacture code")
+set(THING_MODEL "0xA2345678" CACHE STRING "Thing model code")
 
 
 #
@@ -109,6 +109,13 @@ function(initializer_executable _is_gateway _manufacture _model)
             MANUFACTURE=${_manufacture}
             MODEL=${_model}
             )
+
+    #
+    # Format code
+    #
+    if(COMMAND add_clangformat)
+        add_clangformat(${_targetname})
+    endif()
 endfunction()
 
 #

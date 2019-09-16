@@ -41,24 +41,24 @@ check_error
 mv initializer/virgil-iot-gateway-initializer $BUILD_OUTPUT/
 check_error
 
-echo "------------- Build virgil-iot-gateway-app (initial) -----------------"
+echo "------------- Build gateway (initial) -----------------"
 cleanup
 cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
       -DGATEWAY_SIMULATOR=ON \
       -DTEST_UPDATE_MESSAGE="[ Hello from initial Gateway firmware ]" $@ "../"
 check_error
-make virgil-iot-gateway-app -j 8
+make gateway -j 8
 check_error
 mv gateway/virgil-iot-gateway-gateway $BUILD_OUTPUT/virgil-iot-gateway-gateway-initial
 check_error
 
-echo "------------- Build virgil-iot-gateway-app (update) -----------------"
+echo "------------- Build gateway (update) -----------------"
 cleanup
 cmake -DVIRGIL_IOT_MCU_BUILD=OFF \
       -DGATEWAY_SIMULATOR=ON \
       -DTEST_UPDATE_MESSAGE="[ Hello from updated Gateway firmware ]" $@ "../"
 check_error
-make virgil-iot-gateway-app -j 8
+make gateway -j 8
 check_error
 mv gateway/virgil-iot-gateway-gateway $BUILD_OUTPUT/virgil-iot-gateway-gateway-update
 check_error
