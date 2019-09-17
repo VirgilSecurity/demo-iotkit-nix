@@ -42,11 +42,13 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/update/update.h>
 #include <cloud-config.h>
+#include "helpers/msg-queue.h"
 
 #define NUM_TOKENS 300
 
 #define MB_QUEUE_SZ 10
 
+static vs_msg_queue_ctx_t *upd_event_queue = NULL;
 static pthread_t _mb_thread;
 // static const uint16_t _mb_thread_stack = 20 * 1024;
 
@@ -126,8 +128,9 @@ pthread_t *
 start_message_bin_thread() {
     static bool is_threads_started = 0;
     if (!is_threads_started) {
-        //        upd_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
-        //        *upd_event_queue = xQueueCreate(MB_QUEUE_SZ, sizeof(upd_request_t *));
+
+        upd_event_queue = vs_msg_queue_init(MB_QUEUE_SZ, 1, 1);
+
         is_threads_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
         if (!is_threads_started) {
             return NULL;
@@ -149,12 +152,13 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
         pthread_mutex_unlock(&gtwy->firmware_mutex);
 
         if (VS_CLOUD_ERR_OK == res) {
-            //        if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
-            //            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
-            //        } else {
-            vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
-            //            return;
-            //        }
+
+            if (0 != vs_msg_queue_push(upd_event_queue, fw_url, NULL, 0)) {
+                VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
+            } else {
+                vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
+                return;
+            }
 
         } else if (VS_CLOUD_ERR_NOT_FOUND == res) {
             VS_LOG_INFO("[MB] Firmware manifest contains old version\n");
@@ -178,12 +182,12 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
 
     if (VS_CLOUD_ERR_OK == res) {
 
-        //        if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
-        //            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
-        //        } else {
-        vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
-        //            return;
-        //        }
+        if (0 != vs_msg_queue_push(upd_event_queue, tl_url, NULL, 0)) {
+            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
+        } else {
+            vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
+            return;
+        }
     } else if (VS_CLOUD_ERR_NOT_FOUND == res) {
         VS_LOG_INFO("[MB] TL manifest contains old version\n");
     } else {
@@ -215,11 +219,14 @@ message_bin_process_command(const char *topic, const uint8_t *p_data, const uint
 /*************************************************************************/
 bool
 message_bin_get_request(upd_request_t **request) {
+    const uint8_t *data;
+    size_t _sz;
+    *request = NULL;
+    if (vs_msg_queue_data_present(upd_event_queue)) {
+        if (0 == vs_msg_queue_pop(upd_event_queue, (void *)request, &data, &_sz)) {
+            return true;
+        }
+    }
 
-    //    if (uxQueueMessagesWaiting(*upd_event_queue)) {
-    //        if (pdTRUE == xQueueReceive(*upd_event_queue, request, 0))
-    //            return true;
-    //    }
-    //    *request = NULL;
     return false;
 }

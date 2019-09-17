@@ -40,15 +40,16 @@
 
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/logger/logger.h>
+#include "helpers/msg-queue.h"
 
 static pthread_t upd_retrieval_thread;
+static vs_msg_queue_ctx_t *fwdist_event_queue;
 
 // static const uint16_t upd_retrieval_stack = 10 * 1024;
 
 static bool is_retrieval_started;
 
 #define FWDIST_QUEUE_SZ 10
-// xQueueHandle *fwdist_event_queue;
 
 /*************************************************************************/
 static void
@@ -74,10 +75,10 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                 fw_info = (vs_firmware_info_t *)malloc(sizeof(vs_firmware_info_t));
                 VS_IOT_MEMCPY(fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
 
-                //            if (pdTRUE != xQueueSendToBack(*fwdist_event_queue, &fw_info, OS_NO_WAIT)) {
-                free(fw_info);
-                //                VS_LOG_ERROR("[MB] Failed to send fw info to output processing!!!");
-                //            }
+                if (0 != vs_msg_queue_push(fwdist_event_queue, fw_info, NULL, 0)) {
+                    free(fw_info);
+                    VS_LOG_ERROR("[MB] Failed to send fw info to output processing!!!");
+                }
 
             } else {
                 VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
@@ -151,9 +152,9 @@ _upd_http_retrieval_task(void *pvParameters) {
 pthread_t *
 vs_start_upd_http_retrieval_thread(void) {
     if (!is_retrieval_started) {
-        //        fwdist_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
-        //        CHECK_NOT_ZERO_RET(fwdist_event_queue, NULL);
-        //        *fwdist_event_queue = xQueueCreate(FWDIST_QUEUE_SZ, sizeof(vs_firmware_info_t *));
+
+        fwdist_event_queue = vs_msg_queue_init(FWDIST_QUEUE_SZ, 1, 1);
+
         is_retrieval_started = (0 == pthread_create(&upd_retrieval_thread, NULL, _upd_http_retrieval_task, NULL));
         if (!is_retrieval_started) {
             return NULL;
@@ -165,11 +166,13 @@ vs_start_upd_http_retrieval_thread(void) {
 /*************************************************************************/
 bool
 vs_upd_http_retrieval_get_request(vs_firmware_info_t **request) {
-
-    //    if (uxQueueMessagesWaiting(*fwdist_event_queue)) {
-    //        if (pdTRUE == xQueueReceive(*fwdist_event_queue, request, 0))
-    //            return true;
-    //    }
+    const uint8_t *data;
+    size_t _sz;
     *request = NULL;
+    if (vs_msg_queue_data_present(fwdist_event_queue)) {
+        if (0 == vs_msg_queue_pop(fwdist_event_queue, (void *)request, &data, &_sz)) {
+            return true;
+        }
+    }
     return false;
 }

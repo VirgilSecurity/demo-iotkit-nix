@@ -89,41 +89,38 @@ get_gateway_ctx(void) {
 }
 
 /*************************************************************************/
-// static bool
-//_is_self_firmware_image(vs_firmware_info_t *fw_info) {
-//    const vs_firmware_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
-//
-//    return (0 == VS_IOT_MEMCMP(desc->info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
-//            0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
-//}
+static bool
+_is_self_firmware_image(vs_firmware_info_t *fw_info) {
+    const vs_firmware_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
+
+    return (0 == VS_IOT_MEMCMP(desc->info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
+            0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
+}
 
 /*************************************************************************/
-// static void
-//_restart_app() {
-//    /* Cleanup the mutexes */
-//    pthread_mutex_destroy(&_gtwy.firmware_mutex);
-//    pthread_mutex_destroy(&_gtwy.tl_mutex);
-//    pthread_mutex_destroy(&_gtwy.shared_events.mtx);
-//    pthread_cond_destroy(&_gtwy.shared_events.cond);
-//    pthread_mutex_destroy(&_gtwy.incoming_data_events.mtx);
-//    pthread_cond_destroy(&_gtwy.incoming_data_events.cond);
-//    pthread_mutex_destroy(&_gtwy.message_bin_events.mtx);
-//    pthread_cond_destroy(&_gtwy.message_bin_events.cond);
-//
-//
-//    //    //    vTaskEndScheduler();
-//    while (1)
-//        ;
-//}
+static void
+_restart_app() {
+    /* Cleanup the mutexes */
+    pthread_mutex_destroy(&_gtwy.firmware_mutex);
+    pthread_mutex_destroy(&_gtwy.tl_mutex);
+    pthread_mutex_destroy(&_gtwy.shared_events.mtx);
+
+    vs_event_group_destroy(&_gtwy.shared_events);
+    vs_event_group_destroy(&_gtwy.incoming_data_events);
+    vs_event_group_destroy(&_gtwy.message_bin_events);
+
+    while (1)
+        ;
+}
 
 /******************************************************************************/
 static void *
 _gateway_task(void *pvParameters) {
     pthread_t *message_bin_thread;
     pthread_t *upd_http_retrieval_thread;
-    //    vs_firmware_info_t *request;
-    //    vs_firmware_descriptor_t desc;
-    //
+    vs_firmware_info_t *request;
+    vs_firmware_descriptor_t desc;
+
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
 
@@ -135,35 +132,34 @@ _gateway_task(void *pvParameters) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
-        //
-        //        while (vs_upd_http_retrieval_get_request(&request)) {
-        //            if (_is_self_firmware_image(request)) {
-        //                while (xSemaphoreTake(_gtwy.firmware_mutex, portMAX_DELAY) == pdFALSE) {
-        //                }
-        //                if (VS_STORAGE_OK ==
-        //                            vs_update_load_firmware_descriptor(
-        //                                    &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type,
-        //                                    &desc) &&
-        //                    VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
-        //                    (void)xSemaphoreGive(_gtwy.firmware_mutex);
-        //                    _restart_app();
-        //                }
-        //                (void)xSemaphoreGive(_gtwy.firmware_mutex);
-        //            } else {
-        //                // TODO : process downloaded firmware and trust list, i. e. send FLDT message
-        //                // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header
-        //                (vs_tl_header_t(pub_keys_count - chunks
-        //                // amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)
-        //                // vs_update_load_firmware_descriptor( manufacturer, device) ==> descriptor
-        //                if (vs_fldt_new_firmware_available(request)) {
-        //                    VS_LOG_ERROR("Error processing new firmware available");
-        //                }
-        //
-        //                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
-        //            }
-        //
-        //            vPortFree(request);
-        //        }
+
+        while (vs_upd_http_retrieval_get_request(&request)) {
+            if (_is_self_firmware_image(request)) {
+                if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
+                    if (VS_STORAGE_OK ==
+                                vs_update_load_firmware_descriptor(
+                                        &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
+                        VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                        (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
+                        _restart_app();
+                    }
+                    (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
+                }
+            } else {
+                // TODO : process downloaded firmware and trust list, i. e. send FLDT message
+                // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header
+                //                        (vs_tl_header_t(pub_keys_count - chunks
+                // amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)
+                // vs_update_load_firmware_descriptor( manufacturer, device) ==> descriptor
+                //                if (vs_fldt_new_firmware_available(request)) {
+                //                    VS_LOG_ERROR("Error processing new firmware available");
+                //                }
+
+                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+            }
+
+            free(request);
+        }
 
 #if SIMULATOR
         if (_test_message[0] != 0) {
