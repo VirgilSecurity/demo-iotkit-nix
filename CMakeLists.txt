@@ -38,7 +38,8 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 #   Settings
 #
 option(GO_DISABLE "Disable Go apps" OFF)
-option(BIGENDIAN_TEST_BUILD "Build for MIPS big endian" OFF)
+option(BIGENDIAN_64_BIT_BUILD "Build for MIPS 64 big endian" OFF)
+option(BIGENDIAN_32_BIT_BUILD "Build for MIPS 32 big endian" OFF)
 option(GATEWAY_SIMULATOR "On/Off code for simulator." ON)
 option(VIRGIL_IOT_MCU_BUILD "Enable build for MCU" OFF)
 
@@ -52,9 +53,20 @@ option(USE_TSAN "On/Off Thread sanitizer." OFF)
 #
 #   Check setting compatibility
 #
-if (BIGENDIAN_TEST_BUILD)
+if (BIGENDIAN_64_BIT_BUILD)
     set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
-    set (CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips.toolchain.cmake")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips64.toolchain.cmake")
+    set(CRYPTO_C_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/ext/deps/mips64")
+endif ()
+
+if (BIGENDIAN_32_BIT_BUILD)
+    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips32.toolchain.cmake")
+    set(CRYPTO_C_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/ext/deps/mips32")
+endif ()
+
+if (NOT BIGENDIAN_64_BIT_BUILD AND NOT BIGENDIAN_32_BIT_BUILD)
+    set(CRYPTO_C_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/ext/deps/host")
 endif()
 
 #
@@ -68,8 +80,8 @@ include(cmake/helpers.cmake)
 if (NOT GO_DISABLE)
     include(cmake/golang.cmake)
     include(cmake/flags.cmake)
-    set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-endif()
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+endif ()
 
 #
 #   Clang format
@@ -81,9 +93,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 #
 if (GO_DISABLE)
     project(iot-rpi VERSION 0.1.0 LANGUAGES C)
-else()
+else ()
     project(iot-rpi VERSION 0.1.0 LANGUAGES C Go)
-endif()
+endif ()
 
 #
 #   Address sanitizer
