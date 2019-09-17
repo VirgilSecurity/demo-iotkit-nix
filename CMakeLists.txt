@@ -37,16 +37,16 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 # ---------------------------------------------------------------------------
 #   Enable Golang
 # ---------------------------------------------------------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/golang.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/flags.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/helpers.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/golang.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/flags.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
 list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 #
 #   Clang format
 #
-include(${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 
 #
 #   Setup project
@@ -119,17 +119,6 @@ if(USE_ASAN OR USE_MSAN OR USE_LSAN OR USE_UBSAN OR USE_TSAN)
     set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
 endif()
-# ---------------------------------------------------------------------------
-#   Format code
-# ---------------------------------------------------------------------------
-clangformat_folder(
-        ${CMAKE_CURRENT_SOURCE_DIR}/gateway
-        ${CMAKE_CURRENT_SOURCE_DIR}/initializer
-        ${CMAKE_CURRENT_SOURCE_DIR}/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-        ${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk/platform
-        ${CMAKE_CURRENT_SOURCE_DIR}/ext/freertos/unix
-)
 
 # ---------------------------------------------------------------------------
 #   Folders with targets
@@ -144,24 +133,29 @@ set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/rpi CACHE STRING 
 add_subdirectory(${VIRGIL_IOT_DIRECTORY})
 
 #
-#   Gateway library
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
-
-#
-#   Initalizer
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
-
-#
 #   aws-sdk
 #
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
 
 #
-#   Application
+#   Common code library
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
+
+#
+#   Initalizers for Gateway and Thing
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
+
+#
+#   Gateway application
 #
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gateway)
+
+#
+#   Thing application
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thing)
 
 #
 #   Unit tests

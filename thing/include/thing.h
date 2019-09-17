@@ -32,71 +32,37 @@
 ////
 ////  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 //
+//#ifndef GATEWAY_H
+//#define GATEWAY_H
+//
 //#include <stdint.h>
-//#include <virgil/iot/macros/macros.h>
-//#include <FreeRTOS.h>
-//#include <queue.h>
-//#include <msg_queue.h>
+//#include <stdio.h>
+//#include "FreeRTOS.h"
+//#include "task.h"
+//#include "queue.h"
+//#include "semphr.h"
+//#include "event_groups.h"
+//#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+//#include <virgil/iot/storage_hal/storage_hal.h>
+//#include <global-hal.h>
 //
-// static QueueHandle_t _queue = NULL;
+// typedef struct gtwy_s {
+//    uint8_t udid_of_device[SERIAL_SIZE];
+//    vs_storage_op_ctx_t fw_update_ctx;
+//    EventGroupHandle_t shared_event_group;
+//    EventGroupHandle_t incoming_data_event_group;
+//    EventGroupHandle_t firmware_event_group;
+//    SemaphoreHandle_t firmware_semaphore;
+//    SemaphoreHandle_t tl_semaphore;
+//} gtwy_t;
 //
-//#define QUEUE_SIZE (64)
-//
-///******************************************************************************/
-// int
-// vs_msg_queue_init(void) {
-//
-//    _queue = xQueueCreate(QUEUE_SIZE, sizeof(vs_msg_queue_item_s));
-//    CHECK_RET(_queue, -1, "Unable to create messages queue");
-//
-//    return 0;
-//}
-//
-///******************************************************************************/
+// gtwy_t *
+// init_gateway_ctx(vs_mac_addr_t *mac_addr);
+// gtwy_t *
+// get_gateway_ctx(void);
 // void
-// vs_msg_queue_free(void) {
+// start_gateway_threads(void);
 //
-//    if (_queue) {
-//        vQueueDelete(_queue);
-//    }
-//}
+// extern char self_path[FILENAME_MAX];
 //
-///******************************************************************************/
-// int
-// vs_msg_queue_push(vs_msg_queue_item_s *item, size_t wait_ticks) {
-//    BaseType_t res;
-//
-//    CHECK_NOT_ZERO_RET(item, -1);
-//    CHECK_NOT_ZERO_RET(_queue, -2);
-//
-//    res = xQueueSend(_queue, item, wait_ticks);
-//
-//    if (res == pdTRUE) {
-//        return 0;
-//    }
-//
-//    return res;
-//}
-//
-///******************************************************************************/
-// int
-// vs_msg_queue_pop(vs_msg_queue_item_s *item, bool *has_read, size_t wait_ticks) {
-//    BaseType_t res;
-//
-//    CHECK_NOT_ZERO_RET(item, -1);
-//    CHECK_NOT_ZERO_RET(has_read, -2);
-//    CHECK_NOT_ZERO_RET(_queue, -3);
-//
-//    *has_read = false;
-//
-//    res = xQueueReceive(_queue, item, wait_ticks);
-//
-//    if (res == pdTRUE) {
-//        *has_read = true;
-//        return 0;
-//    } else if (res == pdFALSE && uxQueueMessagesWaiting(_queue) == 0) {
-//        return 0;
-//    }
-//
-//    return -1;
-//}
+//#endif // GATEWAY_H

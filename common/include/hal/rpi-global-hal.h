@@ -36,8 +36,22 @@
 #define IOT_RPI_HAL_H
 
 #include <stdint.h>
+#include <arpa/inet.h>
+
+#include <virgil/iot/protocols/sdmp.h>
 
 void
 vs_rpi_hal_get_udid(uint8_t *udid);
+
+int
+vs_rpi_hal_update(int argc, char *argv[]);
+
+void
+vs_rpi_hal_sleep_until_stop(void);
+
+int
+vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr);
+
+extern char *self_path;
 
 #endif // IOT_RPI_HAL_H

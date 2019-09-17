@@ -34,44 +34,25 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(gateway VERSION 0.1.0 LANGUAGES C)
+project(thing VERSION 0.1.0 LANGUAGES C)
 
 #
 #	Gateway application
 #
-add_executable(gateway)
-
-#
-#   Options
-#
-set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
-set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
+add_executable(thing)
 
 #
 #	Header/Source files
 #
-target_sources(gateway
+target_sources(thing
         PRIVATE
 
         # Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/event-flags.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/iot_mqtt.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/fldt_implementation.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/test_update_thread.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/upd_http_retrieval_thread.h
+        ${CMAKE_CURRENT_LIST_DIR}/include/thing.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/cloud/https.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
-		${CMAKE_CURRENT_LIST_DIR}/src/gateway/thing.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/thing.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
         ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
         )
@@ -79,42 +60,37 @@ target_sources(gateway
 #
 #	Definitions
 #
-target_compile_definitions(gateway
+target_compile_definitions(thing
         PRIVATE
         TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
         SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
-		GATEWAY=1
-		MANUFACTURE=${_manufacture}
-		MODEL=${_model}
         )
 
 #
 #   Include directories
 #
-target_include_directories(gateway
+target_include_directories(thing
         PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/include
         )
 
-
 #
 #	Compile options
 #
-target_compile_options(gateway
-        PRIVATE
-        $<$<NOT:$<BOOL:${APPLE}>>:-Wno-format-truncation>
-        )
+target_compile_options(thing
+		PRIVATE
+		$<$<NOT:${APPLE}>:"-Wno-error=format-truncation">
+		)
 
 #
 #	Link libraries
 #
-target_link_libraries(gateway
+target_link_libraries(thing
         PRIVATE
 
-		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
-		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
+        $<$<NOT:${APPLE}>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
+        $<$<BOOL:${APPLE}>:rpi-common>
 
 		curl
 		aws-mqtt
@@ -131,5 +107,5 @@ target_link_libraries(gateway
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(gateway)
+	add_clangformat(thing)
 endif()

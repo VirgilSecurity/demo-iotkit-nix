@@ -38,17 +38,17 @@
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/tests/tests.h>
+//#include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/crypto/foundation/vscf_assert.h>
+#include "../ext/deps/include/virgil/crypto/foundation/vscf_assert.h"
 #include <update-config.h>
 
-#include "hal/rpi-file-io.h"
-#include "hal/rpi-storage-hal.h"
+#include "hal/storage/rpi-file-io.h"
+#include "hal/storage/rpi-storage-hal.h"
+#include "hal/rpi-global-hal.h"
 
-static char _self_path[FILENAME_MAX];
 /******************************************************************************/
 static int
 _recursive_delete(const char *dir) {
@@ -136,7 +136,8 @@ int
 vs_update_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
-    VS_IOT_STRCPY(filename, _self_path);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
     remove(filename);
@@ -152,8 +153,9 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     FILE *fp = NULL;
 
     CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
 
-    VS_IOT_STRCPY(filename, _self_path);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
 
@@ -189,6 +191,7 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
 
+    vs_hal_files_set_dir("test");
     vs_hal_files_set_mac(mac);
     _remove_keystorage_dir();
 
@@ -196,7 +199,7 @@ main(int argc, char *argv[]) {
     vs_tl_init_storage();
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
-
+#if 0
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
     storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
@@ -212,6 +215,7 @@ main(int argc, char *argv[]) {
     }
 
     res += vs_update_test(&storage_ctx);
+#endif
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 

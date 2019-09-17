@@ -32,16 +32,13 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdlib.h>
 
-/******************************************************************************/
-void *
-platform_malloc(size_t size) {
-    return malloc(size);
-}
+#ifndef IOT_RPI_NETIF_QUEUE_H
+#define IOT_RPI_NETIF_QUEUE_H
 
-/******************************************************************************/
-void
-platform_free(void *ptr) {
-    return free(ptr);
-}
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+
+const vs_netif_t *
+vs_netif_queued(const vs_netif_t *base_netif);
+
+#endif // IOT_RPI_NETIF_QUEUE_H

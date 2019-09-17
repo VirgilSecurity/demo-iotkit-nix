@@ -55,14 +55,11 @@ static gtwy_t _gtwy = {.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZ
 
 static bool is_threads_started = false;
 static pthread_t gateway_starter_thread;
-// static pthread_attr_t gateway_starter_thread_attrs;
+
+#define MAIN_THREAD_SLEEP_S 2
 
 #if SIMULATOR
-#define MAIN_THREAD_SLEEP_S 2
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
-#else
-// TODO : sleep until new broadcast message
-#define MAIN_THREAD_SLEEP_MS (3000 / portTICK_PERIOD_MS)
 #endif
 
 extern const vs_firmware_descriptor_t *

@@ -32,44 +32,27 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <string.h>
-#include <global-hal.h>
-#include <gateway.h>
-#include <virgil/iot/cloud/cloud.h>
-#include <virgil/iot/provision/provision.h>
+#ifndef RPI_MESSAGE_QUEUE_H
+#define RPI_MESSAGE_QUEUE_H
 
-#define GW_MANUFACTURE_ID                                                                                              \
-    { 'V', 'R', 'G', 'L' }
-#define GW_DEVICE_TYPE                                                                                                 \
-    { 'C', 'f', '0', '1' }
-#define GW_APP_TYPE                                                                                                    \
-    { 'A', 'P', 'P', '0' }
+typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
 
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor = {
-        .info.manufacture_id = GW_MANUFACTURE_ID,
-        .info.device_type = GW_DEVICE_TYPE,
-        .info.version.app_type = GW_APP_TYPE,
-        .info.version.major = 0,
-        .info.version.minor = 1,
-        .info.version.patch = 3,
-        .info.version.dev_milestone = 'm',
-        .info.version.dev_build = 0,
-        .info.version.timestamp = 0,
-        .padding = 0,
-        .chunk_size = 256,
-        .firmware_length = 2097152,
-        .app_size = 2097152,
-};
+vs_msg_queue_ctx_t *
+vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
 
-/******************************************************************************/
+int
+vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
+
+int
+vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+
+bool
+vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+
 void
-vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
-    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
-}
+vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
 
-/******************************************************************************/
-const vs_firmware_descriptor_t *
-vs_global_hal_get_own_firmware_descriptor(void) {
-    return &_descriptor;
-}
+void
+vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
+
+#endif // RPI_MESSAGE_QUEUE_H

@@ -32,13 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_COMMUNICATION_H
-#define GATEWAY_COMMUNICATION_H
+#ifndef IOT_RPI_INPUT_PARAMS_H
+#define IOT_RPI_INPUT_PARAMS_H
+
+#include <arpa/inet.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
 
 int
-vs_sdmp_comm_start_thread(const vs_mac_addr_t *mac);
+vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr);
 
-#endif // GATEWAY_COMMUNICATION_H
+#endif // IOT_RPI_INPUT_PARAMS_H

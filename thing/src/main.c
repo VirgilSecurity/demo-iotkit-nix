@@ -32,27 +32,53 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef RPI_MESSAGE_QUEUE_H
-#define RPI_MESSAGE_QUEUE_H
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/fldt_client.h>
 
-#include <FreeRTOS.h>
+#include "thing.h"
+#include "hal/netif/rpi-plc-sim.h"
+#include "hal/rpi-global-hal.h"
+#include "helpers/input-params.h"
 
-typedef struct {
-    const struct vs_netif_t *netif;
-    uint8_t *data;
-    size_t size;
-} vs_msg_queue_item_s;
-
+/******************************************************************************/
 int
-vs_msg_queue_init(void);
+main(int argc, char *argv[]) {
+    // Setup forced mac address
+    vs_mac_addr_t forced_mac_addr;
+    struct in_addr plc_sim_addr;
 
-int
-vs_msg_queue_push(vs_msg_queue_item_s *item, size_t timeout_ms);
+    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+        return -1;
+    }
 
-int
-vs_msg_queue_pop(vs_msg_queue_item_s *item, bool *has_read, size_t wait_ms);
+    if (0 != vs_rpi_start("thing", plc_sim_addr, forced_mac_addr)) {
+        return -1;
+    }
 
-void
-vs_msg_queue_free(void);
+    VS_LOG_INFO("%s", argv[0]);
+    self_path = argv[0];
 
-#endif // RPI_MESSAGE_QUEUE_H
+    // Add SDMP Services
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
+
+    // Init thing object
+    //    ???
+
+    // Start app
+    //    start_thing_threads();
+
+    // Sleep until CTRL_C
+    vs_rpi_hal_sleep_until_stop();
+
+    VS_LOG_INFO("Terminating application ...");
+
+    // vs_fldt_destroy();
+
+    int res = 0; // vs_rpi_hal_update(argc, argv);
+
+    return res;
+}
+
+/******************************************************************************/

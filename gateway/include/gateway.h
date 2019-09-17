@@ -64,6 +64,4 @@ get_gateway_ctx(void);
 void
 start_gateway_threads(void);
 
-extern char self_path[FILENAME_MAX];
-
 #endif // GATEWAY_H
