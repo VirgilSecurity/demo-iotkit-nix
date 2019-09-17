@@ -40,6 +40,8 @@
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include "helpers/msg-queue.h"
 
+#define VS_NETIF_QUEUE_SZ (20)
+
 static const vs_netif_t *_base_netif = 0;
 static vs_netif_rx_cb_t _netif_rx_cb = 0;
 static vs_netif_t _queued_netif = {0};
@@ -103,7 +105,7 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
     CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
 
     // Initialize RX Queue
-    _queue_ctx = vs_msg_queue_init(20, 1, 1);
+    _queue_ctx = vs_msg_queue_init(VS_NETIF_QUEUE_SZ, 1, 1);
     CHECK_RET(_queue_ctx, -1, "Cannot create message queue.");
 
     // Save Callback function

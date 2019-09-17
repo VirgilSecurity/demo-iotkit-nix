@@ -68,9 +68,10 @@ struct vs_msg_queue_ctx_s {
 #endif
 };
 
-typedef void (*vs_queue_data_free_cb_t)(const void *info, const uint8_t *data, size_t size);
 enum { QUEUE_STATE_OK = 0, QUEUE_STATE_EOF = 1, QUEUE_STATE_FLUSH = 2 };
-static vs_queue_data_free_cb_t _data_destroyer = 0;
+typedef void (*vs_queue_data_free_cb_t)();
+static void
+_data_destroyer(vs_queue_data_t *queue_data);
 
 /******************************************************************************/
 static void
@@ -267,9 +268,7 @@ _queue_reset(vs_msg_queue_ctx_t *q, int32_t num_adders, int32_t num_getters) {
     _safe_mutex_lock(q->mut);
     for (i = 0; i < q->mem; i++) {
         if (NULL != q->queue[i]) {
-            if (_data_destroyer) {
-                _data_destroyer(q->queue[i]->info, q->queue[i]->data, q->queue[i]->size);
-            }
+            _data_destroyer(q->queue[i]);
             q->queue[i] = NULL;
         }
     }
@@ -289,9 +288,7 @@ _queue_destroy(vs_msg_queue_ctx_t *q) {
         return;
     _queue_close(q);
     for (i = 0; i < q->mem; i++) {
-        if (_data_destroyer) {
-            _data_destroyer(q->queue[i]->info, q->queue[i]->data, q->queue[i]->size);
-        }
+        _data_destroyer(q->queue[i]);
     }
     free(q->queue);
     free(q->mut);
@@ -325,6 +322,16 @@ queue_print_status(vs_msg_queue_ctx_t *q, FILE *fp) {
             q->num_waiting[3]);
 }
 #endif
+/******************************************************************************/
+static void
+_data_destroyer(vs_queue_data_t *queue_data) {
+    if (queue_data) {
+        if (queue_data->data) {
+            free((void *)queue_data->data);
+        }
+        free(queue_data);
+    }
+}
 /******************************************************************************/
 vs_msg_queue_ctx_t *
 vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters) {
