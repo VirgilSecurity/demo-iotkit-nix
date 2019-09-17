@@ -60,6 +60,7 @@ main(int argc, char *argv[]) {
     }
 
     VS_LOG_INFO("%s", argv[0]);
+    self_path = argv[0];
 
     // Init Thing's FLDT implementation
     FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");

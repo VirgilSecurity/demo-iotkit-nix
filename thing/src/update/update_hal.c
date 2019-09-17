@@ -12,14 +12,14 @@
 #include <virgil/iot/update/update.h>
 #include <virgil/iot/update/update_interface.h>
 
-char self_path[FILENAME_MAX];
-
+char *self_path = NULL;
 /******************************************************************************/
 int
 vs_update_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
-    strcpy(filename, self_path);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
     remove(filename);
@@ -35,8 +35,9 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     FILE *fp = NULL;
 
     CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
 
-    strcpy(filename, self_path);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
 

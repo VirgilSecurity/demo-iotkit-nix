@@ -107,7 +107,10 @@ vs_rpi_hal_update(int argc, char *argv[]) {
     char old_app[FILENAME_MAX];
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
-    char *self_path = argv[0];
+
+    if (NULL == self_path) {
+        return -1;
+    }
 
     size_t pos;
 

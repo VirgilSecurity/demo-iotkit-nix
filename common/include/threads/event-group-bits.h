@@ -32,44 +32,37 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <string.h>
-#include <global-hal.h>
-#include <gateway.h>
-#include <virgil/iot/cloud/cloud.h>
-#include <virgil/iot/provision/provision.h>
+#ifndef VS_PTHREAD_EVENT_GROUP_BITS_H
+#define VS_PTHREAD_EVENT_GROUP_BITS_H
 
-#define GW_MANUFACTURE_ID                                                                                              \
-    { 'V', 'R', 'G', 'L' }
-#define GW_DEVICE_TYPE                                                                                                 \
-    { 'C', 'f', '0', '1' }
-#define GW_APP_TYPE                                                                                                    \
-    { 'A', 'P', 'P', '0' }
+#include <stdint.h>
+#include <stdbool.h>
+#include <pthread.h>
 
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor = {
-        .info.manufacture_id = GW_MANUFACTURE_ID,
-        .info.device_type = GW_DEVICE_TYPE,
-        .info.version.app_type = GW_APP_TYPE,
-        .info.version.major = 0,
-        .info.version.minor = 1,
-        .info.version.patch = 3,
-        .info.version.dev_milestone = 'm',
-        .info.version.dev_build = 0,
-        .info.version.timestamp = 0,
-        .padding = 0,
-        .chunk_size = 256,
-        .firmware_length = 2097152,
-        .app_size = 2097152,
-};
+typedef uint32_t event_bits_t;
+typedef struct vs_event_group_bits_s {
+    pthread_cond_t cond;
+    pthread_mutex_t mtx;
+    event_bits_t event_flags;
+} vs_event_group_bits_t;
 
-/******************************************************************************/
-void
-vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
-    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
-}
+#define VS_EVENT_GROUP_WAIT_INFINITE (-1)
+event_bits_t
+vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
+                         event_bits_t bits_to_wait_for,
+                         bool is_clear_on_exit,
+                         bool is_wait_for_all,
+                         int32_t timeout);
 
-/******************************************************************************/
-const vs_firmware_descriptor_t *
-vs_global_hal_get_own_firmware_descriptor(void) {
-    return &_descriptor;
-}
+event_bits_t
+vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_clear);
+
+event_bits_t
+vs_event_group_set_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_set);
+
+int
+vs_event_group_init(vs_event_group_bits_t *ev_group);
+
+int
+vs_event_group_destroy(vs_event_group_bits_t *ev_group);
+#endif // VS_PTHREAD_EVENT_GROUP_BITS_H

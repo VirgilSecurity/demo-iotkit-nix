@@ -47,8 +47,8 @@
 
 #include "hal/storage/rpi-file-io.h"
 #include "hal/storage/rpi-storage-hal.h"
+#include "hal/rpi-global-hal.h"
 
-static char _self_path[FILENAME_MAX];
 /******************************************************************************/
 static int
 _recursive_delete(const char *dir) {
@@ -136,7 +136,8 @@ int
 vs_update_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
-    VS_IOT_STRCPY(filename, _self_path);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
     remove(filename);
@@ -152,8 +153,9 @@ vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
     FILE *fp = NULL;
 
     CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
 
-    VS_IOT_STRCPY(filename, _self_path);
+    VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
 

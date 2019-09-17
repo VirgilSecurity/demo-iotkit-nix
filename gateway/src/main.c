@@ -60,15 +60,16 @@ main(int argc, char *argv[]) {
     }
 
     VS_LOG_INFO("%s", argv[0]);
+    self_path = argv[0];
 
     // Init Thing's FLDT implementation
     FLDT_CHECK(vs_fldt_init(&forced_mac_addr), "Unable to initialize Thing's FLDT implementation");
 
     // Init gateway object
-    //    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
+    init_gateway_ctx(&forced_mac_addr);
 
     // Start app
-    //    start_gateway_threads();
+    start_gateway_threads();
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
