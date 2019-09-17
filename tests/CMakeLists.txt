@@ -61,9 +61,7 @@ target_link_libraries(rpi-tests
 
 		#virgil-iot-sdk-tests
 
-		$<$<BOOL:${USE_ASAN}>:enable_asan_mode>
-		$<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
-
+		enable_sanitizers
 		enable_pedantic_mode
 		)
 

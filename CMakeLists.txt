@@ -34,9 +34,19 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-#
+#------------------------------------------------------------------------------
+#   Includes
+#------------------------------------------------------------------------------
+
+# Helpers
+include(cmake/helpers.cmake)
+
+# Clang format
+include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+
+#------------------------------------------------------------------------------
 #   Settings
-#
+#------------------------------------------------------------------------------
 option(GO_DISABLE "Disable Go apps" OFF)
 option(BIGENDIAN_64_BIT_BUILD "Build for MIPS 64 big endian" OFF)
 option(BIGENDIAN_32_BIT_BUILD "Build for MIPS 32 big endian" OFF)
@@ -69,84 +79,22 @@ if (NOT BIGENDIAN_64_BIT_BUILD AND NOT BIGENDIAN_32_BIT_BUILD)
     set(CRYPTO_C_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/ext/deps/host")
 endif()
 
-#
-#   Include CMake Helpers
-#
-include(cmake/helpers.cmake)
-
-#
+#------------------------------------------------------------------------------
 #   Golang
-#
+#------------------------------------------------------------------------------
 if (NOT GO_DISABLE)
     include(cmake/golang.cmake)
     include(cmake/flags.cmake)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 endif ()
 
-#
-#   Clang format
-#
-include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
-
-#
+#------------------------------------------------------------------------------
 #   Setup project
-#
+#------------------------------------------------------------------------------
 if (GO_DISABLE)
     project(iot-rpi VERSION 0.1.0 LANGUAGES C)
 else ()
     project(iot-rpi VERSION 0.1.0 LANGUAGES C Go)
-endif ()
-
-#
-#   Address sanitizer
-#
-message("-- Address Sanitizer: ${USE_ASAN}")
-if (USE_ASAN)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-endif ()
-
-if (UNIX AND NOT APPLE)
-    #
-    #   Memory sanitizer
-    #
-    message("-- Memory Sanitizer: ${USE_MSAN}")
-    if (USE_MSAN)
-        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=memory")
-        set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=memory")
-    endif ()
-
-    #
-    #   Leak sanitizer
-    #
-    message("-- Leak memory Sanitizer: ${USE_LSAN}")
-    if (USE_LSAN)
-        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=leak")
-        set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=leak")
-    endif ()
-endif ()
-
-#
-#   Undefined behavior sanitizer
-#
-message("-- Undefined behavior Sanitizer: ${USE_UBSAN}")
-if (USE_UBSAN)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=undefined")
-endif ()
-
-#
-#   Thread sanitizer
-#
-message("-- Thread Sanitizer: ${USE_TSAN}")
-if (USE_TSAN)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=thread")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
-endif ()
-
-if (USE_ASAN OR USE_MSAN OR USE_LSAN OR USE_UBSAN OR USE_TSAN)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
-    set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -g")
 endif ()
 
 # ---------------------------------------------------------------------------

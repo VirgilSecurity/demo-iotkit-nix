@@ -112,9 +112,7 @@ target_link_libraries(gateway
 		cloud
 		update
 
-        $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
-        $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
-
+		enable_sanitizers
         enable_pedantic_mode
         )
 
