@@ -32,54 +32,18 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <virgil/iot/logger/logger.h>
-#include <virgil/iot/macros/macros.h>
-#include <virgil/iot/protocols/sdmp.h>
+#ifndef KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
+#define KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
+
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
 
-#include "thing.h"
-#include "hal/netif/rpi-plc-sim.h"
-#include "hal/rpi-global-hal.h"
-#include "helpers/input-params.h"
-#include "fldt_implementation.h"
+vs_fldt_ret_code_e
+vs_fldt_init(void);
 
-/******************************************************************************/
-int
-main(int argc, char *argv[]) {
-    // Setup forced mac address
-    vs_mac_addr_t forced_mac_addr;
-    struct in_addr plc_sim_addr;
-    int fldt_ret_code;
+vs_fldt_ret_code_e
+vs_fldt_firmware_init(void);
 
-    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
-        return -1;
-    }
+void
+vs_fldt_destroy(void);
 
-    if (0 != vs_rpi_start("thing", plc_sim_addr, forced_mac_addr)) {
-        return -1;
-    }
-
-    VS_LOG_INFO("%s", argv[0]);
-
-    // Init Thing's FLDT implementation
-    FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");
-
-    // Init thing object
-    //    ???
-
-    // Start app
-    //    start_thing_threads();
-
-    // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
-
-    VS_LOG_INFO("Terminating application ...");
-
-    // vs_fldt_destroy();
-
-    int res = 0; // vs_rpi_hal_update(argc, argv);
-
-    return res;
-}
-
-/******************************************************************************/
+#endif // KUNLUN_SDMP_FLDT_IMPLEMENTATION_H

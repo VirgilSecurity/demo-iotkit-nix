@@ -40,7 +40,6 @@
 
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/trust_list/rpi-tl-hal.h>
 
 #include "hal/storage/rpi-file-io.h"
 

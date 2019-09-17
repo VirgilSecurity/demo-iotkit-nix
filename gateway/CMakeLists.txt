@@ -115,7 +115,7 @@ target_link_libraries(gateway
         $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
         $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
 
-        enable_pedantic_mode
+#        enable_pedantic_mode
         )
 
 #

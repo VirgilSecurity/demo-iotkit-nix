@@ -48,6 +48,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <stdlib-config.h>
 #include "hal/rpi-global-hal.h"
 
@@ -216,7 +217,8 @@ vs_rpi_hal_sleep_until_stop(void) {
 /******************************************************************************/
 int
 vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr) {
-    const vs_netif_t *netif;
+    const vs_netif_t *netif = NULL;
+    const vs_netif_t *queued_netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
@@ -250,10 +252,22 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
         netif = vs_hal_netif_plc();
     }
 
+    // Prepare queued network interface
+    queued_netif = vs_netif_queued(netif);
+
     // Initialize SDMP
-    CHECK_RET(!vs_sdmp_init(vs_netif_queued(netif)), -1, "Unable to initialize SDMP");
+    CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
+
+    // Register FLDT service
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service(queued_netif)), -1, "FLDT service is not registered");
 
     return 0;
 }
 
 /******************************************************************************/
+void
+vs_rpi_restart(void) {
+    // TODO : restart app
+    while (1)
+        ;
+}

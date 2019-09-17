@@ -97,7 +97,7 @@ target_link_libraries(rpi-common
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
-		enable_pedantic_mode
+#		enable_pedantic_mode
 		)
 #
 # Format code

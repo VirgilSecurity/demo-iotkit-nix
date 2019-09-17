@@ -64,7 +64,7 @@ target_link_libraries(rpi-tests
 		$<$<BOOL:${USE_ASAN}>:enable_asan_mode>
 		$<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
 
-		enable_pedantic_mode
+#		enable_pedantic_mode
 		)
 
 #

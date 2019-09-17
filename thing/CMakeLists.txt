@@ -48,13 +48,16 @@ target_sources(thing
         PRIVATE
 
         # Headers
-        ${CMAKE_CURRENT_LIST_DIR}/include/thing.h
+		${CMAKE_CURRENT_LIST_DIR}/include/thing.h
+		${CMAKE_CURRENT_LIST_DIR}/include/fldt_implementation.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
         ${CMAKE_CURRENT_LIST_DIR}/src/thing.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
         )
 
 #
@@ -100,7 +103,7 @@ target_link_libraries(thing
         $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
         $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
 
-        enable_pedantic_mode
+#        enable_pedantic_mode
         )
 
 #

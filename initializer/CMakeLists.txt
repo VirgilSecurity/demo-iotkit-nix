@@ -99,7 +99,7 @@ function(initializer_executable _is_gateway _manufacture _model)
             $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
             $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
 
-            enable_pedantic_mode
+#            enable_pedantic_mode
             )
     #
     #	Definitions
