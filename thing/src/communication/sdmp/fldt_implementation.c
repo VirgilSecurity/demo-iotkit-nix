@@ -57,7 +57,8 @@ _got_file(const vs_fldt_file_version_t *prev_file_ver,
                     vs_fldt_file_version_descr(prev_file_ver_descr, prev_file_ver),
                     FLDT_GATEWAY_ARG(*gateway),
                     successfully_updated ? "successfully installed" : "did not installed successfully");
-        vs_rpi_restart();
+        // TODO : how to restart ???
+        //        vs_rpi_restart();
         break;
 
     default:

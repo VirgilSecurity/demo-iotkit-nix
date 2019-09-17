@@ -44,6 +44,8 @@
 #include <update-config.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
+#include <virgil/iot/protocols/sdmp/fldt_private.h>
+#include <virgil/iot/protocols/sdmp/fldt_server.h>
 
 static gtwy_t _gtwy = {.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE,
                        .firmware_mutex = PTHREAD_MUTEX_INITIALIZER,
@@ -120,6 +122,10 @@ _gateway_task(void *pvParameters) {
     pthread_t *upd_http_retrieval_thread;
     vs_firmware_info_t *request;
     vs_firmware_descriptor_t desc;
+    vs_fldt_file_type_t file_type;
+    vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
+
+    file_type.file_type_id = VS_UPDATE_FIRMWARE;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -156,6 +162,13 @@ _gateway_task(void *pvParameters) {
                 //                }
 
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+
+                memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
+                memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
+                if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
+                    VS_LOG_ERROR("Unable to add new firmware");
+                    // TODO :how to process???
+                }
             }
 
             free(request);
