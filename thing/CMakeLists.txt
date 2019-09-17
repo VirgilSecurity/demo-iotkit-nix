@@ -63,10 +63,21 @@ target_sources(thing
 #
 #	Definitions
 #
+
+if ((NOT DEFINED MANUFACTURER_ID) OR (MANUFACTURER_ID STREQUAL ""))
+	message(FATAL_ERROR "MANUFACTURER_ID compile time constant must be specified as char[16]")
+endif()
+
+if ((NOT DEFINED DEVICE_ID) OR (DEVICE_ID STREQUAL ""))
+	message(FATAL_ERROR "DEVICE_ID compile time constant must be specified as char[4]")
+endif()
+
 target_compile_definitions(thing
         PRIVATE
         TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
-        SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+		MANUFACTURER_ID="${MANUFACTURER_ID}"
+		DEVICE_ID="${DEVICE_ID}"
+		SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
         )
 

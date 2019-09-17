@@ -233,8 +233,6 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
     // Prepare TL storage
     vs_tl_init_storage();
 
-    // vs_fldt_init(&forced_mac_addr);
-
     if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
         // Setup UDP Broadcast as network interface
         vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
