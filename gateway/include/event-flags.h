@@ -2,7 +2,7 @@
 #ifndef GATEWAY_EVENT_GROUP_BIT_FLAGS_H
 #define GATEWAY_EVENT_GROUP_BIT_FLAGS_H
 
-// Shared flags (shared_event)
+// Shared flags (shared_events)
 #define SDMP_INIT_FINITE_BIT (1 << 0)
 
 // Firmware upgrade flags (message_bin)

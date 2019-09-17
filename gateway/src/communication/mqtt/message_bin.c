@@ -1,42 +1,37 @@
-/**
- * Copyright (C) 2018 Virgil Security Inc.
- *
- * Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     (1) Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *     (2) Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *
- *     (3) Neither the name of the copyright holder nor the names of its
- *     contributors may be used to endorse or promote products derived from
- *     this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//
+//  All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      (1) Redistributions of source code must retain the above copyright
+//      notice, this list of conditions and the following disclaimer.
+//
+//      (2) Redistributions in binary form must reproduce the above copyright
+//      notice, this list of conditions and the following disclaimer in
+//      the documentation and/or other materials provided with the
+//      distribution.
+//
+//      (3) Neither the name of the copyright holder nor the names of its
+//      contributors may be used to endorse or promote products derived from
+//      this software without specific prior written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR
+//  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//  DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+//  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+//  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+//  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+//  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+//  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+//  POSSIBILITY OF SUCH DAMAGE.
+//
+//  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-/**
- * @file alexa.c
- */
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -51,8 +46,6 @@
 #define NUM_TOKENS 300
 
 #define MB_QUEUE_SZ 10
-
-// xQueueHandle *upd_event_queue;
 
 static pthread_t _mb_thread;
 // static const uint16_t _mb_thread_stack = 20 * 1024;
@@ -136,6 +129,9 @@ start_message_bin_thread() {
         //        upd_event_queue = (xQueueHandle *)pvPortMalloc(sizeof(xQueueHandle));
         //        *upd_event_queue = xQueueCreate(MB_QUEUE_SZ, sizeof(upd_request_t *));
         is_threads_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
+        if (!is_threads_started) {
+            return NULL;
+        }
     }
     return &_mb_thread;
 }
@@ -156,7 +152,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
             //        if (pdTRUE != xQueueSendToBack(*upd_event_queue, &fw_url, OS_NO_WAIT)) {
             //            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
             //        } else {
-            vs_event_group_set_bits(&gtwy->message_bin_event, MSG_BIN_RECEIVE_BIT);
+            vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
             //            return;
             //        }
 
@@ -185,7 +181,7 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
         //        if (pdTRUE != xQueueSendToBack(*upd_event_queue, &tl_url, OS_NO_WAIT)) {
         //            VS_LOG_ERROR("[MB] Failed to send MSG BIN data to output processing!!!");
         //        } else {
-        vs_event_group_set_bits(&gtwy->message_bin_event, MSG_BIN_RECEIVE_BIT);
+        vs_event_group_set_bits(&gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT);
         //            return;
         //        }
     } else if (VS_CLOUD_ERR_NOT_FOUND == res) {

@@ -69,13 +69,14 @@ vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
 
     stat = ev_group->event_flags & bits_to_wait_for;
 
-    while ((is_wait_for_all ? 0 != stat : bits_to_wait_for != stat) && ETIMEDOUT != res) {
+    while ((is_wait_for_all ? 0 == stat : bits_to_wait_for != stat) && ETIMEDOUT != res) {
         if (timeout >= 0) {
             res = pthread_cond_timedwait(&ev_group->cond, &ev_group->mtx, &thread_sleep);
         } else {
             res = pthread_cond_wait(&ev_group->cond, &ev_group->mtx);
         }
-        CHECK_RET(ETIMEDOUT == res, 0, "Error while wait condition, %s (%d)\n", strerror(errno), errno);
+        stat = ev_group->event_flags & bits_to_wait_for;
+        CHECK_RET(ETIMEDOUT == res || 0 == res, 0, "Error while wait condition, %s (%d)\n", strerror(errno), errno);
     }
 
 
@@ -83,7 +84,9 @@ vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
         ev_group->event_flags &= ~bits_to_wait_for;
     }
 
-    (void)pthread_mutex_unlock(&ev_group->mtx);
+    if (0 != pthread_mutex_unlock(&ev_group->mtx)) {
+        VS_LOG_ERROR("pthread_mutex_unlock. errno, %s (%d)", strerror(errno), errno);
+    }
     return stat;
 }
 
@@ -102,7 +105,9 @@ vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_
     stat = ev_group->event_flags;
     ev_group->event_flags &= ~bits_to_clear;
 
-    (void)pthread_mutex_unlock(&ev_group->mtx);
+    if (0 != pthread_mutex_unlock(&ev_group->mtx)) {
+        VS_LOG_ERROR("pthread_mutex_unlock. errno, %s (%d)", strerror(errno), errno);
+    }
 
     return stat;
 }
@@ -122,10 +127,36 @@ vs_event_group_set_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_se
     stat = ev_group->event_flags;
     ev_group->event_flags |= bits_to_set;
 
-    (void)pthread_mutex_unlock(&ev_group->mtx);
-    pthread_cond_broadcast(&ev_group->cond);
+    if (0 != pthread_mutex_unlock(&ev_group->mtx)) {
+        VS_LOG_ERROR("pthread_mutex_unlock. errno, %s (%d)", strerror(errno), errno);
+        return stat;
+    }
+
+    if (0 != pthread_cond_broadcast(&ev_group->cond)) {
+        VS_LOG_ERROR("pthread_cond_broadcast. errno, %s (%d)", strerror(errno), errno);
+    }
 
     return stat;
+}
+
+/******************************************************************************/
+int
+vs_event_group_init(vs_event_group_bits_t *ev_group) {
+    assert(ev_group);
+    CHECK_NOT_ZERO_RET(ev_group, -1);
+
+    ev_group->event_flags = 0;
+
+    if (0 != pthread_cond_init(&ev_group->cond, NULL)) {
+        VS_LOG_ERROR("Error init condition var %s (%d)", strerror(errno), errno);
+        return -1;
+    }
+
+    if (0 != pthread_mutex_init(&ev_group->mtx, NULL)) {
+        VS_LOG_ERROR("Error init mutex var %s (%d)", strerror(errno), errno);
+        return -1;
+    }
+    return 0;
 }
 
 /******************************************************************************/

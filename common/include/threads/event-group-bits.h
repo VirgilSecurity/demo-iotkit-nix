@@ -61,5 +61,8 @@ event_bits_t
 vs_event_group_set_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_set);
 
 int
+vs_event_group_init(vs_event_group_bits_t *ev_group);
+
+int
 vs_event_group_destroy(vs_event_group_bits_t *ev_group);
 #endif // VS_PTHREAD_EVENT_GROUP_BITS_H

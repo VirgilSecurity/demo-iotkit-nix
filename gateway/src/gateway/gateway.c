@@ -47,10 +47,7 @@
 
 static gtwy_t _gtwy = {.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE,
                        .firmware_mutex = PTHREAD_MUTEX_INITIALIZER,
-                       .tl_mutex = PTHREAD_MUTEX_INITIALIZER,
-                       .shared_event = {.cond = PTHREAD_COND_INITIALIZER, .mtx = PTHREAD_MUTEX_INITIALIZER},
-                       .incoming_data_event = {.cond = PTHREAD_COND_INITIALIZER, .mtx = PTHREAD_MUTEX_INITIALIZER},
-                       .message_bin_event = {.cond = PTHREAD_COND_INITIALIZER, .mtx = PTHREAD_MUTEX_INITIALIZER}};
+                       .tl_mutex = PTHREAD_MUTEX_INITIALIZER};
 
 
 static bool is_threads_started = false;
@@ -71,6 +68,16 @@ init_gateway_ctx(vs_mac_addr_t *mac_addr) {
 
     vs_rpi_get_storage_impl(&_gtwy.fw_update_ctx.impl);
     _gtwy.fw_update_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+
+    if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
+        exit(-1);
+    }
+    if (0 != vs_event_group_init(&_gtwy.message_bin_events)) {
+        exit(-1);
+    }
+    if (0 != vs_event_group_init(&_gtwy.shared_events)) {
+        exit(-1);
+    }
 
     return &_gtwy;
 }
@@ -96,12 +103,12 @@ get_gateway_ctx(void) {
 //    /* Cleanup the mutexes */
 //    pthread_mutex_destroy(&_gtwy.firmware_mutex);
 //    pthread_mutex_destroy(&_gtwy.tl_mutex);
-//    pthread_mutex_destroy(&_gtwy.shared_event.mtx);
-//    pthread_cond_destroy(&_gtwy.shared_event.cond);
-//    pthread_mutex_destroy(&_gtwy.incoming_data_event.mtx);
-//    pthread_cond_destroy(&_gtwy.incoming_data_event.cond);
-//    pthread_mutex_destroy(&_gtwy.message_bin_event.mtx);
-//    pthread_cond_destroy(&_gtwy.message_bin_event.cond);
+//    pthread_mutex_destroy(&_gtwy.shared_events.mtx);
+//    pthread_cond_destroy(&_gtwy.shared_events.cond);
+//    pthread_mutex_destroy(&_gtwy.incoming_data_events.mtx);
+//    pthread_cond_destroy(&_gtwy.incoming_data_events.cond);
+//    pthread_mutex_destroy(&_gtwy.message_bin_events.mtx);
+//    pthread_cond_destroy(&_gtwy.message_bin_events.cond);
 //
 //
 //    //    //    vTaskEndScheduler();
@@ -113,18 +120,20 @@ get_gateway_ctx(void) {
 static void *
 _gateway_task(void *pvParameters) {
     pthread_t *message_bin_thread;
+    pthread_t *upd_http_retrieval_thread;
     //    vs_firmware_info_t *request;
     //    vs_firmware_descriptor_t desc;
     //
     message_bin_thread = start_message_bin_thread();
-    if (NULL == message_bin_thread) {
-        return (void *)-1;
-    }
-    //
-    //        vs_start_upd_http_retrieval_thread();
-    //
+    CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
+
+    upd_http_retrieval_thread = vs_start_upd_http_retrieval_thread();
+    CHECK_NOT_ZERO_RET(upd_http_retrieval_thread, (void *)-1);
+
+
     while (true) {
-        vs_event_group_wait_bits(&_gtwy.incoming_data_event, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
+        vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
+        vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
         //
         //        while (vs_upd_http_retrieval_get_request(&request)) {

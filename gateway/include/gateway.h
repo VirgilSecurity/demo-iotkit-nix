@@ -49,9 +49,9 @@ typedef struct gtwy_s {
     uint8_t udid_of_device[SERIAL_SIZE];
     vs_storage_op_ctx_t fw_update_ctx;
 
-    vs_event_group_bits_t shared_event;
-    vs_event_group_bits_t message_bin_event;
-    vs_event_group_bits_t incoming_data_event;
+    vs_event_group_bits_t shared_events;
+    vs_event_group_bits_t message_bin_events;
+    vs_event_group_bits_t incoming_data_events;
 
     pthread_mutex_t firmware_mutex;
     pthread_mutex_t tl_mutex;
