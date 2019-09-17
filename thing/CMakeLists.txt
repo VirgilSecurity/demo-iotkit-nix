@@ -80,7 +80,7 @@ target_include_directories(thing
 #
 target_compile_options(thing
 		PRIVATE
-		$<$<NOT:${APPLE}>:"-Wno-error=format-truncation">
+		$<$<NOT:$<BOOL:${APPLE}>>:-Wno-format-truncation>
 		)
 
 #
@@ -89,8 +89,9 @@ target_compile_options(thing
 target_link_libraries(thing
         PRIVATE
 
-        $<$<NOT:${APPLE}>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
-        $<$<BOOL:${APPLE}>:rpi-common>
+        $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
+		rpi-common
+		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		curl
 		aws-mqtt
