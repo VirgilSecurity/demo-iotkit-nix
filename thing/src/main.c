@@ -58,6 +58,7 @@ main(int argc, char *argv[]) {
     }
 
     VS_LOG_INFO("%s", argv[0]);
+    self_path = argv[0];
 
     // Add SDMP Services
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
