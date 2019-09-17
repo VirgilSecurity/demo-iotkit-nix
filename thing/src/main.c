@@ -51,6 +51,10 @@ main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
     int fldt_ret_code;
 
+    printf("\n\n--------------------------------------------\n");
+    printf("%s\n", argv[0]);
+    printf("--------------------------------------------\n\n");
+
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
     }
@@ -59,7 +63,6 @@ main(int argc, char *argv[]) {
         return -1;
     }
 
-    VS_LOG_INFO("%s", argv[0]);
     self_path = argv[0];
 
     // Init Thing's FLDT implementation
@@ -74,11 +77,11 @@ main(int argc, char *argv[]) {
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
 
-    VS_LOG_INFO("Terminating application ...");
+    VS_LOG_INFO("\n\n\nTerminating application ...");
 
     // vs_fldt_destroy();
 
-    int res = 0; // vs_rpi_hal_update(argc, argv);
+    int res = vs_rpi_hal_update(argc, argv);
 
     return res;
 }

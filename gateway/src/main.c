@@ -51,6 +51,10 @@ main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
     int fldt_ret_code;
 
+    printf("\n\n--------------------------------------------\n");
+    printf("%s\n", argv[0]);
+    printf("--------------------------------------------\n\n");
+
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
     }
@@ -78,7 +82,7 @@ main(int argc, char *argv[]) {
 
     // vs_fldt_destroy();
 
-    int res = 0; // vs_rpi_hal_update(argc, argv);
+    int res = vs_rpi_hal_update(argc, argv);
 
     return res;
 }

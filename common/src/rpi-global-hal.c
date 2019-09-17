@@ -65,6 +65,7 @@
 #define CMD_STR_START_TEMPLATE "%s %s"
 
 static pthread_mutex_t _sleep_lock;
+static bool _need_restart = false;
 
 /******************************************************************************/
 void
@@ -107,6 +108,10 @@ vs_rpi_hal_update(int argc, char *argv[]) {
     char old_app[FILENAME_MAX];
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
+
+    if (!_need_restart) {
+        return 0;
+    }
 
     if (NULL == self_path) {
         return -1;
@@ -268,7 +273,8 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
 /******************************************************************************/
 void
 vs_rpi_restart(void) {
-    // TODO : restart app
-    while (1)
-        ;
+    _need_restart = true;
+    pthread_mutex_unlock(&_sleep_lock);
 }
+
+/******************************************************************************/
