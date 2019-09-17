@@ -46,8 +46,10 @@ function build() {
 echo "------ Build on HOST machine --------"
 build "${INSTALL_DIR_HOST}"
 
-echo "--------- Build for MIPS 64 ---------"
-build "${INSTALL_DIR_MIPS_64}" "${TOOLCHAIN_MIPS_64}"
+if [ "${1}" == "all" ]; then
+  echo "--------- Build for MIPS 64 ---------"
+  build "${INSTALL_DIR_MIPS_64}" "${TOOLCHAIN_MIPS_64}"
 
-echo "--------- Build for MIPS 32 ---------"
-build "${INSTALL_DIR_MIPS_32}" "${TOOLCHAIN_MIPS_32}"
+  echo "--------- Build for MIPS 32 ---------"
+  build "${INSTALL_DIR_MIPS_32}" "${TOOLCHAIN_MIPS_32}"
+fi
