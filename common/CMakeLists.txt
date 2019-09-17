@@ -52,6 +52,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
+		${CMAKE_CURRENT_LIST_DIR}/include/threads/event-group-bits.h
 
 		#	Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
@@ -62,6 +63,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/threads/event-group-bits.c
 		)
 
 #

@@ -42,13 +42,19 @@ project(gateway VERSION 0.1.0 LANGUAGES C)
 add_executable(gateway)
 
 #
+#   Options
+#
+set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
+set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
+
+#
 #	Header/Source files
 #
 target_sources(gateway
         PRIVATE
 
         # Headers
-        ${CMAKE_CURRENT_LIST_DIR}/include/event_group_bit_flags.h
+		${CMAKE_CURRENT_LIST_DIR}/include/event-flags.h
         ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
         ${CMAKE_CURRENT_LIST_DIR}/include/iot_mqtt.h
         ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
@@ -82,6 +88,9 @@ target_compile_definitions(gateway
         TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
         SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
+		GATEWAY=1
+		MANUFACTURE=${_manufacture}
+		MODEL=${_model}
         )
 
 #

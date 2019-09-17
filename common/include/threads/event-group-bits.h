@@ -32,38 +32,34 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef GATEWAY_H
-#define GATEWAY_H
+#ifndef VS_PTHREAD_EVENT_GROUP_BITS_H
+#define VS_PTHREAD_EVENT_GROUP_BITS_H
 
 #include <stdint.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <pthread.h>
-#include <errno.h>
 
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
-#include <virgil/iot/storage_hal/storage_hal.h>
-#include <threads/event-group-bits.h>
-#include <global-hal.h>
+typedef uint32_t event_bits_t;
+typedef struct vs_event_group_bits_s {
+    pthread_cond_t cond;
+    pthread_mutex_t mtx;
+    event_bits_t event_flags;
+} vs_event_group_bits_t;
 
-typedef struct gtwy_s {
-    uint8_t udid_of_device[SERIAL_SIZE];
-    vs_storage_op_ctx_t fw_update_ctx;
+#define VS_EVENT_GROUP_WAIT_INFINITE (-1)
+event_bits_t
+vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
+                         event_bits_t bits_to_wait_for,
+                         bool is_clear_on_exit,
+                         bool is_wait_for_all,
+                         int32_t timeout);
 
-    vs_event_group_bits_t shared_event;
-    vs_event_group_bits_t message_bin_event;
-    vs_event_group_bits_t incoming_data_event;
+event_bits_t
+vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_clear);
 
-    pthread_mutex_t firmware_mutex;
-    pthread_mutex_t tl_mutex;
-} gtwy_t;
+event_bits_t
+vs_event_group_set_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_set);
 
-gtwy_t *
-init_gateway_ctx(vs_mac_addr_t *mac_addr);
-gtwy_t *
-get_gateway_ctx(void);
-void
-start_gateway_threads(void);
-
-extern char self_path[FILENAME_MAX];
-
-#endif // GATEWAY_H
+int
+vs_event_group_destroy(vs_event_group_bits_t *ev_group);
+#endif // VS_PTHREAD_EVENT_GROUP_BITS_H

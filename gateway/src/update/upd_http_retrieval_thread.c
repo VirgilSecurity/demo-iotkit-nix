@@ -28,7 +28,7 @@
 //    vs_firmware_info_t *fw_info = NULL;
 //    int res;
 //    // It should be immediately available given that this starts first
-//    while (xSemaphoreTake(gtwy->firmware_semaphore, portMAX_DELAY) == pdFALSE) {
+//    while (xSemaphoreTake(gtwy->firmware_mutex, portMAX_DELAY) == pdFALSE) {
 //    }
 //    VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
 //
@@ -60,7 +60,7 @@
 //        VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
 //    }
 //
-//    (void)xSemaphoreGive(gtwy->firmware_semaphore);
+//    (void)xSemaphoreGive(gtwy->firmware_mutex);
 //    VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
 //
 //    // This thread needs to be signaled by the off chance that there was a powerloss
@@ -71,7 +71,7 @@
 ///*************************************************************************/
 // static void
 //_tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
-//    while (xSemaphoreTake(gtwy->tl_semaphore, portMAX_DELAY) == pdFALSE) {
+//    while (xSemaphoreTake(gtwy->tl_mutex, portMAX_DELAY) == pdFALSE) {
 //    }
 //    VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
 //
@@ -83,7 +83,7 @@
 //        VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new TL\r\n");
 //    }
 //
-//    (void)xSemaphoreGive(gtwy->tl_semaphore);
+//    (void)xSemaphoreGive(gtwy->tl_mutex);
 //    VS_LOG_DEBUG("[MB_NOTIFY]:TL semaphore freed\r\n");
 //    vPortFree(request);
 //}
