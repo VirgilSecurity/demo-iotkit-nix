@@ -57,13 +57,10 @@ if (BIGENDIAN_TEST_BUILD)
     set (CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips.toolchain.cmake")
 endif()
 
-# ---------------------------------------------------------------------------
-#   Enable Golang
-# ---------------------------------------------------------------------------
-#include(${CMAKE_CURRENT_LIST_DIR}/cmake/golang.cmake)
-#include(${CMAKE_CURRENT_LIST_DIR}/cmake/flags.cmake)
-#include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
-#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+#
+#   Include CMake Helpers
+#
+include(cmake/helpers.cmake)
 
 #
 #   Golang
