@@ -61,7 +61,7 @@ _rx_to_queue(const struct vs_netif_t *netif, const uint8_t *data, const uint16_t
         data_copy = malloc(data_sz);
         if (data_sz) {
             memcpy(data_copy, data, data_sz);
-            return vs_msg_queue_push(_queue_ctx, netif, data_copy, data_sz);
+            return vs_msg_queue_push(_queue_ctx, &_queued_netif, data_copy, data_sz);
         }
     }
 
