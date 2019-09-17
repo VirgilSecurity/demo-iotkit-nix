@@ -133,24 +133,29 @@ set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/rpi CACHE STRING 
 add_subdirectory(${VIRGIL_IOT_DIRECTORY})
 
 #
-#   Gateway library
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
-
-#
-#   Initalizer
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
-
-#
 #   aws-sdk
 #
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
 
 #
-#   Application
+#   Common code library
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
+
+#
+#   Initalizers for Gateway and Thing
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
+
+#
+#   Gateway application
 #
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gateway)
+
+#
+#   Thing application
+#
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thing)
 
 #
 #   Unit tests

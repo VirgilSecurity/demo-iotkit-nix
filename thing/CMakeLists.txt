@@ -34,74 +34,78 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi-common VERSION 0.1.0 LANGUAGES C)
+project(thing VERSION 0.1.0 LANGUAGES C)
 
 #
-#   RaspberryPi common code library
+#	Gateway application
 #
-add_library(rpi-common)
+add_executable(thing)
 
 #
 #	Header/Source files
 #
-target_sources(rpi-common
-		PRIVATE
+target_sources(thing
+        PRIVATE
 
-		#	Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/netif-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-plc-sim.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
-		${CMAKE_CURRENT_LIST_DIR}/include/helpers/msg-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/helpers/input-params.h
+        # Headers
+        ${CMAKE_CURRENT_LIST_DIR}/include/thing.h
 
-		#	Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-tl-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/input-params.c
-		)
+        # Sources
+        ${CMAKE_CURRENT_LIST_DIR}/src/main.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/thing.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+        )
+
+#
+#	Definitions
+#
+target_compile_definitions(thing
+        PRIVATE
+        TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
+        SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+        SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
+        )
 
 #
 #   Include directories
 #
-target_include_directories(rpi-common
-		PUBLIC
-		${CMAKE_CURRENT_LIST_DIR}/include
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/include
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/include/virgil/crypto/common
+target_include_directories(thing
+        PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        )
+
+#
+#	Compile options
+#
+target_compile_options(thing
+		PRIVATE
+		$<$<NOT:${APPLE}>:"-Wno-error=format-truncation">
 		)
 
 #
 #	Link libraries
 #
-find_package (Threads)
-target_link_libraries(rpi-common
-		PUBLIC
-		converters
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_foundation.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libvsc_common.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libmbedcrypto.a
-		${CMAKE_CURRENT_LIST_DIR}/../ext/deps/lib/libed25519.a
-		sdmp
-		secbox
-		trust_list
-		${CMAKE_THREAD_LIBS_INIT}
+target_link_libraries(thing
+        PRIVATE
 
-		PRIVATE
-		enable_pedantic_mode
-		)
+        $<$<NOT:${APPLE}>:"-Wl,--whole-archive rpi-common hsm provision -Wl,--no-whole-archive">
+        $<$<BOOL:${APPLE}>:rpi-common>
+
+		curl
+		aws-mqtt
+		cloud
+		update
+
+        $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
+        $<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
+
+        enable_pedantic_mode
+        )
+
 #
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi-common)
+	add_clangformat(thing)
 endif()

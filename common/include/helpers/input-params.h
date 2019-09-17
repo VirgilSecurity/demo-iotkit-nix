@@ -32,18 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_HAL_H
-#define IOT_RPI_HAL_H
+#ifndef IOT_RPI_INPUT_PARAMS_H
+#define IOT_RPI_INPUT_PARAMS_H
 
-#include <stdint.h>
+#include <arpa/inet.h>
 
-void
-vs_rpi_hal_get_udid(uint8_t *udid);
+#include <virgil/iot/protocols/sdmp.h>
 
-int
-vs_rpi_hal_update(int argc, char *argv[]);
+bool
+vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr);
 
-void
-vs_rpi_hal_sleep_until_stop(void);
-
-#endif // IOT_RPI_HAL_H
+#endif // IOT_RPI_INPUT_PARAMS_H

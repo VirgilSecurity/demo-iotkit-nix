@@ -32,27 +32,21 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
 #include <unistd.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <libgen.h>
-#include <arpa/inet.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include "gateway.h"
-#include "helpers/input-params.h"
-#include "fldt_implementation.h"
+#include <virgil/iot/protocols/sdmp/fldt_client.h>
+
+#include "thing.h"
 #include "hal/netif/netif-queue.h"
 #include "hal/netif/rpi-plc-sim.h"
 #include "hal/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 #include "hal/rpi-global-hal.h"
-#include "event_group_bit_flags.h"
+#include "helpers/input-params.h"
 
 /******************************************************************************/
 int
@@ -71,7 +65,7 @@ main(int argc, char *argv[]) {
               "Unrecognized command line");
 
     // Set storage directory
-    vs_hal_files_set_dir("gateway");
+    vs_hal_files_set_dir("thing");
 
     // Set MAC for emulated device
     vs_hal_files_set_mac(forced_mac_addr.bytes);
@@ -102,11 +96,11 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_sdmp_init(vs_netif_queued(netif)), -1, "Unable to initialize SDMP");
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
 
-    // Init gateway object
-    //    gtwy_t *gtwy = init_gateway_ctx(&forced_mac_addr);
+    // Init thing object
+    //    ???
 
     // Start app
-    //    start_gateway_threads();
+    //    start_thing_threads();
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
