@@ -32,23 +32,15 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <libgen.h>
 #include <arpa/inet.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
 #include "hal/rpi-global-hal.h"
-#include "event_group_bit_flags.h"
 
 /******************************************************************************/
 int
