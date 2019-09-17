@@ -39,7 +39,7 @@
 
 #include <virgil/iot/protocols/sdmp.h>
 
-bool
+int
 vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr);
 
 #endif // IOT_RPI_INPUT_PARAMS_H

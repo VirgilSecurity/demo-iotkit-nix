@@ -350,6 +350,7 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
             return -1;
         }
         memcpy((void *)queue_data->data, data, data_sz);
+        queue_data->size = data_sz;
     }
 
     // Add to Queue

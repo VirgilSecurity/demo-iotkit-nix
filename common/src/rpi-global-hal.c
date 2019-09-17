@@ -44,7 +44,17 @@
 
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/protocols/sdmp.h>
 #include <stdlib-config.h>
+#include "hal/rpi-global-hal.h"
+
+#include "hal/netif/netif-queue.h"
+#include "hal/netif/rpi-plc-sim.h"
+#include "hal/netif/rpi-udp-broadcast.h"
+#include "hal/storage/rpi-file-io.h"
 
 #define NEW_APP_EXTEN ".new"
 #define BACKUP_APP_EXTEN ".old"
@@ -203,4 +213,47 @@ vs_rpi_hal_sleep_until_stop(void) {
 
     pthread_mutex_destroy(&_sleep_lock);
 }
+/******************************************************************************/
+int
+vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr) {
+    const vs_netif_t *netif;
+
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
+    assert(devices_dir);
+
+    // Set storage directory
+    vs_hal_files_set_dir(devices_dir);
+
+    // Set MAC for emulated device
+    vs_hal_files_set_mac(forced_mac_addr.bytes);
+
+    // Prepare TL storage
+    vs_tl_init_storage();
+
+    // vs_fldt_init(&forced_mac_addr);
+
+    if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
+        // Setup UDP Broadcast as network interface
+        vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
+
+        // Get PLC Network interface
+        netif = vs_hal_netif_udp_bcast();
+    } else {
+        // Setup PLC simulator as network interface
+        vs_hal_netif_plc_force_mac(forced_mac_addr);
+
+        // Set IP of PLC simulator
+        vs_plc_sim_set_ip(plc_sim_addr);
+
+        // Get PLC Network interface
+        netif = vs_hal_netif_plc();
+    }
+
+    // Initialize SDMP
+    CHECK_RET(!vs_sdmp_init(vs_netif_queued(netif)), -1, "Unable to initialize SDMP");
+
+    return 0;
+}
+
 /******************************************************************************/

@@ -47,10 +47,6 @@
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
-#include "hal/netif/netif-queue.h"
-#include "hal/netif/rpi-plc-sim.h"
-#include "hal/netif/rpi-udp-broadcast.h"
-#include "hal/storage/rpi-file-io.h"
 #include "hal/rpi-global-hal.h"
 #include "event_group_bit_flags.h"
 
@@ -60,46 +56,18 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    const vs_netif_t *netif;
 
-    vs_logger_init(VS_LOGLEV_DEBUG);
+    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+        return -1;
+    }
+
+    if (0 != vs_rpi_start("gateway", plc_sim_addr, forced_mac_addr)) {
+        return -1;
+    }
 
     VS_LOG_INFO("%s", argv[0]);
 
-    CHECK_RET(vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr),
-              -1,
-              "Unrecognized command line");
-
-    // Set storage directory
-    vs_hal_files_set_dir("gateway");
-
-    // Set MAC for emulated device
-    vs_hal_files_set_mac(forced_mac_addr.bytes);
-
-    // Prepare TL storage
-    vs_tl_init_storage();
-
-    // vs_fldt_init(&forced_mac_addr);
-
-    if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
-        // Setup UDP Broadcast as network interface
-        vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
-
-        // Get PLC Network interface
-        netif = vs_hal_netif_udp_bcast();
-    } else {
-        // Setup PLC simulator as network interface
-        vs_hal_netif_plc_force_mac(forced_mac_addr);
-
-        // Set IP of PLC simulator
-        vs_plc_sim_set_ip(plc_sim_addr);
-
-        // Get PLC Network interface
-        netif = vs_hal_netif_plc();
-    }
-
-    // Initialize SDMP
-    CHECK_RET(!vs_sdmp_init(vs_netif_queued(netif)), -1, "Unable to initialize SDMP");
+    // Add SDMP Services
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
 
     // Init gateway object
