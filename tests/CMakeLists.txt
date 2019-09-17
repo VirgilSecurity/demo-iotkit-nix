@@ -34,35 +34,42 @@
 
 cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
 
-project(rpi_gw_tests VERSION 0.1.0 LANGUAGES C)
+project(rpi-tests VERSION 0.1.0 LANGUAGES C)
 
-add_executable(rpi_gw_tests)
+#
+#	Gateway tests application
+#
+add_executable(rpi-tests)
 
-target_sources(rpi_gw_tests
+#
+#	Header/Source files
+#
+target_sources(rpi-tests
 		PRIVATE
 		main.c
-		platform-hal.c
 		)
 
-target_compile_options(rpi_gw_tests
+#
+#	Link libraries
+#
+target_link_libraries(rpi-tests
 		PRIVATE
-		-Wall
-		-Werror
-		-Wno-multichar
+
+		$<$<NOT:${APPLE}>:-Wl,--whole-archive>
+		rpi-common
+		$<$<NOT:${APPLE}>:-Wl,--no-whole-archive>
+
+		#virgil-iot-sdk-tests
+
+		$<$<BOOL:${USE_ASAN}>:enable_asan_mode>
+		$<$<BOOL:${USE_UBSAN}>:enable_ubsan_mode>
+
+		enable_pedantic_mode
 		)
 
-if(UNIX AND NOT APPLE)
-	target_link_libraries(rpi_gw_tests
-			-Wl,--whole-archive rpi_shared -Wl,--no-whole-archive
-			)
-else()
-	target_link_libraries(rpi_gw_tests rpi_shared)
-endif()
-
-target_link_libraries(rpi_gw_tests
-		virgil-iot-sdk-tests
-		)
-
+#
+# Format code
+#
 if (COMMAND add_clangformat)
-	add_clangformat(rpi_gw_tests)
+	add_clangformat(rpi-tests)
 endif ()
