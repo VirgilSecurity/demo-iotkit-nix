@@ -91,8 +91,9 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     target_link_libraries(${_targetname}
             PRIVATE
-            $<$<NOT:${APPLE}>:"-Wl,--whole-archive hsm rpi-common -Wl,--no-whole-archive">
-            $<$<BOOL:${APPLE}>:rpi-common>
+            $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
+            rpi-common
+            $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
             $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>
             $<$<BOOL:${USE_ASAN}>:enable_asan_mode>
@@ -113,9 +114,9 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     # Format code
     #
-    if(COMMAND add_clangformat)
+    if (COMMAND add_clangformat)
         add_clangformat(${_targetname})
-    endif()
+    endif ()
 endfunction()
 
 #
