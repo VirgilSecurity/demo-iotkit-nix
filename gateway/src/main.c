@@ -140,6 +140,7 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 }
 
 /******************************************************************************/
+#if 0
 static int
 _try_to_update_app(int argc, char *argv[]) {
     char old_app[FILENAME_MAX];
@@ -223,7 +224,7 @@ _try_to_update_app(int argc, char *argv[]) {
     VS_LOG_ERROR("Something wrong");
     return -1;
 }
-
+#endif
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
@@ -244,6 +245,8 @@ main(int argc, char *argv[]) {
     CHECK_RET(
             _process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr), -1, "Unrecognized command line");
 
+    // Set storage directory
+    vs_hal_files_set_dir("gateway");
 
     // Set MAC for emulated device
     vs_hal_files_set_mac(forced_mac_addr.bytes);
@@ -282,6 +285,8 @@ main(int argc, char *argv[]) {
     // Prepare tl storage
     vs_tl_init_storage();
 
+    pause();
+
     // Start SDMP protocol over PLC interface
     // TODO: Need to use freertos interface
     // vs_sdmp_comm_start_thread(plc_netif);
@@ -292,7 +297,7 @@ main(int argc, char *argv[]) {
 
     // vs_fldt_destroy();
 
-    int res = _try_to_update_app(argc, argv);
+    int res = 0; //_try_to_update_app(argc, argv);
 
     VS_LOG_ERROR("Fatal error. App stopped");
 

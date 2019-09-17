@@ -85,7 +85,7 @@ _msg_processing(void *ctx) {
                   "Error while reading message from queue");
 
         // Invoke callback function
-        if (!_netif_rx_cb) {
+        if (_netif_rx_cb) {
             _netif_rx_cb(netif, data, data_sz);
         }
 
@@ -104,7 +104,7 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
 
     // Initialize RX Queue
     _queue_ctx = vs_msg_queue_init(20, 1, 1);
-    CHECK_RET(_queued_netif.user_data, -1, "Cannot create message queue.");
+    CHECK_RET(_queue_ctx, -1, "Cannot create message queue.");
 
     // Save Callback function
     _netif_rx_cb = netif_rx_cb;
