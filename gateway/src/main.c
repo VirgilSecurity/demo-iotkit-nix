@@ -37,6 +37,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/fldt.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
@@ -48,6 +49,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
+    int fldt_ret_code;
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
@@ -60,8 +62,8 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("%s", argv[0]);
     self_path = argv[0];
 
-    // Add SDMP Services
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service()), -3, "Unable to register FLDT service");
+    // Init Thing's FLDT implementation
+    FLDT_CHECK(vs_fldt_init(&forced_mac_addr), "Unable to initialize Thing's FLDT implementation");
 
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
