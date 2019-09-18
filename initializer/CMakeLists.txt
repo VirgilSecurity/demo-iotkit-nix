@@ -39,11 +39,11 @@ project(virgil-iot-initializer VERSION 0.1.0 LANGUAGES C)
 #
 #   Options
 #
-set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
-set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
+set(GATEWAY_MANUFACTURE "VRGL" CACHE STRING "Gateway manufacture code")
+set(GATEWAY_MODEL "Cf01" CACHE STRING "Gateway model code")
 
-set(THING_MANUFACTURE "0xaaabcdef" CACHE STRING "Thing manufacture code")
-set(THING_MODEL "0xA2345678" CACHE STRING "Thing model code")
+set(THING_MANUFACTURE "VRGL" CACHE STRING "Thing manufacture code")
+set(THING_MODEL "MCU1" CACHE STRING "Thing model code")
 
 
 #
@@ -105,8 +105,8 @@ function(initializer_executable _is_gateway _manufacture _model)
     target_compile_definitions(${_targetname}
             PRIVATE
             GATEWAY=${_is_gateway}
-            MANUFACTURE=${_manufacture}
-            MODEL=${_model}
+            MANUFACTURE="${_manufacture}"
+            MODEL="${_model}"
             )
 
     #
