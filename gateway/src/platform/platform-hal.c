@@ -81,7 +81,7 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 /******************************************************************************/
 const vs_firmware_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void) {
-    _create_field(_descriptor.info.manufacture_id, MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
-    _create_field(_descriptor.info.device_type, DEVICE_MODEL, DEVICE_TYPE_SIZE);
+    _create_field(_descriptor.info.manufacture_id, GW_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
+    _create_field(_descriptor.info.device_type, GW_DEVICE_MODEL, DEVICE_TYPE_SIZE);
     return &_descriptor;
 }

@@ -52,7 +52,9 @@ main(int argc, char *argv[]) {
     int fldt_ret_code;
 
     printf("\n\n--------------------------------------------\n");
-    printf("%s\n", argv[0]);
+    printf("Thing app at %s\n", argv[0]);
+    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", THING_MANUFACTURE_ID, THING_DEVICE_MODEL);
+
     printf("--------------------------------------------\n\n");
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {

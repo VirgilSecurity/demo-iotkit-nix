@@ -153,6 +153,12 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
 
+    printf("\n\n--------------------------------------------\n");
+    printf("Initializer at %s\n", argv[0]);
+    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", MANUFACTURE_ID, DEVICE_MODEL);
+
+    printf("--------------------------------------------\n\n");
+
     if (_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
 
         // Set storage HAL folder

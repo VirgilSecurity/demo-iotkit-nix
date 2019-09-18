@@ -77,7 +77,7 @@ endfunction()
 create_target_text_option(GATEWAY_MANUFACTURE "16" "VRGL" "Gateway manufacture code")
 create_target_text_option(GATEWAY_MODEL "4" "Cf01" "Gateway model code")
 create_target_text_option(THING_MANUFACTURE "16" "VRGL" "Thing model code")
-create_target_text_option(THING_MODEL "4" "Cf01" "Thing model code")
+create_target_text_option(THING_MODEL "4" "MCU1" "Thing model code")
 
 option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
 
