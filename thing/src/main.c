@@ -79,7 +79,7 @@ main(int argc, char *argv[]) {
 
     VS_LOG_INFO("\n\n\nTerminating application ...");
 
-    // vs_fldt_destroy();
+    vs_fldt_destroy();
 
     int res = vs_rpi_hal_update(argc, argv);
 
