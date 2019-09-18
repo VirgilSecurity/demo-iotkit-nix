@@ -120,12 +120,11 @@ static void *
 _gateway_task(void *pvParameters) {
     pthread_t *message_bin_thread;
     pthread_t *upd_http_retrieval_thread;
-    vs_firmware_info_t *request;
     vs_firmware_descriptor_t desc;
     vs_fldt_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
-
-    file_type.file_type_id = VS_UPDATE_FIRMWARE;
+    queued_file_t *queued_file;
+    vs_firmware_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -138,9 +137,9 @@ _gateway_task(void *pvParameters) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
-
-        while (vs_upd_http_retrieval_get_request(&request)) {
-            if (_is_self_firmware_image(request)) {
+        while (vs_upd_http_retrieval_get_request(&queued_file)) {
+            if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
+                request = &queued_file->fw_info;
                 if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
                     if (VS_STORAGE_OK ==
                                 vs_update_load_firmware_descriptor(
@@ -152,26 +151,39 @@ _gateway_task(void *pvParameters) {
                     (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
                 }
             } else {
-                // TODO : process downloaded firmware and trust list, i. e. send FLDT message
-                // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header
-                //                        (vs_tl_header_t(pub_keys_count - chunks
-                // amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)
-                // vs_update_load_firmware_descriptor( manufacturer, device) ==> descriptor
-                //                if (vs_fldt_new_firmware_available(request)) {
-                //                    VS_LOG_ERROR("Error processing new firmware available");
-                //                }
+                file_type.file_type_id = queued_file->file_type;
+                memset(file_type.add_info, 0, sizeof(file_type.add_info));
 
-                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+                switch (queued_file->file_type) {
+                case VS_UPDATE_FIRMWARE:
+                    VS_LOG_DEBUG("Send info about new Firmware over SDMP");
 
-                memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
-                memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
-                if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
-                    VS_LOG_ERROR("Unable to add new firmware");
-                    // TODO :how to process???
+                    request = &queued_file->fw_info;
+
+                    memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
+                    memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
+                    if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
+                        VS_LOG_ERROR("Unable to add new firmware");
+                        // TODO :how to process???
+                    }
+                    break;
+
+                case VS_UPDATE_TRUST_LIST:
+                    VS_LOG_DEBUG("Send info about new Trust List over SDMP");
+
+                    if (vs_fldt_update_server_file_type(&file_type, NULL, true)) {
+                        VS_LOG_ERROR("Unable to add new Trust List");
+                        // TODO :how to process???
+                    }
+                    break;
+
+                default:
+                    VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type);
+                    break;
                 }
             }
 
-            free(request);
+            free(queued_file);
         }
 
 #if SIMULATOR

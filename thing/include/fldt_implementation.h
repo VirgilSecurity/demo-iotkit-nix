@@ -43,6 +43,9 @@ vs_fldt_init(void);
 vs_fldt_ret_code_e
 vs_fldt_firmware_init(void);
 
+vs_fldt_ret_code_e
+vs_fldt_trust_list_init(void);
+
 void
 vs_fldt_destroy(void);
 

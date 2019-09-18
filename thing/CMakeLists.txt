@@ -57,6 +57,7 @@ target_sources(thing
         ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_trust_list.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
         )
 

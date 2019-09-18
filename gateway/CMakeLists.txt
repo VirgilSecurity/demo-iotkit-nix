@@ -69,7 +69,8 @@ target_sources(gateway
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_trust_list.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c

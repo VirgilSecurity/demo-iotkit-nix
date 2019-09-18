@@ -38,7 +38,7 @@
 #include <fldt_implementation.h>
 #include <hal/storage/rpi-storage-hal.h>
 
-vs_storage_op_ctx_t _storage_ctx;
+vs_storage_op_ctx_t _fw_storage_ctx;
 
 /******************************************************************************/
 static void
@@ -66,9 +66,9 @@ vs_fldt_firmware_init(void) {
 
     VS_LOG_INFO("Firmware's manufacture ID = \"%s\", device type = \"%s\"", manufacturer_id, device_id);
 
-    vs_rpi_get_storage_impl(&_storage_ctx.impl);
-    _storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-    _storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    vs_rpi_get_storage_impl(&_fw_storage_ctx.impl);
+    _fw_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+    _fw_storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
 
     memset(&file_type, 0, sizeof(file_type));
 
@@ -76,7 +76,7 @@ vs_fldt_firmware_init(void) {
     _make_firmware_add_data_element(fw_add_data->manufacture_id, manufacturer_id, MANUFACTURE_ID_SIZE);
     _make_firmware_add_data_element(fw_add_data->device_type, device_id, DEVICE_TYPE_SIZE);
 
-    FLDT_CHECK(vs_fldt_update_client_file_type(&file_type, &_storage_ctx), "Unable to add firmware file type");
+    FLDT_CHECK(vs_fldt_update_client_file_type(&file_type, &_fw_storage_ctx), "Unable to add firmware file type");
 
     return VS_FLDT_ERR_OK;
 }
