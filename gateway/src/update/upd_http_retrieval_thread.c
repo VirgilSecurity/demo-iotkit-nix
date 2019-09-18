@@ -146,6 +146,7 @@ _upd_http_retrieval_task(void *pvParameters) {
             }
         }
     }
+    return NULL;
 }
 
 /*************************************************************************/

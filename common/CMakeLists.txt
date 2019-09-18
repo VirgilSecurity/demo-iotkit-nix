@@ -74,13 +74,26 @@ target_sources(rpi-common
 		)
 
 #
+#	Path to crypto lib
+#
+include(GNUInstallDirs)
+message(">>> ${CRYPTO_C_BASE_DIR}")
+if(EXISTS "${CRYPTO_C_BASE_DIR}")
+	set(CRYPTO_C_INCLUDES "${CRYPTO_C_BASE_DIR}/include")
+	set(CRYPTO_C_LIBS "${CRYPTO_C_BASE_DIR}/lib")
+else()
+	set(CRYPTO_C_INCLUDES "/usr/include/cryptoc-shsm")
+	set(CRYPTO_C_LIBS "/usr/${CMAKE_INSTALL_LIBDIR}/cryptoc-shsm")
+endif ()
+
+#
 #   Include directories
 #
 target_include_directories(rpi-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${CRYPTO_C_BASE_DIR}/include
-		${CRYPTO_C_BASE_DIR}/include/virgil/crypto/common
+		${CRYPTO_C_INCLUDES}
+		${CRYPTO_C_INCLUDES}/virgil/crypto/common
 		)
 
 #
@@ -90,10 +103,10 @@ find_package (Threads)
 target_link_libraries(rpi-common
 		PUBLIC
 		converters
-		${CRYPTO_C_BASE_DIR}/lib/libvsc_foundation.a
-		${CRYPTO_C_BASE_DIR}/lib/libvsc_common.a
-		${CRYPTO_C_BASE_DIR}/lib/libmbedcrypto.a
-		${CRYPTO_C_BASE_DIR}/lib/libed25519.a
+		${CRYPTO_C_LIBS}/libvsc_foundation.a
+		${CRYPTO_C_LIBS}/libvsc_common.a
+		${CRYPTO_C_LIBS}/libmbedcrypto.a
+		${CRYPTO_C_LIBS}/libed25519.a
 		sdmp
 		secbox
 		trust_list

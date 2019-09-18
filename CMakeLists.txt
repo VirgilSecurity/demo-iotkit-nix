@@ -38,9 +38,6 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 #   Includes
 #------------------------------------------------------------------------------
 
-# Helpers
-include(cmake/helpers.cmake)
-
 # Clang format
 include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 
@@ -120,6 +117,9 @@ if (GO_DISABLE)
 else ()
     project(iot-rpi VERSION 0.1.0 LANGUAGES C Go)
 endif ()
+
+# Helpers
+include(cmake/helpers.cmake)
 
 # ---------------------------------------------------------------------------
 #   Folders with targets
