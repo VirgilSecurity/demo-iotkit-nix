@@ -48,6 +48,18 @@
 #include "hal/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 
+char *self_path = NULL;
+
+int
+vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
+    return -1;
+}
+
+int
+vs_update_install_prepare_space_hal(void) {
+    return -1;
+}
+
 /******************************************************************************/
 static bool
 _read_mac_address(const char *arg, vs_mac_addr_t *mac) {

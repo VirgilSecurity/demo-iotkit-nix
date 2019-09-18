@@ -107,9 +107,6 @@ target_link_libraries(thing
 		rpi-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		curl
-		aws-mqtt
-		cloud
 		update
 
 		enable_sanitizers
