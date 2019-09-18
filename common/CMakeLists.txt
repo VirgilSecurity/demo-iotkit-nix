@@ -70,6 +70,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/threads/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/input-params.c
+		${CMAKE_CURRENT_LIST_DIR}/src/update/update-hal.c
 		)
 
 #

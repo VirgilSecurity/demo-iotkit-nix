@@ -53,8 +53,6 @@ target_sources(thing
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/thing.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
@@ -64,19 +62,11 @@ target_sources(thing
 #	Definitions
 #
 
-if ((NOT DEFINED MANUFACTURER_ID) OR (MANUFACTURER_ID STREQUAL ""))
-	message(FATAL_ERROR "MANUFACTURER_ID compile time constant must be specified as char[16]")
-endif()
-
-if ((NOT DEFINED DEVICE_ID) OR (DEVICE_ID STREQUAL ""))
-	message(FATAL_ERROR "DEVICE_ID compile time constant must be specified as char[4]")
-endif()
-
 target_compile_definitions(thing
         PRIVATE
         TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
-		MANUFACTURER_ID="${THING_MANUFACTURE}"
-		DEVICE_ID="${THING_MODEL}"
+		MANUFACTURE_ID="${THING_MANUFACTURE}"
+		DEVICE_MODEL="${THING_MODEL}"
 		SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
         )

@@ -61,6 +61,31 @@ option(USE_UBSAN "On/Off Undefined behavior sanitizer." OFF)
 option(USE_TSAN "On/Off Thread sanitizer." OFF)
 
 #
+# Target options
+#
+function(create_target_text_option _name _maxlen _default_val _descr)
+    if ((NOT DEFINED ${_name}) OR (${_name} STREQUAL ""))
+        message("* Use default ${_name}=\"${_default_val}\"")
+        set(${_name} "${_default_val}" CACHE STRING "${_descr}")
+    else()
+        string(LENGTH ${${_name}} LEN)
+        message("LEN = ${LEN}")
+        if (${LEN} GREATER ${_maxlen})
+            message(FATAL_ERROR "${_name} parameter must be less than ${_maxlen} symbols")
+        else()
+            message("* ${_name}=\"${${_name}}\"")
+        endif ()
+    endif()
+endfunction()
+
+create_target_text_option(GATEWAY_MANUFACTURE "16" "VRGL" "Gateway manufacture code")
+create_target_text_option(GATEWAY_MODEL "4" "Cf01" "Gateway model code")
+create_target_text_option(THING_MANUFACTURE "16" "VRGL" "Thing model code")
+create_target_text_option(THING_MODEL "4" "Cf01" "Thing model code")
+
+option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
+
+#
 #   Check setting compatibility
 #
 if (BIGENDIAN_64_BIT_BUILD)

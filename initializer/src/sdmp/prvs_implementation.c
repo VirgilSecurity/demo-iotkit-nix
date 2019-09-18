@@ -50,6 +50,21 @@ vs_prvs_dnid() {
 }
 
 /******************************************************************************/
+static void
+_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
+    size_t pos;
+    size_t len;
+
+    assert(src && *src);
+    assert(elem_buf_size);
+
+    len = strlen(src);
+    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
+        *dst = *src;
+    }
+}
+
+/******************************************************************************/
 static int
 vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     uint16_t key_sz = 0;
@@ -57,14 +72,19 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     vs_pubkey_t *own_pubkey;
     uint16_t sign_sz = 0;
     vs_sign_t *sign;
+    uint8_t *ptr;
 
     VS_IOT_ASSERT(device_info);
 
     own_pubkey = (vs_pubkey_t *)device_info->data;
     vs_sdmp_mac_addr(0, &device_info->mac);
-    // TODO: Fix this hardcode
-    device_info->manufacturer = 0x89abcdef;
-    device_info->model = 0x12345678;
+    // TODO: Need to move to 16 bytes MANUFACTURE_ID
+    ptr = (uint8_t *)(&device_info->manufacturer);
+    _create_field(ptr, MANUFACTURE_ID, sizeof(device_info->manufacturer));
+
+    ptr = (uint8_t *)(&device_info->model);
+    _create_field(ptr, DEVICE_MODEL, sizeof(device_info->model));
+
     vs_rpi_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key

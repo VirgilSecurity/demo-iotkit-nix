@@ -66,7 +66,6 @@ target_sources(gateway
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
         ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
         )
 
@@ -79,8 +78,8 @@ target_compile_definitions(gateway
         SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
 		GATEWAY=1
-		GW_MANUFACTURE_ID="${GATEWAY_MANUFACTURE}"
-		GW_DEVICE_TYPE="${GATEWAY_MODEL}"
+		MANUFACTURE_ID="${GATEWAY_MANUFACTURE}"
+		DEVICE_MODEL="${GATEWAY_MODEL}"
         )
 
 #
