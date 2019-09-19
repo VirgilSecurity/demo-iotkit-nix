@@ -38,11 +38,11 @@
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-//#include <virgil/iot/tests/tests.h>
+#include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include "../ext/deps/include/virgil/crypto/foundation/vscf_assert.h"
+#include <virgil/crypto/foundation/vscf_assert.h>
 #include <update-config.h>
 
 #include "hal/storage/rpi-file-io.h"
@@ -131,57 +131,12 @@ _assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
-/******************************************************************************/
-int
-vs_update_install_prepare_space_hal(void) {
-    char filename[FILENAME_MAX];
-
-    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
-    VS_IOT_STRCPY(filename, self_path);
-
-    strcat(filename, ".new");
-    remove(filename);
-    return VS_STORAGE_OK;
-}
-
-/******************************************************************************/
-int
-vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
-
-    int res = VS_STORAGE_ERROR_GENERAL;
-    char filename[FILENAME_MAX];
-    FILE *fp = NULL;
-
-    CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
-
-    VS_IOT_STRCPY(filename, self_path);
-
-    strcat(filename, ".new");
-
-    fp = fopen(filename, "a+b");
-    if (fp) {
-
-        if (1 != fwrite(data, data_sz, 1, fp)) {
-            VS_LOG_ERROR("Unable to write %d bytes to the file %s. errno = %d (%s)",
-                         data_sz,
-                         filename,
-                         errno,
-                         strerror(errno));
-        } else {
-            res = VS_STORAGE_OK;
-        }
-        fclose(fp);
-    }
-
-    return res;
-}
-
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
     int res = 0;
     uint8_t mac[6];
+    self_path = argv[0];
     vs_storage_op_ctx_t storage_ctx;
     vs_rpi_get_storage_impl(&storage_ctx.impl);
     storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
@@ -199,7 +154,7 @@ main(int argc, char *argv[]) {
     vs_tl_init_storage();
 
     VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
-#if 0
+
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
     storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
@@ -215,7 +170,6 @@ main(int argc, char *argv[]) {
     }
 
     res += vs_update_test(&storage_ctx);
-#endif
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
