@@ -57,6 +57,7 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 
     assert(src && *src);
     assert(elem_buf_size);
+    memset(dst, 0, elem_buf_size);
 
     len = strlen(src);
     for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
