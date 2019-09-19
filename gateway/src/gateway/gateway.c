@@ -61,6 +61,9 @@ static pthread_t gateway_starter_thread;
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #endif
 
+static pthread_t *message_bin_thread;
+static pthread_t *upd_http_retrieval_thread;
+
 extern const vs_firmware_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void);
 /******************************************************************************/
@@ -100,9 +103,45 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
 }
 
 /*************************************************************************/
+static int
+_cancel_thread(pthread_t *thread) {
+    void *res;
+
+    if (0 != pthread_cancel(*thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        return -1;
+    }
+
+    if (0 != pthread_join(*thread, &res) || PTHREAD_CANCELED != res) {
+        VS_LOG_ERROR("Error during joining to thread");
+        return -1;
+    } else {
+        VS_LOG_INFO("thread canceled");
+    }
+
+    return 0;
+}
+
+/*************************************************************************/
 static void
 _restart_app() {
-    /* Cleanup the mutexes */
+
+    // Stop message bin thread
+    if (0 != _cancel_thread(message_bin_thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        exit(-1);
+    }
+
+    // Stop retrieval thread
+    if (0 != _cancel_thread(upd_http_retrieval_thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        exit(-1);
+    }
+
+    // Destroy sdmp services
+    vs_fldt_destroy();
+
+    /* Cleanup a mutexes */
     pthread_mutex_destroy(&_gtwy.firmware_mutex);
     pthread_mutex_destroy(&_gtwy.tl_mutex);
     pthread_mutex_destroy(&_gtwy.shared_events.mtx);
@@ -111,8 +150,8 @@ _restart_app() {
     vs_event_group_destroy(&_gtwy.incoming_data_events);
     vs_event_group_destroy(&_gtwy.message_bin_events);
 
-    while (1)
-        ;
+    vs_rpi_restart();
+    pthread_exit(0);
 }
 
 /******************************************************************************/
@@ -124,7 +163,6 @@ _gateway_task(void *pvParameters) {
     vs_fldt_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
     queued_file_t *queued_file;
-    vs_firmware_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -146,6 +184,7 @@ _gateway_task(void *pvParameters) {
                                         &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
                         VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
                         (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
+
                         _restart_app();
                     }
                     (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
@@ -187,7 +226,7 @@ _gateway_task(void *pvParameters) {
         }
 
 #if SIMULATOR
-        if (_test_message[0] != 0) {
+        if (_test_message[0] != 0) { //-V547
             VS_LOG_INFO(_test_message);
         }
 #endif
@@ -198,16 +237,13 @@ _gateway_task(void *pvParameters) {
 /******************************************************************************/
 void
 start_gateway_threads(void) {
-    void *res;
+    //        void *res;
     if (!is_threads_started) {
         is_threads_started = true;
 
+
         if (0 != pthread_create(&gateway_starter_thread, NULL, _gateway_task, NULL)) {
             VS_LOG_ERROR("Error during starting main gateway thread");
-            exit(-1);
-        }
-        if (0 != pthread_join(gateway_starter_thread, &res) || NULL != res) {
-            VS_LOG_ERROR("Error during joining to main gateway thread");
             exit(-1);
         }
     }

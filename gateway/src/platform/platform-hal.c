@@ -32,23 +32,18 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <assert.h>
 #include <string.h>
 #include <global-hal.h>
 #include <gateway.h>
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/provision/provision.h>
 
-#define GW_MANUFACTURE_ID                                                                                              \
-    { 'V', 'R', 'G', 'L' }
-#define GW_DEVICE_TYPE                                                                                                 \
-    { 'C', 'f', '0', '1' }
 #define GW_APP_TYPE                                                                                                    \
     { 'A', 'P', 'P', '0' }
 
 // TODO: Need to use real descriptor, which can be obtain from footer of self image
 static vs_firmware_descriptor_t _descriptor = {
-        .info.manufacture_id = GW_MANUFACTURE_ID,
-        .info.device_type = GW_DEVICE_TYPE,
         .info.version.app_type = GW_APP_TYPE,
         .info.version.major = 0,
         .info.version.minor = 1,
@@ -69,7 +64,24 @@ vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
 }
 
 /******************************************************************************/
+static void
+_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
+    size_t pos;
+    size_t len;
+
+    assert(src && *src);
+    assert(elem_buf_size);
+
+    len = strlen(src);
+    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
+        *dst = *src;
+    }
+}
+
+/******************************************************************************/
 const vs_firmware_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void) {
+    _create_field(_descriptor.info.manufacture_id, GW_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
+    _create_field(_descriptor.info.device_type, GW_DEVICE_MODEL, DEVICE_TYPE_SIZE);
     return &_descriptor;
 }

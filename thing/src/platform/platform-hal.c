@@ -38,12 +38,9 @@
 //#include <virgil/iot/cloud/cloud.h>
 //#include <virgil/iot/provision/provision.h>
 //
-//#define GW_MANUFACTURE_ID \
-//    { 'V', 'R', 'G', 'L' }
-//#define GW_DEVICE_TYPE \
-//    { 'C', 'f', '0', '1' }
-//#define GW_APP_TYPE \
-//    { 'A', 'P', 'P', '0' }
+//#define GW_MANUFACTURE_ID { 'V', 'R', 'G', 'L' }
+//#define GW_DEVICE_TYPE { 'C', 'f', '0', '1' }
+//#define GW_APP_TYPE { 'A', 'P', 'P', '0' }
 //
 //// TODO: Need to use real descriptor, which can be obtain from footer of self image
 // static vs_firmware_descriptor_t _descriptor = {

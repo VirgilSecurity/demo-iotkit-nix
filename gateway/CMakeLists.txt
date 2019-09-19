@@ -42,12 +42,6 @@ project(gateway VERSION 0.1.0 LANGUAGES C)
 add_executable(gateway)
 
 #
-#   Options
-#
-set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
-set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
-
-#
 #	Header/Source files
 #
 target_sources(gateway
@@ -73,7 +67,6 @@ target_sources(gateway
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_trust_list.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/update/update_hal.c
         ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
         )
 
@@ -86,8 +79,8 @@ target_compile_definitions(gateway
         SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
         SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
 		GATEWAY=1
-		MANUFACTURE=${_manufacture}
-		MODEL=${_model}
+		GW_MANUFACTURE_ID="${GATEWAY_MANUFACTURE}"
+		GW_DEVICE_MODEL="${GATEWAY_MODEL}"
         )
 
 #

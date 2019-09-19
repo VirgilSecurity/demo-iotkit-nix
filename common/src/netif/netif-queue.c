@@ -59,6 +59,12 @@ _rx_to_queue(const struct vs_netif_t *netif, const uint8_t *data, const uint16_t
 
     if (data) {
         data_copy = malloc(data_sz);
+        assert(NULL != data_copy);
+        if (NULL == data_copy) {
+            VS_LOG_ERROR("Can't allocate memory");
+            exit(-1);
+        }
+
         if (data_sz) {
             memcpy(data_copy, data, data_sz);
             return vs_msg_queue_push(_queue_ctx, &_queued_netif, data_copy, data_sz);

@@ -59,7 +59,7 @@ target_link_libraries(rpi-tests
 		rpi-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		#virgil-iot-sdk-tests
+		virgil-iot-sdk-tests
 
 		enable_sanitizers
 		enable_pedantic_mode
