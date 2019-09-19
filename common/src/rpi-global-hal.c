@@ -50,7 +50,9 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
 #include <stdlib-config.h>
+#include <trust_list-config.h>
 #include "hal/rpi-global-hal.h"
+#include "hal/storage/rpi-storage-hal.h"
 
 #include "hal/netif/netif-queue.h"
 #include "hal/netif/rpi-plc-sim.h"
@@ -227,6 +229,7 @@ int
 vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr) {
     const vs_netif_t *netif = NULL;
     const vs_netif_t *queued_netif = NULL;
+    vs_storage_op_ctx_t tl_ctx;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
@@ -239,7 +242,10 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
     vs_hal_files_set_mac(forced_mac_addr.bytes);
 
     // Prepare TL storage
-    vs_tl_init_storage();
+    vs_rpi_get_storage_impl(&tl_ctx.impl);
+    tl_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    vs_tl_init(&tl_ctx);
 
     if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
         // Setup UDP Broadcast as network interface
