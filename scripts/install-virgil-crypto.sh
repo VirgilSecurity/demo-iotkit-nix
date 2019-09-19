@@ -13,7 +13,7 @@ function create_clean_dir() {
   if [ -d "${1}" ]; then
     rm -rf "${1}"
   fi
-  mkdir "${1}"
+  mkdir -p "${1}"
 }
 
 function build() {
