@@ -61,7 +61,6 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-tl-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
