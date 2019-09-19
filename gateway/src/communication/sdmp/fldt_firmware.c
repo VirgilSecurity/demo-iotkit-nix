@@ -52,7 +52,7 @@ int
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info) {
     vs_fldt_ret_code_e fldt_ret_code;
     vs_fldt_file_type_t file_type;
-    vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)&file_type.add_info;
+    vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)&file_type.add_info; //-V641
 
     memset(&file_type, 0, sizeof(file_type));
 

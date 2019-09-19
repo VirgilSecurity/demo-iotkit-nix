@@ -213,7 +213,7 @@ _gateway_task(void *pvParameters) {
         }
 
 #if SIMULATOR
-        if (_test_message[0] != 0) {
+        if (_test_message[0] != 0) { //-V008
             VS_LOG_INFO(_test_message);
         }
 #endif

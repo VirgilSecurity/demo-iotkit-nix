@@ -40,6 +40,9 @@
 #include <string.h>
 #include <pthread.h>
 #include "helpers/msg-queue.h"
+#include "private/helpers.h"
+#include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 
 typedef struct {
     const void *info;
@@ -118,15 +121,22 @@ _queue_signal(vs_msg_queue_ctx_t *q) {
 static vs_msg_queue_ctx_t *
 _queue_init(int32_t capacity, int32_t num_adders, int32_t num_getters) {
     vs_msg_queue_ctx_t *q = calloc(1, sizeof(vs_msg_queue_ctx_t));
+    CHECK_MEM_ALLOC(NULL != q, "Can't allocate memory");
 
     q->mem = capacity;
     q->queue = calloc(q->mem, sizeof(vs_queue_data_t *));
+    CHECK_MEM_ALLOC(NULL != q->queue, "Can't allocate memory");
 
     q->mut = calloc(1, sizeof(pthread_mutex_t));
+    CHECK_MEM_ALLOC(NULL != q->mut, "Can't allocate memory");
     q->not_full = calloc(1, sizeof(pthread_cond_t));
+    CHECK_MEM_ALLOC(NULL != q->not_full, "Can't allocate memory");
     q->not_empty = calloc(1, sizeof(pthread_cond_t));
+    CHECK_MEM_ALLOC(NULL != q->not_empty, "Can't allocate memory");
     q->is_empty = calloc(1, sizeof(pthread_cond_t));
+    CHECK_MEM_ALLOC(NULL != q->is_empty, "Can't allocate memory");
     q->not_flush = calloc(1, sizeof(pthread_cond_t));
+    CHECK_MEM_ALLOC(NULL != q->not_flush, "Can't allocate memory");
     q->state = QUEUE_STATE_OK;
     q->num_adders = num_adders;
     q->num_getters = num_getters;
@@ -159,6 +169,8 @@ _queue_init(int32_t capacity, int32_t num_adders, int32_t num_getters) {
     }
 
     return q;
+terminate:
+    exit(1);
 }
 
 /******************************************************************************/

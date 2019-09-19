@@ -73,6 +73,12 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
                 fw_info = (vs_firmware_info_t *)malloc(sizeof(vs_firmware_info_t));
+                assert(NULL != fw_info);
+                if (NULL == fw_info) {
+                    VS_LOG_ERROR("Can't allocate memory");
+                    exit(-1);
+                }
+
                 VS_IOT_MEMCPY(fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
 
                 if (0 != vs_msg_queue_push(fwdist_event_queue, fw_info, NULL, 0)) {

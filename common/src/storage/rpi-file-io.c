@@ -292,10 +292,10 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
     }
 
     fp = fopen(file_path, "wb");
-    setvbuf(fp, file_io_buffer, _IOFBF, VS_IO_BUF_SZ);
 
     if (fp) {
 
+        setvbuf(fp, file_io_buffer, _IOFBF, VS_IO_BUF_SZ);
         if (1 != fwrite(buf, new_file_sz, 1, fp)) {
             VS_LOG_ERROR("Unable to write %d bytes to the file %s. errno = %d (%s)",
                          data_sz,

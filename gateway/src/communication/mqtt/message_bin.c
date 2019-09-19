@@ -145,6 +145,12 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
     int res;
     gtwy_t *gtwy = get_gateway_ctx();
     upd_request_t *fw_url = (upd_request_t *)malloc(sizeof(upd_request_t));
+    assert(NULL != fw_url);
+    if (NULL == fw_url) {
+        VS_LOG_ERROR("Can't allocate memory");
+        exit(-1);
+    }
+
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
 
     if (0 == pthread_mutex_lock(&gtwy->firmware_mutex)) {
@@ -176,6 +182,12 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     int res;
     gtwy_t *gtwy = get_gateway_ctx();
     upd_request_t *tl_url = (upd_request_t *)malloc(sizeof(upd_request_t));
+    assert(NULL != tl_url);
+    if (NULL == tl_url) {
+        VS_LOG_ERROR("Can't allocate memory");
+        exit(-1);
+    }
+
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
 
     res = vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url);

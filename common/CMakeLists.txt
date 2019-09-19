@@ -94,6 +94,8 @@ target_include_directories(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${CRYPTO_C_INCLUDES}
 		${CRYPTO_C_INCLUDES}/virgil/crypto/common
+		PRIVATE
+		${CMAKE_CURRENT_LIST_DIR}/src
 		)
 
 #
