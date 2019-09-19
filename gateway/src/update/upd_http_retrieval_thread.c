@@ -74,7 +74,10 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
                 fw_info = (queued_file_t *)malloc(sizeof(*fw_info));
-                CHECK_RET(fw_info, -1, "Can't allocate memory");
+                if (!fw_info) {
+                    VS_LOG_ERROR("Can't allocate memory");
+                    exit(-1);
+                }
                 fw_info->file_type = VS_UPDATE_FIRMWARE;
                 VS_IOT_MEMCPY(&fw_info->fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
 

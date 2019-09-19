@@ -157,12 +157,11 @@ _restart_app() {
 /******************************************************************************/
 static void *
 _gateway_task(void *pvParameters) {
-    pthread_t *message_bin_thread;
-    pthread_t *upd_http_retrieval_thread;
     vs_firmware_descriptor_t desc;
     vs_fldt_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
     queued_file_t *queued_file;
+    vs_firmware_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -176,50 +175,52 @@ _gateway_task(void *pvParameters) {
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
         while (vs_upd_http_retrieval_get_request(&queued_file)) {
-            if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
-                request = &queued_file->fw_info;
-                if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
-                    if (VS_STORAGE_OK ==
-                                vs_update_load_firmware_descriptor(
-                                        &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
-                        VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
-                        (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
+            file_type.file_type_id = queued_file->file_type;
+            memset(file_type.add_info, 0, sizeof(file_type.add_info));
 
-                        _restart_app();
-                    }
-                    (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
-                }
-            } else {
-                file_type.file_type_id = queued_file->file_type;
-                memset(file_type.add_info, 0, sizeof(file_type.add_info));
-
-                switch (queued_file->file_type) {
-                case VS_UPDATE_FIRMWARE:
-                    VS_LOG_DEBUG("Send info about new Firmware over SDMP");
-
+            switch (queued_file->file_type) {
+            case VS_UPDATE_FIRMWARE:
+                if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
                     request = &queued_file->fw_info;
+                    if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
+                        if (VS_STORAGE_OK == vs_update_load_firmware_descriptor(&_gtwy.fw_update_ctx,
+                                                                                request->manufacture_id,
+                                                                                request->device_type,
+                                                                                &desc) &&
+                            VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                            (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
 
-                    memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
-                    memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
-                    if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
-                        VS_LOG_ERROR("Unable to add new firmware");
-                        // TODO :how to process???
+                            _restart_app();
+                        }
+                        free(queued_file);
+                        (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
                     }
-                    break;
-
-                case VS_UPDATE_TRUST_LIST:
-                    VS_LOG_DEBUG("Send info about new Trust List over SDMP");
-
-                    if (vs_fldt_update_server_file_type(&file_type, NULL, true)) {
-                        VS_LOG_ERROR("Unable to add new Trust List");
-                        // TODO :how to process???
-                    }
-                    break;
-
-                default:
-                    VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type);
-                    break;
                 }
+
+                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+
+                request = &queued_file->fw_info;
+
+                memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
+                memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
+                if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
+                    VS_LOG_ERROR("Unable to add new firmware");
+                    // TODO :how to process???
+                }
+                break;
+
+            case VS_UPDATE_TRUST_LIST:
+                VS_LOG_DEBUG("Send info about new Trust List over SDMP");
+
+                if (vs_fldt_update_server_file_type(&file_type, NULL, true)) {
+                    VS_LOG_ERROR("Unable to add new Trust List");
+                    // TODO :how to process???
+                }
+                break;
+
+            default:
+                VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type);
+                break;
             }
 
             free(queued_file);

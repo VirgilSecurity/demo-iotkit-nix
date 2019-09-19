@@ -32,70 +32,45 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <virgil/iot/protocols/sdmp/fldt.h>
-#include <fldt_implementation.h>
-#include <limits.h>
-#include <hal/rpi-global-hal.h>
+#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <update-config.h>
+#include <hal/storage/rpi-storage-hal.h>
+#include <trust_list-config.h>
 
-/******************************************************************************/
-static void
-_got_file(const vs_fldt_file_version_t *prev_file_ver,
-          const vs_fldt_file_version_t *new_file_ver,
-          const vs_mac_addr_t *gateway,
-          bool successfully_updated) {
-    char file_ver_descr[FLDT_FILEVER_BUF];
-    const char *file_type;
-
-    VS_IOT_ASSERT(prev_file_ver);
-    VS_IOT_ASSERT(new_file_ver);
-    VS_IOT_ASSERT(gateway);
-
-    switch (new_file_ver->file_type.file_type_id) {
-    case VS_UPDATE_FIRMWARE:
-        file_type = "firmware";
-        break;
-
-    case VS_UPDATE_TRUST_LIST:
-        file_type = "trust list";
-        break;
-
-    default:
-        assert(false && "File type is not supported");
-    }
-
-    VS_LOG_INFO("New %s was loaded and %s : %s",
-                file_type,
-                successfully_updated ? "successfully installed" : "did not installed successfully",
-                vs_fldt_file_version_descr(file_ver_descr, new_file_ver));
-    VS_LOG_INFO("Gateway : " FLDT_GATEWAY_TEMPLATE, FLDT_GATEWAY_ARG(*gateway));
-    VS_LOG_INFO("Previous %s : %s", file_type, vs_fldt_file_version_descr(file_ver_descr, prev_file_ver));
-
-    if (new_file_ver->file_type.file_type_id == VS_UPDATE_FIRMWARE) {
-        vs_rpi_restart();
-    }
-}
+vs_storage_op_ctx_t _tl_storage_ctx;
 
 /******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_init(void) {
+vs_fldt_add_tl_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
+    (void)file_type;
+    *storage_ctx = &_tl_storage_ctx;
+
+    return VS_FLDT_ERR_OK;
+}
+
+/******************************************************************************/
+int
+vs_fldt_new_trust_list_available(vs_firmware_info_t *firmware_info) {
     vs_fldt_ret_code_e fldt_ret_code;
+    vs_fldt_file_type_t file_type;
+    vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)&file_type.add_info;
 
-    VS_LOG_DEBUG("[FLDT] Initialization");
+    memset(&file_type, 0, sizeof(file_type));
 
-    FLDT_CHECK(vs_fldt_init_client(_got_file), "Unable to initialize FLDT");
-    FLDT_CHECK(vs_fldt_firmware_init(), "Unable to add firmware file type");
-    FLDT_CHECK(vs_fldt_trust_list_init(), "Unable to add Trust List file type");
+    file_type.file_type_id = VS_UPDATE_FIRMWARE;
+    memcpy(fw_add_data->manufacture_id, firmware_info->manufacture_id, sizeof(firmware_info->manufacture_id));
+    memcpy(fw_add_data->device_type, firmware_info->device_type, sizeof(firmware_info->device_type));
 
-    VS_LOG_DEBUG("[FLDT] Successfully initialized");
+    FLDT_CHECK(vs_fldt_update_server_file_type(&file_type, &_tl_storage_ctx, true),
+               "Unable to update firmware file mapping");
 
     return VS_FLDT_ERR_OK;
 }
 
 /******************************************************************************/
 void
-vs_fldt_destroy(void) {
-
-    vs_fldt_destroy_client();
-
-    VS_LOG_DEBUG("[FLDT] Successfully destroyed");
+vs_fldt_trust_list_init(void) {
+    vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);
+    _tl_storage_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    _tl_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
 }
