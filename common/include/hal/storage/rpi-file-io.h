@@ -63,15 +63,15 @@ const char *
 vs_rpi_get_secbox_dir(void);
 
 bool
-vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, uint16_t data_sz);
+vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
 
 bool
 vs_rpi_read_file_data(const char *folder,
                       const char *file_name,
                       uint32_t offset,
                       uint8_t *data,
-                      uint16_t buf_sz,
-                      uint16_t *read_sz);
+                      size_t buf_sz,
+                      size_t *read_sz);
 
 bool
 vs_rpi_remove_file_data(const char *folder, const char *file_name);

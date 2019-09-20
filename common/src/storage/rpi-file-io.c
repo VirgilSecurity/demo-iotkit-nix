@@ -234,7 +234,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, uint16_t data_sz) {
+vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -326,8 +326,8 @@ vs_rpi_read_file_data(const char *folder,
                       const char *file_name,
                       uint32_t offset,
                       uint8_t *data,
-                      uint16_t buf_sz,
-                      uint16_t *read_sz) {
+                      size_t buf_sz,
+                      size_t *read_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -554,8 +554,17 @@ vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) 
 /********************************************************************************/
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    return vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, out_sz) ? VS_HSM_ERR_OK
-                                                                                          : VS_HSM_ERR_FILE_IO;
+    size_t out_sz_size_t = *out_sz;
+    bool call_res;
+
+    call_res = vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, &out_sz_size_t)
+                       ? VS_HSM_ERR_OK
+                       : VS_HSM_ERR_FILE_IO;
+
+    assert(out_sz_size_t <= UINT16_MAX);
+    *out_sz = out_sz_size_t;
+
+    return call_res;
 }
 
 /******************************************************************************/

@@ -50,7 +50,9 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
 #include <stdlib-config.h>
+#include <trust_list-config.h>
 #include "hal/rpi-global-hal.h"
+#include "hal/storage/rpi-storage-hal.h"
 
 #include "hal/netif/netif-queue.h"
 #include "hal/netif/rpi-plc-sim.h"
@@ -66,6 +68,7 @@
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
+static vs_storage_op_ctx_t _tl_ctx;
 
 /******************************************************************************/
 void
@@ -222,6 +225,7 @@ vs_rpi_hal_sleep_until_stop(void) {
 
     pthread_mutex_destroy(&_sleep_lock);
 }
+
 /******************************************************************************/
 int
 vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr) {
@@ -239,7 +243,10 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
     vs_hal_files_set_mac(forced_mac_addr.bytes);
 
     // Prepare TL storage
-    vs_tl_init_storage();
+    vs_rpi_get_storage_impl(&_tl_ctx.impl);
+    _tl_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+    _tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    vs_tl_init(&_tl_ctx);
 
     if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
         // Setup UDP Broadcast as network interface

@@ -146,7 +146,7 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
                         size_t offset,
                         uint8_t *out_data,
                         size_t data_sz) {
-    uint16_t read_sz;
+    size_t read_sz;
     CHECK_NOT_ZERO_RET(out_data, VS_STORAGE_ERROR_PARAMS);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
