@@ -40,28 +40,38 @@
 /******************************************************************************/
 static void
 _got_file(const vs_fldt_file_version_t *prev_file_ver,
-          const vs_fldt_file_version_t *cur_file_ver,
+          const vs_fldt_file_version_t *new_file_ver,
           const vs_mac_addr_t *gateway,
           bool successfully_updated) {
-    char prev_file_ver_descr[FLDT_FILEVER_BUF];
-    char cur_file_ver_descr[FLDT_FILEVER_BUF];
+    char file_ver_descr[FLDT_FILEVER_BUF];
+    const char *file_type;
 
     VS_IOT_ASSERT(prev_file_ver);
-    VS_IOT_ASSERT(cur_file_ver);
+    VS_IOT_ASSERT(new_file_ver);
     VS_IOT_ASSERT(gateway);
 
-    switch (cur_file_ver->file_type.file_type_id) {
+    switch (new_file_ver->file_type.file_type_id) {
     case VS_UPDATE_FIRMWARE:
-        VS_LOG_INFO("New firmware %s instead of %s downloaded from gateway " FLDT_GATEWAY_TEMPLATE ", %s",
-                    vs_fldt_file_version_descr(cur_file_ver_descr, cur_file_ver),
-                    vs_fldt_file_version_descr(prev_file_ver_descr, prev_file_ver),
-                    FLDT_GATEWAY_ARG(*gateway),
-                    successfully_updated ? "successfully installed" : "did not installed successfully");
-        vs_rpi_restart();
+        file_type = "firmware";
+        break;
+
+    case VS_UPDATE_TRUST_LIST:
+        file_type = "trust list";
         break;
 
     default:
         assert(false && "File type is not supported");
+    }
+
+    VS_LOG_INFO("New %s was loaded and %s : %s",
+                file_type,
+                successfully_updated ? "successfully installed" : "did not installed successfully",
+                vs_fldt_file_version_descr(file_ver_descr, new_file_ver));
+    VS_LOG_INFO("Gateway : " FLDT_GATEWAY_TEMPLATE, FLDT_GATEWAY_ARG(*gateway));
+    VS_LOG_INFO("Previous %s : %s", file_type, vs_fldt_file_version_descr(file_ver_descr, prev_file_ver));
+
+    if (new_file_ver->file_type.file_type_id == VS_UPDATE_FIRMWARE) {
+        vs_rpi_restart();
     }
 }
 
@@ -74,6 +84,7 @@ vs_fldt_init(void) {
 
     FLDT_CHECK(vs_fldt_init_client(_got_file), "Unable to initialize FLDT");
     FLDT_CHECK(vs_fldt_firmware_init(), "Unable to add firmware file type");
+    FLDT_CHECK(vs_fldt_trust_list_init(), "Unable to add Trust List file type");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 

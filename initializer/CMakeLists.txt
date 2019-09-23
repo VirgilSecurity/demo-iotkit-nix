@@ -37,16 +37,6 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(virgil-iot-initializer VERSION 0.1.0 LANGUAGES C)
 
 #
-#   Options
-#
-set(GATEWAY_MANUFACTURE "0x89abcdef" CACHE STRING "Gateway manufacture code")
-set(GATEWAY_MODEL "0x12345678" CACHE STRING "Gateway model code")
-
-set(THING_MANUFACTURE "0xaaabcdef" CACHE STRING "Thing manufacture code")
-set(THING_MODEL "0xA2345678" CACHE STRING "Thing model code")
-
-
-#
 #   Function to create targets for initializers
 #
 function(initializer_executable _is_gateway _manufacture _model)
@@ -105,8 +95,8 @@ function(initializer_executable _is_gateway _manufacture _model)
     target_compile_definitions(${_targetname}
             PRIVATE
             GATEWAY=${_is_gateway}
-            MANUFACTURE=${_manufacture}
-            MODEL=${_model}
+            MANUFACTURE_ID="${_manufacture}"
+            DEVICE_MODEL="${_model}"
             )
 
     #

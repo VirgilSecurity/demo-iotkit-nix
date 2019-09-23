@@ -61,6 +61,9 @@ static pthread_t gateway_starter_thread;
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #endif
 
+static pthread_t *message_bin_thread;
+static pthread_t *upd_http_retrieval_thread;
+
 extern const vs_firmware_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void);
 /******************************************************************************/
@@ -100,9 +103,45 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
 }
 
 /*************************************************************************/
+static int
+_cancel_thread(pthread_t *thread) {
+    void *res;
+
+    if (0 != pthread_cancel(*thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        return -1;
+    }
+
+    if (0 != pthread_join(*thread, &res) || PTHREAD_CANCELED != res) {
+        VS_LOG_ERROR("Error during joining to thread");
+        return -1;
+    } else {
+        VS_LOG_INFO("thread canceled");
+    }
+
+    return 0;
+}
+
+/*************************************************************************/
 static void
 _restart_app() {
-    /* Cleanup the mutexes */
+
+    // Stop message bin thread
+    if (0 != _cancel_thread(message_bin_thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        exit(-1);
+    }
+
+    // Stop retrieval thread
+    if (0 != _cancel_thread(upd_http_retrieval_thread)) {
+        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        exit(-1);
+    }
+
+    // Destroy sdmp services
+    vs_fldt_destroy();
+
+    /* Cleanup a mutexes */
     pthread_mutex_destroy(&_gtwy.firmware_mutex);
     pthread_mutex_destroy(&_gtwy.tl_mutex);
     pthread_mutex_destroy(&_gtwy.shared_events.mtx);
@@ -111,21 +150,18 @@ _restart_app() {
     vs_event_group_destroy(&_gtwy.incoming_data_events);
     vs_event_group_destroy(&_gtwy.message_bin_events);
 
-    while (1)
-        ;
+    vs_rpi_restart();
+    pthread_exit(0);
 }
 
 /******************************************************************************/
 static void *
 _gateway_task(void *pvParameters) {
-    pthread_t *message_bin_thread;
-    pthread_t *upd_http_retrieval_thread;
-    vs_firmware_info_t *request;
     vs_firmware_descriptor_t desc;
     vs_fldt_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
-
-    file_type.file_type_id = VS_UPDATE_FIRMWARE;
+    queued_file_t *queued_file;
+    vs_firmware_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -138,30 +174,32 @@ _gateway_task(void *pvParameters) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
+        while (vs_upd_http_retrieval_get_request(&queued_file)) {
+            file_type.file_type_id = queued_file->file_type;
+            memset(file_type.add_info, 0, sizeof(file_type.add_info));
 
-        while (vs_upd_http_retrieval_get_request(&request)) {
-            if (_is_self_firmware_image(request)) {
-                if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
-                    if (VS_STORAGE_OK ==
-                                vs_update_load_firmware_descriptor(
-                                        &_gtwy.fw_update_ctx, request->manufacture_id, request->device_type, &desc) &&
-                        VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+            switch (queued_file->file_type) {
+            case VS_UPDATE_FIRMWARE:
+                if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
+                    request = &queued_file->fw_info;
+                    if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
+                        if (VS_STORAGE_OK == vs_update_load_firmware_descriptor(&_gtwy.fw_update_ctx,
+                                                                                request->manufacture_id,
+                                                                                request->device_type,
+                                                                                &desc) &&
+                            VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                            (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
+
+                            _restart_app();
+                        }
+                        free(queued_file);
                         (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
-                        _restart_app();
                     }
-                    (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
                 }
-            } else {
-                // TODO : process downloaded firmware and trust list, i. e. send FLDT message
-                // trust list : vs_tl_load_part( vs_tl_element_info_t ==> header
-                //                        (vs_tl_header_t(pub_keys_count - chunks
-                // amount)) / chunk / footer (vs_tl_footer_t - vs_sign_t; vs_hsm_get_signature_len etc.)
-                // vs_update_load_firmware_descriptor( manufacturer, device) ==> descriptor
-                //                if (vs_fldt_new_firmware_available(request)) {
-                //                    VS_LOG_ERROR("Error processing new firmware available");
-                //                }
 
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+
+                request = &queued_file->fw_info;
 
                 memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
                 memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
@@ -169,13 +207,27 @@ _gateway_task(void *pvParameters) {
                     VS_LOG_ERROR("Unable to add new firmware");
                     // TODO :how to process???
                 }
+                break;
+
+            case VS_UPDATE_TRUST_LIST:
+                VS_LOG_DEBUG("Send info about new Trust List over SDMP");
+
+                if (vs_fldt_update_server_file_type(&file_type, NULL, true)) {
+                    VS_LOG_ERROR("Unable to add new Trust List");
+                    // TODO :how to process???
+                }
+                break;
+
+            default:
+                VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type);
+                break;
             }
 
-            free(request);
+            free(queued_file);
         }
 
 #if SIMULATOR
-        if (_test_message[0] != 0) {
+        if (_test_message[0] != 0) { //-V547
             VS_LOG_INFO(_test_message);
         }
 #endif
@@ -186,16 +238,13 @@ _gateway_task(void *pvParameters) {
 /******************************************************************************/
 void
 start_gateway_threads(void) {
-    void *res;
+    //        void *res;
     if (!is_threads_started) {
         is_threads_started = true;
 
+
         if (0 != pthread_create(&gateway_starter_thread, NULL, _gateway_task, NULL)) {
             VS_LOG_ERROR("Error during starting main gateway thread");
-            exit(-1);
-        }
-        if (0 != pthread_join(gateway_starter_thread, &res) || NULL != res) {
-            VS_LOG_ERROR("Error during joining to main gateway thread");
             exit(-1);
         }
     }

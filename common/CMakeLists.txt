@@ -70,6 +70,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/threads/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/input-params.c
+		${CMAKE_CURRENT_LIST_DIR}/src/update/update-hal.c
 		)
 
 #
@@ -93,6 +94,8 @@ target_include_directories(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${CRYPTO_C_INCLUDES}
 		${CRYPTO_C_INCLUDES}/virgil/crypto/common
+		PRIVATE
+		${CMAKE_CURRENT_LIST_DIR}/src
 		)
 
 #

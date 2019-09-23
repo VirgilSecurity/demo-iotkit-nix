@@ -46,6 +46,8 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
     switch (file_type->file_type_id) {
     case VS_UPDATE_FIRMWARE:
         return vs_fldt_add_fw_filetype(file_type, storage_ctx);
+    case VS_UPDATE_TRUST_LIST:
+        return vs_fldt_add_tl_filetype(file_type, storage_ctx);
     default:
         VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
         return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
@@ -61,7 +63,8 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
 
     FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
 
-    vs_fldt_fw_init();
+    vs_fldt_firmware_init();
+    vs_fldt_trust_list_init();
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 

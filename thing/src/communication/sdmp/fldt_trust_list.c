@@ -32,21 +32,30 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
-#define KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
-
+#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
+#include <update-config.h>
+#include <fldt_implementation.h>
+#include <hal/storage/rpi-storage-hal.h>
+#include <trust_list-config.h>
 
+vs_storage_op_ctx_t _tl_storage_ctx;
+
+/******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_init(void);
+vs_fldt_trust_list_init(void) {
+    vs_fldt_file_type_t file_type;
+    vs_fldt_ret_code_e fldt_ret_code;
 
-vs_fldt_ret_code_e
-vs_fldt_firmware_init(void);
+    vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);
+    _tl_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+    _tl_storage_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
 
-vs_fldt_ret_code_e
-vs_fldt_trust_list_init(void);
+    memset(&file_type, 0, sizeof(file_type));
 
-void
-vs_fldt_destroy(void);
+    file_type.file_type_id = VS_UPDATE_TRUST_LIST;
 
-#endif // KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
+    FLDT_CHECK(vs_fldt_update_client_file_type(&file_type, &_tl_storage_ctx), "Unable to add Trust List file type");
+
+    return VS_FLDT_ERR_OK;
+}

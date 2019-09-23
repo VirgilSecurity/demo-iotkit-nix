@@ -43,7 +43,7 @@
 #include "helpers/msg-queue.h"
 
 static pthread_t upd_retrieval_thread;
-static vs_msg_queue_ctx_t *fwdist_event_queue;
+static vs_msg_queue_ctx_t *_event_queue;
 
 // static const uint16_t upd_retrieval_stack = 10 * 1024;
 
@@ -55,8 +55,9 @@ static bool is_retrieval_started;
 static void
 _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_cloud_firmware_header_t header;
-    vs_firmware_info_t *fw_info = NULL;
+    queued_file_t *fw_info = NULL;
     int res;
+
     // It should be immediately available given that this starts first
     if (0 == pthread_mutex_lock(&gtwy->firmware_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got firmware semaphore");
@@ -72,10 +73,15 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
-                fw_info = (vs_firmware_info_t *)malloc(sizeof(vs_firmware_info_t));
-                VS_IOT_MEMCPY(fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
+                fw_info = (queued_file_t *)malloc(sizeof(*fw_info));
+                if (!fw_info) {
+                    VS_LOG_ERROR("Can't allocate memory");
+                    exit(-1);
+                }
+                fw_info->file_type = VS_UPDATE_FIRMWARE;
+                VS_IOT_MEMCPY(&fw_info->fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
 
-                if (0 != vs_msg_queue_push(fwdist_event_queue, fw_info, NULL, 0)) {
+                if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
                     free(fw_info);
                     VS_LOG_ERROR("[MB] Failed to send fw info to output processing!!!");
                 }
@@ -101,12 +107,21 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 /*************************************************************************/
 static void
 _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
+    queued_file_t *tl_info = NULL;
+
     if (0 == pthread_mutex_lock(&gtwy->tl_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
 
         if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
-            // TODO : notify main thread about new trust list (like for FW above)
+
+            tl_info = (queued_file_t *)malloc(sizeof(*tl_info));
+            tl_info->file_type = VS_UPDATE_TRUST_LIST;
+
+            if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {
+                free(tl_info);
+                VS_LOG_ERROR("[MB] Failed to send TL info to output processing!!!");
+            }
 
         } else {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new TL\r\n");
@@ -154,7 +169,7 @@ pthread_t *
 vs_start_upd_http_retrieval_thread(void) {
     if (!is_retrieval_started) {
 
-        fwdist_event_queue = vs_msg_queue_init(FWDIST_QUEUE_SZ, 1, 1);
+        _event_queue = vs_msg_queue_init(FWDIST_QUEUE_SZ, 1, 1);
 
         is_retrieval_started = (0 == pthread_create(&upd_retrieval_thread, NULL, _upd_http_retrieval_task, NULL));
         if (!is_retrieval_started) {
@@ -166,12 +181,12 @@ vs_start_upd_http_retrieval_thread(void) {
 
 /*************************************************************************/
 bool
-vs_upd_http_retrieval_get_request(vs_firmware_info_t **request) {
+vs_upd_http_retrieval_get_request(queued_file_t **request) {
     const uint8_t *data;
     size_t _sz;
     *request = NULL;
-    if (vs_msg_queue_data_present(fwdist_event_queue)) {
-        if (0 == vs_msg_queue_pop(fwdist_event_queue, (void *)request, &data, &_sz)) {
+    if (vs_msg_queue_data_present(_event_queue)) {
+        if (0 == vs_msg_queue_pop(_event_queue, (void *)request, &data, &_sz)) {
             return true;
         }
     }
