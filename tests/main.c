@@ -153,7 +153,7 @@ main(int argc, char *argv[]) {
     // Prepare TL storage
     vs_tl_init_storage();
 
-    VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
+    VS_LOG_INFO("[RPI] Start IoT tests");
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
