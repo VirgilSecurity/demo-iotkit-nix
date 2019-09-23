@@ -44,6 +44,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
 #include <update-config.h>
+#include <trust_list-config.h>
 
 #include "hal/storage/rpi-file-io.h"
 #include "hal/storage/rpi-storage-hal.h"
@@ -137,9 +138,8 @@ main(int argc, char *argv[]) {
     int res = 0;
     uint8_t mac[6];
     self_path = argv[0];
-    vs_storage_op_ctx_t storage_ctx;
-    vs_rpi_get_storage_impl(&storage_ctx.impl);
-    storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    vs_storage_op_ctx_t secbox_ctx;
+    vs_storage_op_ctx_t tl_ctx;
 
     memset(mac, 0, sizeof(mac));
 
@@ -151,25 +151,30 @@ main(int argc, char *argv[]) {
     _remove_keystorage_dir();
 
     // Prepare TL storage
-    vs_tl_init_storage();
+    vs_rpi_get_storage_impl(&tl_ctx.impl);
+    tl_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    vs_tl_init(&tl_ctx);
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
-    storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
-    if (NULL == storage_ctx.storage_ctx) {
+    vs_rpi_get_storage_impl(&secbox_ctx.impl);
+    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    secbox_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
+    if (NULL == secbox_ctx.storage_ctx) {
         res += 1;
     }
 
-    res += vs_secbox_test(&storage_ctx);
+    res += vs_secbox_test(&secbox_ctx);
 
-    storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-    if (NULL == storage_ctx.storage_ctx) {
+    secbox_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+    if (NULL == secbox_ctx.storage_ctx) {
         res += 1;
     }
 
-    res += vs_update_test(&storage_ctx);
+    res += vs_update_test(&secbox_ctx);
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
