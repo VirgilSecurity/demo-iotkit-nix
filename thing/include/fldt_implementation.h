@@ -37,13 +37,13 @@
 
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_init(void);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_firmware_init(void);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_trust_list_init(void);
 
 void

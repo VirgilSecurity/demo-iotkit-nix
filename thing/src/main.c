@@ -49,7 +49,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    int fldt_ret_code;
+    vs_status_code_e ret_code;
 
     printf("\n\n--------------------------------------------\n");
     printf("Thing app at %s\n", argv[0]);
@@ -68,7 +68,7 @@ main(int argc, char *argv[]) {
     self_path = argv[0];
 
     // Init Thing's FLDT implementation
-    FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");
+    FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation. %s", vs_code_descr(ret_code));
 
     // Init thing object
     //    ???
@@ -83,9 +83,9 @@ main(int argc, char *argv[]) {
 
     vs_fldt_destroy();
 
-    int res = vs_rpi_hal_update(argc, argv);
+    ret_code = vs_rpi_hal_update(argc, argv);
 
-    return res;
+    return ret_code;
 }
 
 /******************************************************************************/

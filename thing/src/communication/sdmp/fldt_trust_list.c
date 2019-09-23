@@ -42,10 +42,10 @@
 vs_storage_op_ctx_t _tl_storage_ctx;
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_trust_list_init(void) {
     vs_fldt_file_type_t file_type;
-    vs_fldt_ret_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
 
     vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);
     _tl_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
@@ -57,5 +57,5 @@ vs_fldt_trust_list_init(void) {
 
     FLDT_CHECK(vs_fldt_update_client_file_type(&file_type, &_tl_storage_ctx), "Unable to add Trust List file type");
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }

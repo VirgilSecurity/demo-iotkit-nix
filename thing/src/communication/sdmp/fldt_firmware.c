@@ -56,12 +56,12 @@ _make_firmware_add_data_element(uint8_t *dst, const char *src, size_t elem_buf_s
 }
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_firmware_init(void) {
     static const char *manufacturer_id = THING_MANUFACTURE_ID;
     static const char *device_id = THING_DEVICE_MODEL;
     vs_fldt_file_type_t file_type;
-    vs_fldt_ret_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
     vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)file_type.add_info;
 
     VS_LOG_INFO("Firmware's manufacture ID = \"%s\", device type = \"%s\"", manufacturer_id, device_id);
@@ -78,5 +78,5 @@ vs_fldt_firmware_init(void) {
 
     FLDT_CHECK(vs_fldt_update_client_file_type(&file_type, &_fw_storage_ctx), "Unable to add firmware file type");
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }

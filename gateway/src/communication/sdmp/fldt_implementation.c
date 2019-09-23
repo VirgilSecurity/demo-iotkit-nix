@@ -37,7 +37,7 @@
 #include <fldt_implementation.h>
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
     char file_descr[FLDT_FILEVER_BUF];
 
@@ -50,14 +50,14 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
         return vs_fldt_add_tl_filetype(file_type, storage_ctx);
     default:
         VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
-        return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
     }
 }
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
-    vs_fldt_ret_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
@@ -68,7 +68,7 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/

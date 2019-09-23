@@ -39,18 +39,18 @@
 vs_storage_op_ctx_t _storage_ctx;
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
     (void)file_type;
     *storage_ctx = &_storage_ctx;
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
 int
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info) {
-    vs_fldt_ret_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
     vs_fldt_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)&file_type.add_info; //-V641
 
@@ -63,7 +63,7 @@ vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info) {
     FLDT_CHECK(vs_fldt_update_server_file_type(&file_type, &_storage_ctx, true),
                "Unable to update firmware file mapping");
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/

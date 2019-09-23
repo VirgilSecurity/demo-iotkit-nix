@@ -99,7 +99,8 @@ target_link_libraries(thing
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		update
-
+		virgil-iot-status-code
+		
 		enable_sanitizers
         enable_pedantic_mode
         )

@@ -38,6 +38,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
+#include <virgil/iot/status_code/status_code.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
@@ -49,7 +50,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    int fldt_ret_code;
+    vs_status_code_e ret_code;
 
     printf("\n\n--------------------------------------------\n");
     printf("Gateway app at %s\n", argv[0]);

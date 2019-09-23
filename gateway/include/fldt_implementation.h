@@ -38,20 +38,21 @@
 #include <global-hal.h>
 #include <virgil/iot/protocols/sdmp/fldt.h>
 #include <virgil/iot/update/update.h>
+#include <virgil/iot/status_code/status_code.h>
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_add_tl_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac);
 
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
 
 void

@@ -114,6 +114,7 @@ target_link_libraries(gateway
 		aws-mqtt
 		cloud
 		update
+		virgil-iot-status-code
 
 		enable_sanitizers
         enable_pedantic_mode

@@ -76,9 +76,9 @@ _got_file(const vs_fldt_file_version_t *prev_file_ver,
 }
 
 /******************************************************************************/
-vs_fldt_ret_code_e
+vs_status_code_e
 vs_fldt_init(void) {
-    vs_fldt_ret_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
@@ -88,7 +88,7 @@ vs_fldt_init(void) {
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
-    return VS_FLDT_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
