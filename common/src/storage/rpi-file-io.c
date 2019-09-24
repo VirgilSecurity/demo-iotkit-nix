@@ -555,7 +555,7 @@ vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) 
 int
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
     size_t out_sz_size_t = *out_sz;
-    bool call_res;
+    vs_hsm_err_code_e call_res;
 
     call_res = vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, &out_sz_size_t)
                        ? VS_HSM_ERR_OK

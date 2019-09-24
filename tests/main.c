@@ -156,7 +156,7 @@ main(int argc, char *argv[]) {
     tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
     vs_tl_init(&tl_ctx);
 
-    VS_LOG_INFO("[RPI] Start IoT rpi gateway tests");
+    VS_LOG_INFO("[RPI] Start IoT tests");
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 

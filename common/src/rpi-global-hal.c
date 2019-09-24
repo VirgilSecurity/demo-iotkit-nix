@@ -48,7 +48,6 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
 #include "hal/rpi-global-hal.h"
@@ -270,9 +269,6 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
 
     // Initialize SDMP
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
-
-    // Register FLDT service
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_service(queued_netif)), -1, "FLDT service is not registered");
 
     return 0;
 }

@@ -46,7 +46,4 @@ vs_fldt_firmware_init(void);
 vs_status_code_e
 vs_fldt_trust_list_init(void);
 
-void
-vs_fldt_destroy(void);
-
 #endif // KUNLUN_SDMP_FLDT_IMPLEMENTATION_H

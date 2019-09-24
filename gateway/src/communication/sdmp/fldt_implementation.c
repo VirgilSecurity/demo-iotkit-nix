@@ -33,11 +33,10 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <fldt_implementation.h>
 
 /******************************************************************************/
-vs_status_code_e
+vs_fldt_ret_code_e
 vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
     char file_descr[FLDT_FILEVER_BUF];
 
@@ -50,29 +49,25 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
         return vs_fldt_add_tl_filetype(file_type, storage_ctx);
     default:
         VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
-        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
+        return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
     }
 }
 
 /******************************************************************************/
-vs_status_code_e
-vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
-    vs_status_code_e ret_code;
-
-    VS_LOG_DEBUG("[FLDT] Initialization");
-
-    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
-
-    vs_fldt_firmware_init();
-    vs_fldt_trust_list_init();
-
-    VS_LOG_DEBUG("[FLDT] Successfully initialized");
-
-    return VS_CODE_OK;
-}
+// vs_fldt_ret_code_e
+// vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
+//    vs_fldt_ret_code_e fldt_ret_code;
+//
+//    VS_LOG_DEBUG("[FLDT] Initialization");
+//
+//    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
+//
+//    vs_fldt_firmware_init();
+//    vs_fldt_trust_list_init();
+//
+//    VS_LOG_DEBUG("[FLDT] Successfully initialized");
+//
+//    return VS_FLDT_ERR_OK;
+//}
 
 /******************************************************************************/
-void
-vs_fldt_destroy(void) {
-    vs_fldt_destroy_server();
-}

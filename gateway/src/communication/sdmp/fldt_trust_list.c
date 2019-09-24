@@ -33,6 +33,7 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/fldt_private.h>
 #include <update-config.h>
 #include <hal/storage/rpi-storage-hal.h>
 #include <trust_list-config.h>

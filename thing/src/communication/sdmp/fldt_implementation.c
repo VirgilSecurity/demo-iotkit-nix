@@ -32,7 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <virgil/iot/protocols/sdmp/fldt.h>
+#include <virgil/iot/protocols/sdmp/fldt_private.h>
 #include <fldt_implementation.h>
 #include <limits.h>
 #include <hal/rpi-global-hal.h>
@@ -92,10 +92,3 @@ vs_fldt_init(void) {
 }
 
 /******************************************************************************/
-void
-vs_fldt_destroy(void) {
-
-    vs_fldt_destroy_client();
-
-    VS_LOG_DEBUG("[FLDT] Successfully destroyed");
-}

@@ -37,8 +37,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
-#include <virgil/iot/status_code/status_code.h>
+#include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
@@ -50,7 +49,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    vs_status_code_e ret_code;
+    int fldt_ret_code;
 
     printf("\n\n--------------------------------------------\n");
     printf("Gateway app at %s\n", argv[0]);
@@ -69,7 +68,11 @@ main(int argc, char *argv[]) {
     self_path = argv[0];
 
     // Init Thing's FLDT implementation
-    FLDT_CHECK(vs_fldt_init(&forced_mac_addr), "Unable to initialize Thing's FLDT implementation");
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
+    FLDT_CHECK(vs_fldt_init_server(&forced_mac_addr, vs_fldt_add_filetype),
+               "Unable to initialize FLDT's server service");
+    vs_fldt_firmware_init();
+    vs_fldt_trust_list_init();
 
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
