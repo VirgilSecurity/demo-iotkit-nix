@@ -33,7 +33,6 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <fldt_implementation.h>
 
 /******************************************************************************/
@@ -55,24 +54,20 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
 }
 
 /******************************************************************************/
-vs_fldt_ret_code_e
-vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
-    vs_fldt_ret_code_e fldt_ret_code;
-
-    VS_LOG_DEBUG("[FLDT] Initialization");
-
-    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
-
-    vs_fldt_firmware_init();
-    vs_fldt_trust_list_init();
-
-    VS_LOG_DEBUG("[FLDT] Successfully initialized");
-
-    return VS_FLDT_ERR_OK;
-}
+// vs_fldt_ret_code_e
+// vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
+//    vs_fldt_ret_code_e fldt_ret_code;
+//
+//    VS_LOG_DEBUG("[FLDT] Initialization");
+//
+//    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
+//
+//    vs_fldt_firmware_init();
+//    vs_fldt_trust_list_init();
+//
+//    VS_LOG_DEBUG("[FLDT] Successfully initialized");
+//
+//    return VS_FLDT_ERR_OK;
+//}
 
 /******************************************************************************/
-void
-vs_fldt_destroy(void) {
-    vs_fldt_destroy_server();
-}

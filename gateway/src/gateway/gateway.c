@@ -139,7 +139,7 @@ _restart_app() {
     }
 
     // Destroy sdmp services
-    vs_fldt_destroy();
+    vs_fldt_destroy_server();
 
     /* Cleanup a mutexes */
     pthread_mutex_destroy(&_gtwy.firmware_mutex);

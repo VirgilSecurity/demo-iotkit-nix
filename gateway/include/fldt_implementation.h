@@ -36,8 +36,8 @@
 #define RPI_SDMP_FLDT_IMPLEMENTATION_H
 
 #include <global-hal.h>
-#include <virgil/iot/protocols/sdmp/fldt.h>
 #include <virgil/iot/update/update.h>
+#include <virgil/iot/protocols/sdmp/fldt_private.h>
 
 vs_fldt_ret_code_e
 vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
@@ -49,9 +49,6 @@ vs_fldt_ret_code_e
 vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
 
 vs_fldt_ret_code_e
-vs_fldt_init(const vs_mac_addr_t *gateway_mac);
-
-vs_fldt_ret_code_e
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
 
 void
@@ -59,8 +56,5 @@ vs_fldt_firmware_init(void);
 
 void
 vs_fldt_trust_list_init(void);
-
-void
-vs_fldt_destroy(void);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H
