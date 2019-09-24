@@ -43,6 +43,10 @@
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
 
+#if SIMULATOR
+static const char _test_message[] = TEST_UPDATE_MESSAGE;
+#endif
+
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
@@ -71,11 +75,12 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");
     FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");
 
-    // Init thing object
-    //    ???
-
     // Start app
-    //    start_thing_threads();
+#if SIMULATOR
+    if (_test_message[0] != 0) { //-V547
+        VS_LOG_INFO(_test_message);
+    }
+#endif
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
