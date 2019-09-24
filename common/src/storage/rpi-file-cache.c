@@ -252,7 +252,6 @@ vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t
             if (element && element->file_sz > offset) {
                 max_avail_sz = element->file_sz - offset;
                 *read_sz = max_avail_sz < buf_sz ? max_avail_sz : buf_sz;
-                printf("%s [%ld] %ld:%d\n", file_name, (long)element->file_sz, (long)offset, (int)*read_sz);
                 memcpy(data, &element->data[offset], *read_sz);
                 res = 0;
             }
