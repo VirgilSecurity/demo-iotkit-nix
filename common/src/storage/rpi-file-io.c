@@ -255,7 +255,7 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
         return false;
     }
 
-    VS_LOG_DEBUG("Write file '%s', %d bytes", file_path, data_sz);
+    VS_LOG_TRACE("Write file '%s', %d bytes", file_path, data_sz);
 
     fp = fopen(file_path, "rb");
     if (fp) {
