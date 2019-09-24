@@ -49,6 +49,7 @@
 #include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
+#include <hal/storage/rpi-file-cache.h>
 
 #include "hal/storage/rpi-file-io.h"
 
@@ -255,7 +256,9 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
         return false;
     }
 
-    //VS_LOG_TRACE("Write file '%s', %d bytes", file_path, data_sz);
+    // VS_LOG_TRACE("Write file '%s', %d bytes", file_path, data_sz);
+
+    vs_file_cache_close(file_path);
 
     fp = fopen(file_path, "rb");
     if (fp) {
@@ -342,6 +345,14 @@ vs_rpi_read_file_data(const char *folder,
         goto terminate;
     }
 
+    // Cached read
+    if (0 == vs_file_cache_open(file_path)) {
+        if (0 == vs_file_cache_read(file_path, offset, data, buf_sz, read_sz)) {
+            return true;
+        }
+    }
+
+    // Real read in case of cache is absent
     fp = fopen(file_path, "rb");
 
     if (fp) {
@@ -393,6 +404,8 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
     }
+
+    vs_file_cache_close(file_path);
 
     remove(file_path);
 

@@ -42,6 +42,7 @@
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
 #include "hal/rpi-global-hal.h"
+#include "hal/storage/rpi-file-cache.h"
 
 /******************************************************************************/
 int
@@ -67,6 +68,9 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("%s", argv[0]);
     self_path = argv[0];
 
+    // Enable cached file IO
+    vs_file_cache_enable(true);
+
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
     FLDT_CHECK(vs_fldt_init_server(&forced_mac_addr, vs_fldt_add_filetype),
@@ -86,6 +90,9 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("Terminating application ...");
 
     int res = vs_rpi_hal_update(argc, argv);
+
+    // Clean File cache
+    vs_file_cache_clean();
 
     return res;
 }

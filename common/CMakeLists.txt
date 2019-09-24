@@ -56,6 +56,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/include/threads/event-group-bits.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/msg-queue.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/input-params.h
+		include/hal/storage/rpi-file-cache.h
 
 		#	Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
@@ -63,6 +64,7 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
+		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-cache.c
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
