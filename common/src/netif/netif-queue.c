@@ -40,7 +40,7 @@
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include "helpers/msg-queue.h"
 
-#define VS_NETIF_QUEUE_SZ (20)
+#define VS_NETIF_QUEUE_SZ (100)
 
 static const vs_netif_t *_base_netif = 0;
 static vs_netif_rx_cb_t _netif_rx_cb = 0;
