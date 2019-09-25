@@ -10,7 +10,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/update/update.h>
-#include <virgil/iot/update/update_interface.h>
+#include <virgil/iot/update/update_hal.h>
 
 char *self_path = NULL;
 /******************************************************************************/

@@ -40,7 +40,7 @@ vs_storage_op_ctx_t _storage_ctx;
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
+vs_fldt_add_fw_filetype(const vs_update_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
     (void)file_type;
     *storage_ctx = &_storage_ctx;
 
@@ -51,7 +51,7 @@ vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_
 int
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info) {
     vs_status_code_e ret_code;
-    vs_fldt_file_type_t file_type;
+    vs_update_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)&file_type.add_info; //-V641
 
     memset(&file_type, 0, sizeof(file_type));
@@ -72,4 +72,6 @@ vs_fldt_firmware_init(void) {
     vs_rpi_get_storage_impl(&_storage_ctx.impl);
     _storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
     _storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+
+    vs_fldt_init_server()
 }

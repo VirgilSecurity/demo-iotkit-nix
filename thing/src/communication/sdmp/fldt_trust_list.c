@@ -44,7 +44,7 @@ vs_storage_op_ctx_t _tl_storage_ctx;
 /******************************************************************************/
 vs_status_code_e
 vs_fldt_trust_list_init(void) {
-    vs_fldt_file_type_t file_type;
+    vs_update_file_type_t file_type;
     vs_status_code_e ret_code;
 
     vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);

@@ -64,7 +64,7 @@ static const char _test_message[] = TEST_UPDATE_MESSAGE;
 static pthread_t *message_bin_thread;
 static pthread_t *upd_http_retrieval_thread;
 
-extern const vs_firmware_descriptor_t *
+extern const vs_update_fw_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void);
 /******************************************************************************/
 gtwy_t *
@@ -96,7 +96,7 @@ get_gateway_ctx(void) {
 /*************************************************************************/
 static bool
 _is_self_firmware_image(vs_firmware_info_t *fw_info) {
-    const vs_firmware_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
+    const vs_update_fw_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
 
     return (0 == VS_IOT_MEMCMP(desc->info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
             0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
@@ -157,8 +157,8 @@ _restart_app() {
 /******************************************************************************/
 static void *
 _gateway_task(void *pvParameters) {
-    vs_firmware_descriptor_t desc;
-    vs_fldt_file_type_t file_type;
+    vs_update_fw_descriptor_t desc;
+    vs_update_file_type_t file_type;
     vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
     queued_file_t *queued_file;
     vs_firmware_info_t *request;

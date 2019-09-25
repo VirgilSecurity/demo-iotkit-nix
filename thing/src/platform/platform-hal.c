@@ -43,7 +43,7 @@
 //#define GW_APP_TYPE { 'A', 'P', 'P', '0' }
 //
 //// TODO: Need to use real descriptor, which can be obtain from footer of self image
-// static vs_firmware_descriptor_t _descriptor = {
+// static vs_update_fw_descriptor_t _descriptor = {
 //        .info.manufacture_id = GW_MANUFACTURE_ID,
 //        .info.device_type = GW_DEVICE_TYPE,
 //        .info.version.app_type = GW_APP_TYPE,
@@ -66,7 +66,7 @@
 //}
 //
 ///******************************************************************************/
-// const vs_firmware_descriptor_t *
+// const vs_update_fw_descriptor_t *
 // vs_global_hal_get_own_firmware_descriptor(void) {
 //    return &_descriptor;
 //}

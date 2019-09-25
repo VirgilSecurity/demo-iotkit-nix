@@ -60,7 +60,7 @@ vs_status_code_e
 vs_fldt_firmware_init(void) {
     static const char *manufacturer_id = THING_MANUFACTURE_ID;
     static const char *device_id = THING_DEVICE_MODEL;
-    vs_fldt_file_type_t file_type;
+    vs_update_file_type_t file_type;
     vs_status_code_e ret_code;
     vs_fldt_fw_add_info_t *fw_add_data = (vs_fldt_fw_add_info_t *)file_type.add_info;
 

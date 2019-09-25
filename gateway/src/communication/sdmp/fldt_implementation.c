@@ -36,8 +36,8 @@
 #include <fldt_implementation.h>
 
 /******************************************************************************/
-vs_fldt_ret_code_e
-vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
+vs_status_code_e
+vs_fldt_add_filetype(const vs_update_file_type_t *file_type, void **update_ctx) {
     char file_descr[FLDT_FILEVER_BUF];
 
     assert(file_type);
@@ -54,20 +54,18 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
 }
 
 /******************************************************************************/
-// vs_fldt_ret_code_e
-// vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
-//    vs_fldt_ret_code_e fldt_ret_code;
-//
-//    VS_LOG_DEBUG("[FLDT] Initialization");
-//
-//    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
-//
-//    vs_fldt_firmware_init();
-//    vs_fldt_trust_list_init();
-//
-//    VS_LOG_DEBUG("[FLDT] Successfully initialized");
-//
-//    return VS_FLDT_ERR_OK;
-//}
+vs_status_code_e
+vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
+    vs_status_code_e fldt_ret_code;
 
-/******************************************************************************/
+    VS_LOG_DEBUG("[FLDT] Initialization");
+
+    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
+
+    vs_fldt_firmware_init();
+    vs_fldt_trust_list_init();
+
+    VS_LOG_DEBUG("[FLDT] Successfully initialized");
+
+    return VS_CODE_OK;
+}

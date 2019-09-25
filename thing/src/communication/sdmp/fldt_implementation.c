@@ -39,8 +39,8 @@
 
 /******************************************************************************/
 static void
-_got_file(const vs_fldt_file_version_t *prev_file_ver,
-          const vs_fldt_file_version_t *new_file_ver,
+_got_file(const vs_update_file_version_t *prev_file_ver,
+          const vs_update_file_version_t *new_file_ver,
           const vs_mac_addr_t *gateway,
           bool successfully_updated) {
     char file_ver_descr[FLDT_FILEVER_BUF];

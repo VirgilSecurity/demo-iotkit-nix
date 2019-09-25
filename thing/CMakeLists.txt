@@ -100,7 +100,7 @@ target_link_libraries(thing
 
 		update
 		virgil-iot-status-code
-		
+
 		enable_sanitizers
         enable_pedantic_mode
         )

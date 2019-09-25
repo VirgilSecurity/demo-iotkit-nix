@@ -42,7 +42,7 @@ vs_storage_op_ctx_t _tl_storage_ctx;
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_add_tl_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
+vs_fldt_add_tl_filetype(const vs_update_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx) {
     (void)file_type;
     *storage_ctx = &_tl_storage_ctx;
 
