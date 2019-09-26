@@ -38,6 +38,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/trust_list/trust_list.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt_implementation.h"
@@ -50,12 +51,10 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
+    vs_storage_op_ctx_t *gw_fw_ctx;
+    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = GW_MANUFACTURE_ID;
+    static const uint8_t device_type[DEVICE_TYPE_SIZE] = GW_DEVICE_MODEL;
     int fldt_ret_code;
-
-    printf("\n\n--------------------------------------------\n");
-    printf("Gateway app at %s\n", argv[0]);
-    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
-    printf("--------------------------------------------\n\n");
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
@@ -75,11 +74,13 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
     FLDT_CHECK(vs_fldt_init_server(&forced_mac_addr, vs_fldt_add_filetype),
                "Unable to initialize FLDT's server service");
-    vs_fldt_firmware_init();
+    gw_fw_ctx = vs_fldt_firmware_init();
     vs_fldt_trust_list_init();
 
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
+
+    vs_rpi_app_info("Gateway", gw_fw_ctx, manufacture_id, device_type);
 
     // Start app
     start_gateway_threads();

@@ -77,14 +77,14 @@ _got_file(const vs_fldt_file_version_t *prev_file_ver,
 
 /******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_init(void) {
+vs_fldt_init(vs_storage_op_ctx_t **fw_ctx, vs_storage_op_ctx_t **tl_ctx) {
     vs_fldt_ret_code_e fldt_ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
     FLDT_CHECK(vs_fldt_init_client(_got_file), "Unable to initialize FLDT");
-    FLDT_CHECK(vs_fldt_firmware_init(), "Unable to add firmware file type");
-    FLDT_CHECK(vs_fldt_trust_list_init(), "Unable to add Trust List file type");
+    FLDT_CHECK(vs_fldt_firmware_init(fw_ctx), "Unable to add firmware file type");
+    FLDT_CHECK(vs_fldt_trust_list_init(tl_ctx), "Unable to add Trust List file type");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 

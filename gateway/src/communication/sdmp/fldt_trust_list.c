@@ -69,9 +69,11 @@ vs_fldt_new_trust_list_available(vs_firmware_info_t *firmware_info) {
 }
 
 /******************************************************************************/
-void
+vs_storage_op_ctx_t *
 vs_fldt_trust_list_init(void) {
     vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);
     _tl_storage_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
     _tl_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+
+    return &_tl_storage_ctx;
 }

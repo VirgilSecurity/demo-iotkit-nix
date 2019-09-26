@@ -51,10 +51,10 @@ vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t *
 vs_fldt_ret_code_e
 vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
 
-void
+vs_storage_op_ctx_t *
 vs_fldt_firmware_init(void);
 
-void
+vs_storage_op_ctx_t *
 vs_fldt_trust_list_init(void);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

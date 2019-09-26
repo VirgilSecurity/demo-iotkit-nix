@@ -57,7 +57,7 @@ _make_firmware_add_data_element(uint8_t *dst, const char *src, size_t elem_buf_s
 
 /******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_firmware_init(void) {
+vs_fldt_firmware_init(vs_storage_op_ctx_t **fw_ctx) {
     static const char *manufacturer_id = THING_MANUFACTURE_ID;
     static const char *device_id = THING_DEVICE_MODEL;
     vs_fldt_file_type_t file_type;
@@ -69,6 +69,7 @@ vs_fldt_firmware_init(void) {
     vs_rpi_get_storage_impl(&_fw_storage_ctx.impl);
     _fw_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
     _fw_storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    *fw_ctx = &_fw_storage_ctx;
 
     memset(&file_type, 0, sizeof(file_type));
 

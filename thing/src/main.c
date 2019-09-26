@@ -36,6 +36,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
+#include <virgil/iot/trust_list/trust_list.h>
 
 #include "thing.h"
 #include "hal/netif/rpi-plc-sim.h"
@@ -53,13 +54,11 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
+    vs_storage_op_ctx_t *fw_ctx;
+    vs_storage_op_ctx_t *tl_ctx;
     int fldt_ret_code;
-
-    printf("\n\n--------------------------------------------\n");
-    printf("Thing app at %s\n", argv[0]);
-    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", THING_MANUFACTURE_ID, THING_DEVICE_MODEL);
-
-    printf("--------------------------------------------\n\n");
+    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = THING_MANUFACTURE_ID;
+    static const uint8_t device_type[DEVICE_TYPE_SIZE] = THING_DEVICE_MODEL;
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
@@ -73,7 +72,9 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");
-    FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");
+    FLDT_CHECK(vs_fldt_init(&fw_ctx, &tl_ctx), "Unable to initialize Thing's FLDT implementation");
+
+    vs_rpi_app_info("Thing", fw_ctx, manufacture_id, device_type);
 
     // Start app
 #if SIMULATOR

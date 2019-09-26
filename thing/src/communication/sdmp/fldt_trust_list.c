@@ -43,13 +43,14 @@ vs_storage_op_ctx_t _tl_storage_ctx;
 
 /******************************************************************************/
 vs_fldt_ret_code_e
-vs_fldt_trust_list_init(void) {
+vs_fldt_trust_list_init(vs_storage_op_ctx_t **tl_ctx) {
     vs_fldt_file_type_t file_type;
     vs_fldt_ret_code_e fldt_ret_code;
 
     vs_rpi_get_storage_impl(&_tl_storage_ctx.impl);
     _tl_storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
     _tl_storage_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    *tl_ctx = &_tl_storage_ctx;
 
     memset(&file_type, 0, sizeof(file_type));
 

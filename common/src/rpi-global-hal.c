@@ -50,6 +50,8 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
+#include <virgil/iot/update/update.h>
+#include <virgil/iot/trust_list/tl_structs.h>
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
 
@@ -271,6 +273,46 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
 
     return 0;
+}
+
+/******************************************************************************/
+void
+vs_rpi_app_info(const char *app_title,
+                vs_storage_op_ctx_t *fw_ctx,
+                const uint8_t manufacture_id[MANUFACTURE_ID_SIZE],
+                const uint8_t device_type[DEVICE_TYPE_SIZE]) {
+    vs_firmware_descriptor_t fw_descr;
+    vs_firmware_version_t *fw_ver = &fw_descr.info.version;
+    static const uint32_t START_EPOCH = 1420070400; // January 1, 2015 UTC
+    time_t fw_timestamp;
+    vs_tl_element_info_t tl_elem_info;
+    vs_tl_header_t tl_header;
+    uint16_t tl_header_sz;
+
+    memset(&fw_descr, 0, sizeof(fw_descr));
+    if (vs_update_load_firmware_descriptor(fw_ctx, manufacture_id, device_type, &fw_descr)) {
+        VS_LOG_WARNING("Error while loading Gateway's firmware descriptor");
+    }
+    fw_timestamp = fw_ver->timestamp + START_EPOCH;
+
+    tl_elem_info.id = VS_TL_ELEMENT_TLH;
+    tl_header_sz = sizeof(tl_header);
+    vs_tl_load_part(&tl_elem_info, (uint8_t *)&tl_header, tl_header_sz, &tl_header_sz);
+
+    VS_LOG_INFO("--------------------------------------------");
+    VS_LOG_INFO("%s app at %s", app_title, self_path);
+    VS_LOG_INFO("Manufacture ID = \"%s\"", manufacture_id);
+    VS_LOG_INFO("Device type = \"%s\"", device_type);
+    VS_LOG_INFO("%s firmware version : ver %d.%d.%d.%c.%d, %s",
+                app_title,
+                fw_ver->major,
+                fw_ver->minor,
+                fw_ver->patch,
+                fw_ver->dev_milestone >= ' ' ? fw_ver->dev_milestone : '0',
+                fw_ver->dev_build,
+                fw_ver->timestamp ? asctime(localtime(&fw_timestamp)) : "0");
+    VS_LOG_INFO("Trust List version : %d", ntohs(tl_header.version));
+    VS_LOG_INFO("--------------------------------------------");
 }
 
 /******************************************************************************/

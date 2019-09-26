@@ -67,9 +67,11 @@ vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info) {
 }
 
 /******************************************************************************/
-void
+vs_storage_op_ctx_t *
 vs_fldt_firmware_init(void) {
     vs_rpi_get_storage_impl(&_storage_ctx.impl);
     _storage_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
     _storage_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+
+    return &_storage_ctx;
 }
