@@ -57,8 +57,8 @@ main(int argc, char *argv[]) {
     vs_storage_op_ctx_t *fw_ctx;
     vs_storage_op_ctx_t *tl_ctx;
     int fldt_ret_code;
-    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = THING_MANUFACTURE_ID;
-    static const uint8_t device_type[DEVICE_TYPE_SIZE] = THING_DEVICE_MODEL;
+    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = {THING_MANUFACTURE_ID};
+    static const uint8_t device_type[DEVICE_TYPE_SIZE] = {THING_DEVICE_MODEL};
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;

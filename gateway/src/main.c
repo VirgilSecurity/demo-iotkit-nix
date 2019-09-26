@@ -52,8 +52,8 @@ main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
     vs_storage_op_ctx_t *gw_fw_ctx;
-    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = GW_MANUFACTURE_ID;
-    static const uint8_t device_type[DEVICE_TYPE_SIZE] = GW_DEVICE_MODEL;
+    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = {GW_MANUFACTURE_ID};
+    static const uint8_t device_type[DEVICE_TYPE_SIZE] = {GW_DEVICE_MODEL};
     int fldt_ret_code;
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {

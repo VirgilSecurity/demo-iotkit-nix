@@ -57,8 +57,8 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
 void
 vs_rpi_app_info(const char *app_title,
                 vs_storage_op_ctx_t *fw_ctx,
-                const uint8_t manufacture_id[MANUFACTURE_ID_SIZE],
-                const uint8_t device_type[DEVICE_TYPE_SIZE]);
+                const uint8_t *manufacture_id,
+                const uint8_t *device_type);
 
 void
 vs_rpi_restart(void);
