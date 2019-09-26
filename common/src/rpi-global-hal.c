@@ -303,7 +303,7 @@ vs_rpi_app_info(const char *app_title,
     VS_LOG_INFO("%s app at %s", app_title, self_path);
     VS_LOG_INFO("Manufacture ID = \"%s\"", manufacture_id);
     VS_LOG_INFO("Device type = \"%s\"", device_type);
-    VS_LOG_INFO("%s firmware version : ver %d.%d.%d.%c.%d, %s",
+    VS_LOG_INFO("%s firmware version : %d.%d.%d.%c.%d, %s",
                 app_title,
                 fw_ver->major,
                 fw_ver->minor,
