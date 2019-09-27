@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/update/update.h>
 
 typedef struct __attribute__((__packed__)) {

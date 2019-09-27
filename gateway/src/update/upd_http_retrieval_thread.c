@@ -68,7 +68,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         if (VS_CLOUD_ERR_OK == res) {
             VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
 
-            res = vs_update_verify_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
+            res = vs_firmware_verify_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
             if (VS_STORAGE_OK == res) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
@@ -88,7 +88,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
             } else {
                 VS_LOG_DEBUG("[MB_NOTIFY]:Error verify firmware image\r\n");
-                vs_update_delete_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
+                vs_firmware_delete_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
             }
 
         } else {

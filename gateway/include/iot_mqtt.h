@@ -34,8 +34,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __AMAZON_MQTT__
-#define __AMAZON_MQTT__
+#ifndef _AMAZON_MQTT_
+#define _AMAZON_MQTT_
 
 #include "aws_iot_mqtt_client_interface.h"
 #include <virgil/iot/cloud/cloud.h>
@@ -81,4 +81,4 @@ iot_send(iot_message_handler_t *handler, const char *topic, uint8_t *data, size_
 bool
 iot_process(iot_message_handler_t *handler);
 
-#endif //__AMAZON_MQTT__
+#endif //_AMAZON_MQTT_

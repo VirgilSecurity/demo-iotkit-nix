@@ -158,8 +158,7 @@ _restart_app() {
 static void *
 _gateway_task(void *pvParameters) {
     vs_firmware_descriptor_t desc;
-    vs_fldt_file_type_t file_type;
-    vs_fldt_fw_add_info_t *fw_add_info = (vs_fldt_fw_add_info_t *)file_type.add_info;
+    vs_update_file_type_t file_type;
     queued_file_t *queued_file;
     vs_firmware_info_t *request;
 
@@ -183,11 +182,11 @@ _gateway_task(void *pvParameters) {
                 if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
                     request = &queued_file->fw_info;
                     if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
-                        if (VS_STORAGE_OK == vs_update_load_firmware_descriptor(&_gtwy.fw_update_ctx,
-                                                                                request->manufacture_id,
-                                                                                request->device_type,
-                                                                                &desc) &&
-                            VS_STORAGE_OK == vs_update_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                        if (VS_STORAGE_OK == vs_firmware_load_firmware_descriptor(&_gtwy.fw_update_ctx,
+                                                                                  request->manufacture_id,
+                                                                                  request->device_type,
+                                                                                  &desc) &&
+                            VS_STORAGE_OK == vs_firmware_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
                             (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
 
                             _restart_app();
@@ -199,11 +198,7 @@ _gateway_task(void *pvParameters) {
 
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
 
-                request = &queued_file->fw_info;
-
-                memcpy(&fw_add_info->manufacture_id, &request->manufacture_id, sizeof(request->manufacture_id));
-                memcpy(&fw_add_info->device_type, &request->device_type, sizeof(request->device_type));
-                if (vs_fldt_update_server_file_type(&file_type, &_gtwy.fw_update_ctx, true)) {
+                if (vs_fldt_update_server_file_type(&file_type, &_fw_update_ctx, true)) {
                     VS_LOG_ERROR("Unable to add new firmware");
                     // TODO :how to process???
                 }
@@ -212,7 +207,7 @@ _gateway_task(void *pvParameters) {
             case VS_UPDATE_TRUST_LIST:
                 VS_LOG_DEBUG("Send info about new Trust List over SDMP");
 
-                if (vs_fldt_update_server_file_type(&file_type, NULL, true)) {
+                if (vs_fldt_update_server_file_type(&file_type, &_tl_update_ctx, true)) {
                     VS_LOG_ERROR("Unable to add new Trust List");
                     // TODO :how to process???
                 }

@@ -9,13 +9,12 @@
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/update/update.h>
-#include <virgil/iot/update/update_interface.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
 
 char *self_path = NULL;
 /******************************************************************************/
 int
-vs_update_install_prepare_space_hal(void) {
+vs_firmware_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
     CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
@@ -28,7 +27,7 @@ vs_update_install_prepare_space_hal(void) {
 
 /******************************************************************************/
 int
-vs_update_install_append_data_hal(const void *data, uint16_t data_sz) {
+vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 
     int res = VS_STORAGE_ERROR_GENERAL;
     char filename[FILENAME_MAX];

@@ -35,26 +35,15 @@
 #ifndef RPI_SDMP_FLDT_IMPLEMENTATION_H
 #define RPI_SDMP_FLDT_IMPLEMENTATION_H
 
-#include <global-hal.h>
-#include <virgil/iot/update/update.h>
-#include <virgil/iot/protocols/sdmp/fldt_private.h>
+#include <virgil/iot/status_code/status_code.h>
+#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-vs_fldt_ret_code_e
-vs_fldt_add_fw_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
+extern vs_update_interface_t _fw_update_ctx;
+extern vs_update_interface_t _tl_update_ctx;
+extern vs_storage_op_ctx_t _fw_storage_ctx;
+extern vs_storage_op_ctx_t _tl_storage_ctx;
 
-vs_fldt_ret_code_e
-vs_fldt_add_tl_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
-
-vs_fldt_ret_code_e
-vs_fldt_add_filetype(const vs_fldt_file_type_t *file_type, vs_storage_op_ctx_t **storage_ctx);
-
-vs_fldt_ret_code_e
-vs_fldt_new_firmware_available(vs_firmware_info_t *firmware_info);
-
-void
-vs_fldt_firmware_init(void);
-
-void
-vs_fldt_trust_list_init(void);
+vs_status_code_e
+vs_fldt_init(const vs_mac_addr_t *mac_addr);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

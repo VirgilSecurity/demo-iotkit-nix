@@ -37,13 +37,12 @@
 
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
 
-vs_fldt_ret_code_e
+extern vs_update_interface_t _fw_update_ctx;
+extern vs_update_interface_t _tl_update_ctx;
+extern vs_storage_op_ctx_t _fw_storage_ctx;
+extern vs_storage_op_ctx_t _tl_storage_ctx;
+
+vs_status_code_e
 vs_fldt_init(void);
-
-vs_fldt_ret_code_e
-vs_fldt_firmware_init(void);
-
-vs_fldt_ret_code_e
-vs_fldt_trust_list_init(void);
 
 #endif // KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
