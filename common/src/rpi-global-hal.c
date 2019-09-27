@@ -210,6 +210,8 @@ void
 vs_rpi_hal_sleep_until_stop(void) {
     struct sigaction sigaction_ctx;
 
+    memset(&sigaction_ctx, 0, sizeof(sigaction_ctx));
+
     // Catch Signals to terminate application correctly
     sigaction_ctx.sa_flags = SA_SIGINFO;
     sigaction_ctx.sa_sigaction = _wave_signal_process;
