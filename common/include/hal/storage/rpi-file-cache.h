@@ -39,6 +39,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 int
 vs_file_cache_enable(bool enable);
