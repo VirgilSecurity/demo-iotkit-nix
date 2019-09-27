@@ -158,8 +158,7 @@ _restart_app() {
 static void *
 _gateway_task(void *pvParameters) {
     vs_firmware_descriptor_t desc;
-    vs_update_file_type_t file_type;
-    queued_file_t *queued_file;
+    vs_update_file_type_t *queued_file;
     vs_firmware_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
@@ -174,13 +173,12 @@ _gateway_task(void *pvParameters) {
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
         while (vs_upd_http_retrieval_get_request(&queued_file)) {
-            file_type.file_type_id = queued_file->file_type;
-            memset(file_type.add_info, 0, sizeof(file_type.add_info));
 
-            switch (queued_file->file_type) {
+            switch (queued_file->file_type_id) {
             case VS_UPDATE_FIRMWARE:
-                if (queued_file->file_type == VS_UPDATE_FIRMWARE && _is_self_firmware_image(&queued_file->fw_info)) {
-                    request = &queued_file->fw_info;
+                if (queued_file->file_type_id == VS_UPDATE_FIRMWARE &&
+                    _is_self_firmware_image((vs_firmware_info_t *)&queued_file->add_info)) {
+                    request = (vs_firmware_info_t *)&queued_file->add_info;
                     if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
                         if (VS_STORAGE_OK == vs_firmware_load_firmware_descriptor(&_gtwy.fw_update_ctx,
                                                                                   request->manufacture_id,
@@ -198,7 +196,7 @@ _gateway_task(void *pvParameters) {
 
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
 
-                if (vs_fldt_update_server_file_type(&file_type, &_fw_update_ctx, true)) {
+                if (vs_fldt_update_server_file_type(queued_file, &_fw_update_ctx, true)) {
                     VS_LOG_ERROR("Unable to add new firmware");
                     // TODO :how to process???
                 }
@@ -207,14 +205,14 @@ _gateway_task(void *pvParameters) {
             case VS_UPDATE_TRUST_LIST:
                 VS_LOG_DEBUG("Send info about new Trust List over SDMP");
 
-                if (vs_fldt_update_server_file_type(&file_type, &_tl_update_ctx, true)) {
+                if (vs_fldt_update_server_file_type(queued_file, &_tl_update_ctx, true)) {
                     VS_LOG_ERROR("Unable to add new Trust List");
                     // TODO :how to process???
                 }
                 break;
 
             default:
-                VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type);
+                VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type_id);
                 break;
             }
 
