@@ -194,10 +194,10 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
 }
 
 /******************************************************************************/
-int
+ssize_t
 vs_rpi_get_file_len(const char *folder, const char *file_name) {
 
-    int res = -1;
+    ssize_t res = -1;
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
 

@@ -44,7 +44,7 @@ vs_hal_files_set_mac(uint8_t mac_addr[6]);
 void
 vs_hal_files_set_dir(const char *dir_name);
 
-int
+ssize_t
 vs_rpi_get_file_len(const char *folder, const char *file_name);
 
 bool
