@@ -44,6 +44,6 @@ extern vs_storage_op_ctx_t _fw_storage_ctx;
 extern vs_storage_op_ctx_t _tl_storage_ctx;
 
 vs_status_code_e
-vs_fldt_init(const vs_mac_addr_t *mac_addr);
+vs_fldt_gateway_init(const vs_mac_addr_t *mac_addr);
 
 #endif // RPI_SDMP_FLDT_IMPLEMENTATION_H

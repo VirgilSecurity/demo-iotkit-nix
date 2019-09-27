@@ -67,7 +67,7 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");
-    CHECK_RET(!vs_fldt_init(), -2, "Unable to initialize Thing's FLDT implementation");
+    CHECK_RET(!vs_fldt_thing_init(), -2, "Unable to initialize Thing's FLDT implementation");
 
     // Init thing object
     //    ???

@@ -68,7 +68,7 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
-    CHECK_RET(!vs_fldt_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
+    CHECK_RET(!vs_fldt_gateway_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
 
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);

@@ -43,6 +43,6 @@ extern vs_storage_op_ctx_t _fw_storage_ctx;
 extern vs_storage_op_ctx_t _tl_storage_ctx;
 
 vs_status_code_e
-vs_fldt_init(void);
+vs_fldt_thing_init(void);
 
 #endif // KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
