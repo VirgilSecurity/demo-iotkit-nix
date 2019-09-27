@@ -240,6 +240,24 @@ vs_file_cache_open(const char *file_name) {
 }
 
 /******************************************************************************/
+ssize_t
+vs_file_cache_get_len(const char *file_name) {
+    vs_file_cache_element_t *element;
+    ssize_t res = -1;
+    _safe_mutex_lock(&_lock);
+    {
+        if (_ctx.enabled) {
+            element = _find_element(file_name);
+            if (element) {
+                res = element->file_sz;
+            }
+        }
+    }
+    _safe_mutex_unlock(&_lock);
+    return res;
+}
+
+/******************************************************************************/
 int
 vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t buf_sz, size_t *read_sz) {
     vs_file_cache_element_t *element;

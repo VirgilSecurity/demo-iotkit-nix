@@ -163,23 +163,12 @@ terminate:
 /******************************************************************************/
 static bool
 _check_fio_and_path(const char *folder, const char *file_name, char file_path[FILENAME_MAX]) {
-    DIR *d = NULL;
-
     if (!initialized && !_init_fio()) {
         VS_LOG_ERROR("Unable to initialize file I/O operations");
         return false;
     }
 
     if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
-        return false;
-    }
-
-    d = opendir(file_path);
-
-    if (d) {
-        closedir(d);
-    } else {
-        VS_LOG_ERROR("Unable to open previously created directory %s", base_dir);
         return false;
     }
 
@@ -208,6 +197,14 @@ vs_rpi_get_file_len(const char *folder, const char *file_name) {
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return 0;
+    }
+
+    // Cached read
+    if (0 == vs_file_cache_open(file_path)) {
+        res = vs_file_cache_get_len(file_path);
+        if (res > 0) {
+            return res;
+        }
     }
 
     fp = fopen(file_path, "rb");

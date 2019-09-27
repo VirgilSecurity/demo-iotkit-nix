@@ -38,12 +38,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 int
 vs_file_cache_enable(bool enable);
 
 int
 vs_file_cache_open(const char *file_name);
+
+ssize_t
+vs_file_cache_get_len(const char *file_name);
 
 int
 vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t buf_sz, size_t *read_sz);
