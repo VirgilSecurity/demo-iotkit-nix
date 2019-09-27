@@ -52,7 +52,11 @@ void
 vs_rpi_hal_sleep_until_stop(void);
 
 int
-vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr);
+vs_rpi_start(const char *devices_dir,
+             struct in_addr plc_sim_addr,
+             vs_mac_addr_t forced_mac_addr,
+             vs_storage_op_ctx_t *tl_ctx,
+             vs_storage_op_ctx_t *fw_ctx);
 
 void
 vs_rpi_restart(void);

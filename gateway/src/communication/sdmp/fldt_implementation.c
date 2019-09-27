@@ -33,37 +33,75 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/status_code/status_code.h>
 #include <fldt_implementation.h>
+#include <hal/storage/rpi-storage-hal.h>
+#include <trust_list-config.h>
+#include <update-config.h>
+#include <virgil/iot/firmware/firmware.h>
+#include <virgil/iot/firmware/update_interface.h>
+#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/update_interface.h>
+
+vs_storage_op_ctx_t _fw_storage_ctx;
+vs_storage_op_ctx_t _tl_storage_ctx;
+vs_update_interface_t _fw_update_ctx;
+vs_update_interface_t _tl_update_ctx;
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_add_filetype(const vs_update_file_type_t *file_type, void **update_ctx) {
-    char file_descr[FLDT_FILEVER_BUF];
-
+vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
     assert(file_type);
 
     switch (file_type->file_type_id) {
     case VS_UPDATE_FIRMWARE:
-        return vs_fldt_add_fw_filetype(file_type, storage_ctx);
+        *update_ctx = &_fw_update_ctx;
+        break;
+
     case VS_UPDATE_TRUST_LIST:
-        return vs_fldt_add_tl_filetype(file_type, storage_ctx);
+        *update_ctx = &_tl_update_ctx;
+        break;
+
     default:
-        VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %s", vs_fldt_file_type_descr(file_descr, file_type));
-        return VS_FLDT_ERR_UNSUPPORTED_PARAMETER;
+        VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %d", file_type->file_type_id);
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
     }
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
+vs_status_code_e
+vs_fldt_trust_list_init(void) {
+    vs_update_file_type_t file_type;
+    vs_status_code_e ret_code;
+
+    STATUS_CHECK_RET(vs_update_trust_list_init(&_tl_update_ctx, &_tl_storage_ctx),
+                     "Unable to initialize Trust List's Update context");
+
+    memset(&file_type, 0, sizeof(file_type));
+    file_type.file_type_id = VS_UPDATE_TRUST_LIST;
+
+    STATUS_CHECK_RET(vs_fldt_update_server_file_type(&file_type, &_tl_update_ctx, true),
+                     "Unable to add Trust List file type");
+
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
 vs_status_code_e
 vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
-    vs_status_code_e fldt_ret_code;
+    vs_status_code_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
-    FLDT_CHECK(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype), "Unable to initialize FLDT's server service");
+    STATUS_CHECK_RET(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype),
+                     "Unable to initialize FLDT's server service");
 
-    vs_fldt_firmware_init();
-    vs_fldt_trust_list_init();
+    STATUS_CHECK_RET(vs_update_firmware_init(&_fw_update_ctx, &_fw_storage_ctx),
+                     "Unable to initialize Firmware's Update context");
+
+    STATUS_CHECK_RET(vs_fldt_trust_list_init(), "Unable to initialize Trust List");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 

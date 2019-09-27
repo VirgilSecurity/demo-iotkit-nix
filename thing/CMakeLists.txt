@@ -54,8 +54,6 @@ target_sources(thing
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
 		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_firmware.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_trust_list.c
 		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
         )
 
@@ -99,6 +97,8 @@ target_link_libraries(thing
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		update
+		firmware
+		trust_list
 		virgil-iot-status-code
 
 		enable_sanitizers

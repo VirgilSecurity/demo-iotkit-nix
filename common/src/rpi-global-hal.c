@@ -46,10 +46,13 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
+#include <virgil/iot/status_code/status_code.h>
+#include <update-config.h>
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
 
@@ -67,7 +70,6 @@
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
-static vs_storage_op_ctx_t _tl_ctx;
 
 /******************************************************************************/
 void
@@ -227,7 +229,11 @@ vs_rpi_hal_sleep_until_stop(void) {
 
 /******************************************************************************/
 int
-vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t forced_mac_addr) {
+vs_rpi_start(const char *devices_dir,
+             struct in_addr plc_sim_addr,
+             vs_mac_addr_t forced_mac_addr,
+             vs_storage_op_ctx_t *tl_ctx,
+             vs_storage_op_ctx_t *fw_ctx) {
     const vs_netif_t *netif = NULL;
     const vs_netif_t *queued_netif = NULL;
 
@@ -242,10 +248,16 @@ vs_rpi_start(const char *devices_dir, struct in_addr plc_sim_addr, vs_mac_addr_t
     vs_hal_files_set_mac(forced_mac_addr.bytes);
 
     // Prepare TL storage
-    vs_rpi_get_storage_impl(&_tl_ctx.impl);
-    _tl_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
-    _tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    vs_tl_init(&_tl_ctx);
+    vs_rpi_get_storage_impl(&tl_ctx->impl);
+    tl_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
+    tl_ctx->file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    CHECK_RET(!vs_tl_init(tl_ctx), -1, "Unable to initialize Trust List library");
+
+    // Prepare FW storage
+    vs_rpi_get_storage_impl(&fw_ctx->impl);
+    fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+    fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    CHECK_RET(!vs_firmware_init(fw_ctx), -2, "Unable to initialize Firmware library");
 
     if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
         // Setup UDP Broadcast as network interface

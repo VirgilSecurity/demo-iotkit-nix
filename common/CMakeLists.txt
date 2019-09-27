@@ -111,6 +111,7 @@ target_link_libraries(rpi-common
 		sdmp
 		secbox
 		trust_list
+		firmware
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE

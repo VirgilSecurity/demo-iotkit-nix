@@ -49,19 +49,17 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    int fldt_ret_code;
 
     printf("\n\n--------------------------------------------\n");
     printf("Thing app at %s\n", argv[0]);
     printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", THING_MANUFACTURE_ID, THING_DEVICE_MODEL);
-
     printf("--------------------------------------------\n\n");
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
     }
 
-    if (0 != vs_rpi_start("thing", plc_sim_addr, forced_mac_addr)) {
+    if (0 != vs_rpi_start("thing", plc_sim_addr, forced_mac_addr, &_tl_storage_ctx, &_fw_storage_ctx)) {
         return -1;
     }
 
@@ -69,7 +67,7 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");
-    FLDT_CHECK(vs_fldt_init(), "Unable to initialize Thing's FLDT implementation");
+    CHECK_RET(!vs_fldt_init(), -2, "Unable to initialize Thing's FLDT implementation");
 
     // Init thing object
     //    ???

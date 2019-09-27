@@ -40,7 +40,7 @@
 #include "event-flags.h"
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/update/update.h>
+#include <virgil/iot/firmware/firmware.h>
 #include <cloud-config.h>
 #include "helpers/msg-queue.h"
 

@@ -49,7 +49,6 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
-    int fldt_ret_code;
 
     printf("\n\n--------------------------------------------\n");
     printf("Gateway app at %s\n", argv[0]);
@@ -60,7 +59,7 @@ main(int argc, char *argv[]) {
         return -1;
     }
 
-    if (0 != vs_rpi_start("gateway", plc_sim_addr, forced_mac_addr)) {
+    if (0 != vs_rpi_start("gateway", plc_sim_addr, forced_mac_addr, &_tl_storage_ctx, &_fw_storage_ctx)) {
         return -1;
     }
 
@@ -69,10 +68,7 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
-    FLDT_CHECK(vs_fldt_init_server(&forced_mac_addr, vs_fldt_add_filetype),
-               "Unable to initialize FLDT's server service");
-    vs_fldt_firmware_init();
-    vs_fldt_trust_list_init();
+    CHECK_RET(!vs_fldt_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
 
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);

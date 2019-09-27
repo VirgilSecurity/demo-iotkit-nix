@@ -43,7 +43,7 @@
     { 'A', 'P', 'P', '0' }
 
 // TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_update_fw_descriptor_t _descriptor = {
+static vs_firmware_descriptor_t _descriptor = {
         .info.version.app_type = GW_APP_TYPE,
         .info.version.major = 0,
         .info.version.minor = 1,
@@ -79,7 +79,7 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 }
 
 /******************************************************************************/
-const vs_update_fw_descriptor_t *
+const vs_firmware_descriptor_t *
 vs_global_hal_get_own_firmware_descriptor(void) {
     _create_field(_descriptor.info.manufacture_id, GW_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
     _create_field(_descriptor.info.device_type, GW_DEVICE_MODEL, DEVICE_TYPE_SIZE);
