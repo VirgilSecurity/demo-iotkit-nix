@@ -33,9 +33,9 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/protocols/sdmp/fldt_private.h>
-#include <virgil/iot/firmware/update_interface.h>
+#include <virgil/iot/firmware/update_fw_interface.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/trust_list/update_interface.h>
+#include <virgil/iot/trust_list/update_tl_interface.h>
 #include <fldt-impl-tg.h>
 #include <limits.h>
 #include <hal/rpi-global-hal.h>
@@ -50,7 +50,7 @@ vs_update_interface_t _tl_update_ctx;
 
 /******************************************************************************/
 static void
-_got_file(const vs_update_file_type_t *file_type,
+_got_file(vs_update_file_type_t *file_type,
           const vs_update_file_version_t *prev_file_ver,
           const vs_update_file_version_t *new_file_ver,
           const vs_mac_addr_t *gateway,

@@ -39,9 +39,9 @@
 #include <trust_list-config.h>
 #include <update-config.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/firmware/update_interface.h>
+#include <virgil/iot/firmware/update_fw_interface.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/trust_list/update_interface.h>
+#include <virgil/iot/trust_list/update_tl_interface.h>
 
 vs_storage_op_ctx_t _fw_storage_ctx;
 vs_storage_op_ctx_t _tl_storage_ctx;
