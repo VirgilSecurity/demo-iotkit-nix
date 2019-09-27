@@ -36,7 +36,7 @@
 #include <virgil/iot/firmware/update_interface.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/trust_list/update_interface.h>
-#include <fldt_implementation.h>
+#include <fldt-impl-tg.h>
 #include <limits.h>
 #include <hal/rpi-global-hal.h>
 #include <hal/storage/rpi-storage-hal.h>

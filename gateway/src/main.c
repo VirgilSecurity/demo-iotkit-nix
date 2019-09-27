@@ -40,7 +40,7 @@
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
-#include "fldt_implementation.h"
+#include "fldt-impl-gw.h"
 #include "hal/rpi-global-hal.h"
 
 /******************************************************************************/

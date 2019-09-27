@@ -34,7 +34,7 @@
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <fldt_implementation.h>
+#include <fldt-impl-gw.h>
 #include <hal/storage/rpi-storage-hal.h>
 #include <trust_list-config.h>
 #include <update-config.h>

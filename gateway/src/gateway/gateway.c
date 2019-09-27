@@ -36,7 +36,7 @@
 #include "message_bin.h"
 #include "upd_http_retrieval_thread.h"
 #include "event-flags.h"
-#include "fldt_implementation.h"
+#include "fldt-impl-gw.h"
 #include "hal/storage/rpi-storage-hal.h"
 #include "hal/rpi-global-hal.h"
 
