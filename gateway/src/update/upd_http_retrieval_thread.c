@@ -55,7 +55,7 @@ static bool is_retrieval_started;
 static void
 _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_cloud_firmware_header_t header;
-    queued_file_t *fw_info = NULL;
+    vs_update_file_type_t *fw_info = NULL;
     int res;
 
     // It should be immediately available given that this starts first
@@ -73,13 +73,13 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
-                fw_info = (queued_file_t *)malloc(sizeof(*fw_info));
+                fw_info = malloc(sizeof(*fw_info));
                 if (!fw_info) {
                     VS_LOG_ERROR("Can't allocate memory");
                     exit(-1);
                 }
-                fw_info->file_type = VS_UPDATE_FIRMWARE;
-                VS_IOT_MEMCPY(&fw_info->fw_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
+                fw_info->file_type_id = VS_UPDATE_FIRMWARE;
+                VS_IOT_MEMCPY(&fw_info->add_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
 
                 if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
                     free(fw_info);
@@ -107,7 +107,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 /*************************************************************************/
 static void
 _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
-    queued_file_t *tl_info = NULL;
+    vs_update_file_type_t *tl_info = NULL;
 
     if (0 == pthread_mutex_lock(&gtwy->tl_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
@@ -115,8 +115,8 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
-            tl_info = (queued_file_t *)malloc(sizeof(*tl_info));
-            tl_info->file_type = VS_UPDATE_TRUST_LIST;
+            tl_info = malloc(sizeof(*tl_info));
+            tl_info->file_type_id = VS_UPDATE_TRUST_LIST;
 
             if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {
                 free(tl_info);
@@ -181,7 +181,7 @@ vs_start_upd_http_retrieval_thread(void) {
 
 /*************************************************************************/
 bool
-vs_upd_http_retrieval_get_request(queued_file_t **request) {
+vs_upd_http_retrieval_get_request(vs_update_file_type_t **request) {
     const uint8_t *data;
     size_t _sz;
     *request = NULL;
