@@ -36,7 +36,7 @@
 #include <virgil/iot/firmware/update_interface.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/trust_list/update_interface.h>
-#include <fldt_implementation.h>
+#include <fldt-impl-tg.h>
 #include <limits.h>
 #include <hal/rpi-global-hal.h>
 #include <hal/storage/rpi-storage-hal.h>
@@ -112,7 +112,7 @@ _make_firmware_add_data_element(uint8_t *dst, const char *src, size_t elem_buf_s
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_firmware_init(void) {
+vs_fldt_thing_firmware_init(void) {
     static const char *manufacturer_id = THING_MANUFACTURE_ID;
     static const char *device_id = THING_DEVICE_MODEL;
     vs_update_file_type_t file_type;
@@ -136,7 +136,7 @@ vs_fldt_firmware_init(void) {
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_trust_list_init(void) {
+vs_fldt_thing_trust_list_init(void) {
     vs_update_file_type_t file_type;
     vs_status_code_e ret_code;
 
@@ -154,14 +154,14 @@ vs_fldt_trust_list_init(void) {
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_init(void) {
+vs_fldt_thing_init(void) {
     vs_status_code_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 
     STATUS_CHECK_RET(vs_fldt_init_client(_got_file), "Unable to initialize FLDT client");
-    STATUS_CHECK_RET(vs_fldt_firmware_init(), "Unable to initialize Firmware");
-    STATUS_CHECK_RET(vs_fldt_trust_list_init(), "Unable to initialize Trust List");
+    STATUS_CHECK_RET(vs_fldt_thing_firmware_init(), "Unable to initialize Firmware");
+    STATUS_CHECK_RET(vs_fldt_thing_trust_list_init(), "Unable to initialize Trust List");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 

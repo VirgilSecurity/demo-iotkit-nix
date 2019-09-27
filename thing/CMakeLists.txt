@@ -49,12 +49,12 @@ target_sources(thing
 
         # Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/thing.h
-		${CMAKE_CURRENT_LIST_DIR}/include/fldt_implementation.h
+		${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-tg.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
 		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt_implementation.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-tg.c
         )
 
 #

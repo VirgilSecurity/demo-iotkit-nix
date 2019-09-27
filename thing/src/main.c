@@ -41,7 +41,7 @@
 #include "hal/netif/rpi-plc-sim.h"
 #include "hal/rpi-global-hal.h"
 #include "helpers/input-params.h"
-#include "fldt_implementation.h"
+#include "fldt-impl-tg.h"
 
 #if SIMULATOR
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
@@ -71,7 +71,7 @@ main(int argc, char *argv[]) {
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");
-    CHECK_RET(!vs_fldt_init(), -2, "Unable to initialize Thing's FLDT implementation");
+    CHECK_RET(!vs_fldt_thing_init(), -2, "Unable to initialize Thing's FLDT implementation");
 
     // Start app
 #if SIMULATOR

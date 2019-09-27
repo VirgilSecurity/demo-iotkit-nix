@@ -34,7 +34,7 @@
 
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <fldt_implementation.h>
+#include <fldt-impl-gw.h>
 #include <hal/storage/rpi-storage-hal.h>
 #include <trust_list-config.h>
 #include <update-config.h>
@@ -72,7 +72,7 @@ vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_trust_list_init(void) {
+vs_fldt_gateway_trust_list_init(void) {
     vs_update_file_type_t file_type;
     vs_status_code_e ret_code;
 
@@ -90,7 +90,7 @@ vs_fldt_trust_list_init(void) {
 
 /******************************************************************************/
 vs_status_code_e
-vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
+vs_fldt_gateway_init(const vs_mac_addr_t *gateway_mac) {
     vs_status_code_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
@@ -101,7 +101,7 @@ vs_fldt_init(const vs_mac_addr_t *gateway_mac) {
     STATUS_CHECK_RET(vs_update_firmware_init(&_fw_update_ctx, &_fw_storage_ctx),
                      "Unable to initialize Firmware's Update context");
 
-    STATUS_CHECK_RET(vs_fldt_trust_list_init(), "Unable to initialize Trust List");
+    STATUS_CHECK_RET(vs_fldt_gateway_trust_list_init(), "Unable to initialize Trust List");
 
     VS_LOG_DEBUG("[FLDT] Successfully initialized");
 
