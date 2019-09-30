@@ -34,6 +34,7 @@
 
 #include <assert.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
@@ -48,6 +49,8 @@ static vs_netif_t _queued_netif = {0};
 static vs_msg_queue_ctx_t *_queue_ctx = 0;
 static pthread_t _queue_thread;
 static bool _queue_thread_ready = false;
+static pthread_t _periodical_thread;
+static bool _periodical_ready = false;
 
 /******************************************************************************/
 static int
@@ -103,6 +106,15 @@ _msg_processing(void *ctx) {
     return NULL;
 }
 
+/******************************************************************************/
+static void *
+_periodical_processing(void *ctx) {
+    while (true) {
+        sleep(1);
+        vs_msg_queue_push(_queue_ctx, NULL, NULL, 0);
+    }
+    return NULL;
+}
 
 /******************************************************************************/
 static int
@@ -116,6 +128,11 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
 
     // Save Callback function
     _netif_rx_cb = netif_rx_cb;
+
+    // Create thread for periodical actions
+    if (0 == pthread_create(&_periodical_thread, NULL, _periodical_processing, NULL)) {
+        _periodical_ready = true;
+    }
 
     // Create thread to call Callbacks on data receive
     if (0 == pthread_create(&_queue_thread, NULL, _msg_processing, NULL)) {
@@ -151,6 +168,13 @@ _deinit_with_queue() {
 
     // Clean user data
     _queued_netif.user_data = NULL;
+
+    // Stop periodical thread
+    if (_periodical_ready) {
+        pthread_cancel(_periodical_thread);
+        pthread_join(_periodical_thread, NULL);
+        _periodical_ready = false;
+    }
 
     return res;
 }

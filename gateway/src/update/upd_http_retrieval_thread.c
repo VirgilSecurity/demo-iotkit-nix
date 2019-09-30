@@ -144,7 +144,7 @@ _upd_http_retrieval_task(void *pvParameters) {
     VS_LOG_DEBUG("vs_upd_http_retrieval thread started");
 
     while (1) {
-        upd_request_t *request;
+        upd_request_t *request = NULL;
 
         vs_event_group_wait_bits(
                 &gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT, true, true, VS_EVENT_GROUP_WAIT_INFINITE);
@@ -152,6 +152,8 @@ _upd_http_retrieval_task(void *pvParameters) {
         VS_LOG_DEBUG("vs_upd_http_retrieval thread resume");
 
         while (message_bin_get_request(&request)) {
+            if (!request)
+                continue;
             if (MSG_BIN_UPD_TYPE_FW == request->upd_type) {
                 _sw_retrieval_mb_notify(gtwy, request);
             } else if (MSG_BIN_UPD_TYPE_TL == request->upd_type) {
