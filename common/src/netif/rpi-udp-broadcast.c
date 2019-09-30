@@ -35,7 +35,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -44,6 +43,7 @@
 #include <sys/socket.h>
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <virgil/iot/logger/logger.h>
 
 static int
 _udp_bcast_init(const vs_netif_rx_cb_t rx_cb);
@@ -86,7 +86,7 @@ _udp_bcast_receive_processor(void *sock_desc) {
         recv_sz = recvfrom(
                 _udp_bcast_sock, received_data, sizeof received_data, 0, (struct sockaddr *)&client_addr, &addr_sz);
         if (recv_sz < 0) {
-            printf("UDP broadcast: recv failed. %s\n", strerror(errno));
+            VS_LOG_ERROR("UDP broadcast: recv failed. %s\n", strerror(errno));
             break;
         }
 
@@ -113,7 +113,7 @@ _udp_bcast_connect() {
     // Create socket
     _udp_bcast_sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (_udp_bcast_sock == -1) {
-        printf("UDP Broadcast: Could not create socket. %s\n", strerror(errno));
+        VS_LOG_ERROR("UDP Broadcast: Could not create socket. %s\n", strerror(errno));
         return -1;
     }
 
@@ -121,14 +121,14 @@ _udp_bcast_connect() {
     tv.tv_sec = 0;
     tv.tv_usec = 0;
     if (setsockopt(_udp_bcast_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        printf("UDP Broadcast: Cannot set infinite timeout on receive. %s\n", strerror(errno));
+        VS_LOG_ERROR("UDP Broadcast: Cannot set infinite timeout on receive. %s\n", strerror(errno));
         goto terminate;
     }
 
 #if __APPLE__
     // Set SO_REUSEPORT
     if (setsockopt(_udp_bcast_sock, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0) {
-        printf("UDP Broadcast: Cannot set SO_REUSEPORT. %s\n", strerror(errno));
+        VS_LOG_ERROR("UDP Broadcast: Cannot set SO_REUSEPORT. %s\n", strerror(errno));
         goto terminate;
     }
 #else
@@ -141,7 +141,7 @@ _udp_bcast_connect() {
 
     // Set SO_BROADCAST
     if (setsockopt(_udp_bcast_sock, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(int)) < 0) {
-        printf("UDP Broadcast: Cannot set SO_BROADCAST. %s\n", strerror(errno));
+        VS_LOG_ERROR("UDP Broadcast: Cannot set SO_BROADCAST. %s\n", strerror(errno));
         goto terminate;
     }
 
@@ -151,11 +151,11 @@ _udp_bcast_connect() {
     server.sin_addr.s_addr = htons(INADDR_ANY);
     server.sin_port = htons(UDP_BCAST_PORT);
     if (bind(_udp_bcast_sock, (struct sockaddr *)&server, sizeof(struct sockaddr_in)) < 0) {
-        printf("UDP Broadcast: UDP Broadcast: Bind error. %s\n", strerror(errno));
+        VS_LOG_ERROR("UDP Broadcast: UDP Broadcast: Bind error. %s\n", strerror(errno));
         goto terminate;
     }
 
-    printf("Opened connection for UDP broadcast\n");
+    VS_LOG_INFO("Opened connection for UDP broadcast\n");
 
     // Start receive thread
     pthread_create(&receive_thread, NULL, _udp_bcast_receive_processor, NULL);
