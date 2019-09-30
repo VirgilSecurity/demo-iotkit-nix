@@ -43,15 +43,14 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/info.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/protocols/sdmp.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
-#include <virgil/iot/status_code/status_code.h>
 #include <update-config.h>
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
@@ -283,6 +282,9 @@ vs_rpi_start(const char *devices_dir,
 
     // Initialize SDMP
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
+
+    // Register SDMP:INFO service
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info()), -1, "INFO service is not registered");
 
     return 0;
 }
