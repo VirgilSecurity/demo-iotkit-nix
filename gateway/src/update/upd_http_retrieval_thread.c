@@ -95,7 +95,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
         }
     }
-    terminate:
+
     (void)pthread_mutex_unlock(&gtwy->firmware_mutex);
     VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
 
