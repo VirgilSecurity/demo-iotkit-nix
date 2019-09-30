@@ -364,7 +364,6 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
     }
 
     // Allocate and copy data
-    queue_data->info = info;
     if (data && data_sz) {
         queue_data->data = malloc(data_sz);
         if (!queue_data->data) {
@@ -373,7 +372,10 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
         }
         memcpy((void *)queue_data->data, data, data_sz);
         queue_data->size = data_sz;
+    } else {
+        memset(queue_data, 0, sizeof(*queue_data));
     }
+    queue_data->info = info;
 
     // Add to Queue
     res = _queue_add(ctx, queue_data, true);
