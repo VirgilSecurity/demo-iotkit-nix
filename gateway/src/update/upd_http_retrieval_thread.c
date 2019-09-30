@@ -95,7 +95,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new firmware\r\n");
         }
     }
-
+    terminate:
     (void)pthread_mutex_unlock(&gtwy->firmware_mutex);
     VS_LOG_DEBUG("[MB_NOTIFY]:Firmware semaphore freed");
 
@@ -116,6 +116,10 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
             tl_info = malloc(sizeof(*tl_info));
+            if(!tl_info) {
+                VS_LOG_ERROR("[MB] Failed memory allocation!!!");
+                goto terminate;
+            }
             tl_info->file_type_id = VS_UPDATE_TRUST_LIST;
 
             if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {
@@ -127,7 +131,7 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new TL\r\n");
         }
     }
-
+    terminate:
     (void)pthread_mutex_unlock(&gtwy->tl_mutex);
     VS_LOG_DEBUG("[MB_NOTIFY]:TL semaphore freed\r\n");
     free(request);
