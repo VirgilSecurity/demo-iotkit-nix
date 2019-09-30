@@ -48,16 +48,12 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/protocols/sdmp.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
-#include <virgil/iot/status_code/status_code.h>
 #include <update-config.h>
 #include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-storage-hal.h"
 
 #include "hal/netif/netif-queue.h"
-#include "hal/netif/rpi-plc-sim.h"
 #include "hal/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 
@@ -236,8 +232,8 @@ vs_rpi_start(const char *devices_dir,
              vs_mac_addr_t forced_mac_addr,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx) {
-    const vs_netif_t *netif = NULL;
-    const vs_netif_t *queued_netif = NULL;
+    vs_netif_t *netif = NULL;
+    vs_netif_t *queued_netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
@@ -261,22 +257,11 @@ vs_rpi_start(const char *devices_dir,
     fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
     CHECK_RET(!vs_firmware_init(fw_ctx), -2, "Unable to initialize Firmware library");
 
-    if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
-        // Setup UDP Broadcast as network interface
-        vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
+    // Setup UDP Broadcast as network interface
+    vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
 
-        // Get PLC Network interface
-        netif = vs_hal_netif_udp_bcast();
-    } else {
-        // Setup PLC simulator as network interface
-        vs_hal_netif_plc_force_mac(forced_mac_addr);
-
-        // Set IP of PLC simulator
-        vs_plc_sim_set_ip(plc_sim_addr);
-
-        // Get PLC Network interface
-        netif = vs_hal_netif_plc();
-    }
+    // Get PLC Network interface
+    netif = vs_hal_netif_udp_bcast();
 
     // Prepare queued network interface
     queued_netif = vs_netif_queued(netif);

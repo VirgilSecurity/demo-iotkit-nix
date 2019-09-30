@@ -46,7 +46,6 @@
 #include <trust_list-config.h>
 
 #include "hal/storage/rpi-storage-hal.h"
-#include "hal/netif/rpi-plc-sim.h"
 #include "hal/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 
@@ -130,7 +129,7 @@ _process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr
 
 /******************************************************************************/
 static int
-_sdmp_start(const vs_netif_t *netif) {
+_sdmp_start(vs_netif_t *netif) {
 
     if (0 != vs_sdmp_init(netif)) {
         return -1;
@@ -148,7 +147,7 @@ _sdmp_start(const vs_netif_t *netif) {
 int
 main(int argc, char *argv[]) {
     struct in_addr plc_sim_addr;
-    const vs_netif_t *netif = NULL;
+    vs_netif_t *netif = NULL;
     vs_storage_op_ctx_t tl_ctx;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
@@ -182,22 +181,11 @@ main(int argc, char *argv[]) {
         tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
         vs_tl_init(&tl_ctx);
 
-        if (plc_sim_addr.s_addr == htonl(INADDR_ANY)) {
-            // Setup UDP Broadcast as network interface
-            vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
+        // Setup UDP Broadcast as network interface
+        vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
 
-            // Get PLC Network interface
-            netif = vs_hal_netif_udp_bcast();
-        } else {
-            // Setup PLC simulator as network interface
-            vs_hal_netif_plc_force_mac(forced_mac_addr);
-
-            // Set IP of PLC simulator
-            vs_plc_sim_set_ip(plc_sim_addr);
-
-            // Get PLC Network interface
-            netif = vs_hal_netif_plc();
-        }
+        // Get PLC Network interface
+        netif = vs_hal_netif_udp_bcast();
 
         // Start SDMP protocol
         _sdmp_start(netif);

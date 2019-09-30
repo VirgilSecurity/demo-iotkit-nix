@@ -39,6 +39,7 @@
 #include <arpa/inet.h>
 
 #include <virgil/iot/protocols/sdmp.h>
+#include "hal/storage/rpi-storage-hal.h"
 
 extern char *self_path;
 
