@@ -32,75 +32,90 @@
 #
 #   Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(virgil-iot-gateway-initializer VERSION 0.1.0 LANGUAGES C)
-
-#
-#	MCU Initializer
-#
-add_executable(virgil-iot-gateway-initializer
-		${GW_INITIALIZER_SRC}
-		)
+project(virgil-iot-initializer VERSION 0.1.0 LANGUAGES C)
 
 #
-#	Define variables
+#   Function to create targets for initializers
 #
-set (IOT_GW_INITIALIZER virgil-iot-gateway-initializer)
-set (BIN_FILE ${IOT_GW_INITIALIZER}.bin)
+function(initializer_executable _is_gateway _manufacture _model)
+    #
+    #	Prepare _targetname
+    #
+    if (${_is_gateway})
+        set(_targetname "gateway-initializer")
+    else ()
+        set(_targetname "thing-initializer")
+    endif ()
+
+    #
+    #	Initializer target
+    #
+    add_executable(${_targetname})
+
+    #
+    #	Header/Source files
+    #
+    target_sources(${_targetname}
+            PRIVATE
+
+            # Headers
+            ${CMAKE_CURRENT_LIST_DIR}/include/prvs_implementation.h
+
+            # Sources
+            ${CMAKE_CURRENT_LIST_DIR}/src/main.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/sdmp/prvs_implementation.c
+            )
+
+    #
+    #   Include directories
+    #
+    target_include_directories(${_targetname}
+            PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            )
+
+    #
+    #	Link libraries
+    #
+    target_link_libraries(${_targetname}
+            PRIVATE
+            $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
+            rpi-common
+            $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
+
+            $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>
+            enable_sanitizers
+            enable_pedantic_mode
+            )
+    #
+    #	Definitions
+    #
+    target_compile_definitions(${_targetname}
+            PRIVATE
+            GATEWAY=${_is_gateway}
+            MANUFACTURE_ID="${_manufacture}"
+            DEVICE_MODEL="${_model}"
+            )
+
+    #
+    # Format code
+    #
+    if (COMMAND add_clangformat)
+        add_clangformat(${_targetname})
+    endif ()
+endfunction()
 
 #
-#	Header/Source files
+#	Gateway initializer
 #
-target_sources(virgil-iot-gateway-initializer
-		PRIVATE
-		# Headers
-		include/virgil/iot/initializer/communication/sdmp_initializer.h
-		include/virgil/iot/initializer/sdmp/prvs_implementation.h
-
-		# Sources
-		src/main.c
-		src/platform-hal.c
-		src/communication/sdmp_initializer.c
-		src/sdmp/prvs_implementation.c
-		)
-
-#
-#   -Wall -Werror
-#
-target_compile_options(virgil-iot-gateway-initializer
-		PRIVATE
-		-Wall
-		-Werror
-		-Wno-multichar
-		)
-
-#
-#   Include directories
-#
-target_include_directories(virgil-iot-gateway-initializer
-		PRIVATE
-		${CMAKE_CURRENT_SOURCE_DIR}/include
-		)
-
-#
-#	Link libraries
-#
-if(UNIX AND NOT APPLE)
-	target_link_libraries(virgil-iot-gateway-initializer
-			-Wl,--whole-archive hsm rpi_gw_shared -Wl,--no-whole-archive
-			)
-else()
-	target_link_libraries (virgil-iot-gateway-initializer
-			rpi_gw_shared
-			)
-endif()
+set(GATEWAY_MODE 1)
+initializer_executable(${GATEWAY_MODE} ${GATEWAY_MANUFACTURE} ${GATEWAY_MODEL})
 
 
 #
-#	Add cmake test
+#	Thing initializer
 #
-add_test (
-		NAME virgil-iot-gateway-initializer
-		COMMAND "${CMAKE_CURRENT_BINARY_DIR}/virgil-iot-gateway-initializer"
-)
+set(THING_MODE 0)
+initializer_executable(${THING_MODE} ${THING_MANUFACTURE} ${THING_MODEL})

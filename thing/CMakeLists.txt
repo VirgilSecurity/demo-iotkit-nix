@@ -32,42 +32,82 @@
 #
 #   Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-cmake_minimum_required (VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi-tests VERSION 0.1.0 LANGUAGES C)
+project(thing VERSION 0.1.0 LANGUAGES C)
 
 #
-#	Gateway tests application
+#	Gateway application
 #
-add_executable(rpi-tests)
+add_executable(thing)
 
 #
 #	Header/Source files
 #
-target_sources(rpi-tests
+target_sources(thing
+        PRIVATE
+
+        # Headers
+		${CMAKE_CURRENT_LIST_DIR}/include/thing.h
+		${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-tg.h
+
+        # Sources
+        ${CMAKE_CURRENT_LIST_DIR}/src/main.c
+		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-tg.c
+        )
+
+#
+#	Definitions
+#
+
+target_compile_definitions(thing
+        PRIVATE
+        TEST_UPDATE_MESSAGE="${TEST_UPDATE_MESSAGE}"
+		THING_MANUFACTURE_ID="${THING_MANUFACTURE}"
+		THING_DEVICE_MODEL="${THING_MODEL}"
+		SIMULATOR=$<BOOL:${GATEWAY_SIMULATOR}>
+        SIM_FETCH_FIRMWARE=$<BOOL:${SIM_FETCH_FIRMWARE}>
+        )
+
+#
+#   Include directories
+#
+target_include_directories(thing
+        PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        )
+
+#
+#	Compile options
+#
+target_compile_options(thing
 		PRIVATE
-		main.c
+		$<$<NOT:$<BOOL:${APPLE}>>:-Wno-format-truncation>
 		)
 
 #
 #	Link libraries
 #
-target_link_libraries(rpi-tests
-		PRIVATE
+target_link_libraries(thing
+        PRIVATE
 
-		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
+        $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
 		rpi-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		virgil-iot-sdk-tests
+		update
+		firmware
+		trust_list
+		virgil-iot-status-code
 
 		enable_sanitizers
-		enable_pedantic_mode
-		)
+        enable_pedantic_mode
+        )
 
 #
 # Format code
 #
-if (COMMAND add_clangformat)
-	add_clangformat(rpi-tests)
-endif ()
+if(COMMAND add_clangformat)
+	add_clangformat(thing)
+endif()

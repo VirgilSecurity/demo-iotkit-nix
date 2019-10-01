@@ -32,21 +32,35 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include "prvs_implementation.h"
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/hsm/hsm_interface.h>
-#include <virgil/iot/hsm/hsm_helpers.h>
-#include <stdlib-config.h>
+#include <assert.h>
+#include <string.h>
+#include <global-hal.h>
+#include <gateway.h>
+#include <virgil/iot/cloud/cloud.h>
+#include <virgil/iot/provision/provision.h>
 
+#define GW_APP_TYPE                                                                                                    \
+    { 'A', 'P', 'P', '0' }
 
-#include <virgil/iot/secbox/secbox.h>
-
-#include <hal/rpi-global-hal.h>
+// TODO: Need to use real descriptor, which can be obtain from footer of self image
+static vs_firmware_descriptor_t _descriptor = {
+        .info.version.app_type = GW_APP_TYPE,
+        .info.version.major = 0,
+        .info.version.minor = 1,
+        .info.version.patch = 3,
+        .info.version.dev_milestone = 'm',
+        .info.version.dev_build = 0,
+        .info.version.timestamp = 0,
+        .padding = 0,
+        .chunk_size = 256,
+        .firmware_length = 2097152,
+        .app_size = 2097152,
+};
 
 /******************************************************************************/
-static int
-vs_prvs_dnid() {
-    return 0;
+void
+vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
+    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
 }
 
 /******************************************************************************/
@@ -57,7 +71,6 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 
     assert(src && *src);
     assert(elem_buf_size);
-    memset(dst, 0, elem_buf_size);
 
     len = strlen(src);
     for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
@@ -66,60 +79,9 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 }
 
 /******************************************************************************/
-static int
-vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
-    uint16_t key_sz = 0;
-    vs_hsm_keypair_type_e ec_type;
-    vs_pubkey_t *own_pubkey;
-    uint16_t sign_sz = 0;
-    vs_sign_t *sign;
-    uint8_t *ptr;
-
-    VS_IOT_ASSERT(device_info);
-
-    own_pubkey = (vs_pubkey_t *)device_info->data;
-    vs_sdmp_mac_addr(0, &device_info->mac);
-    // TODO: Need to move to 16 bytes MANUFACTURE_ID
-    ptr = (uint8_t *)(&device_info->manufacturer);
-    _create_field(ptr, MANUFACTURE_ID, sizeof(device_info->manufacturer));
-
-    ptr = (uint8_t *)(&device_info->model);
-    _create_field(ptr, DEVICE_MODEL, sizeof(device_info->model));
-
-    vs_rpi_hal_get_udid(device_info->udid_of_device);
-
-    // Fill own public key
-    if (VS_HSM_ERR_OK !=
-        vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type)) {
-        return -1;
-    }
-
-    own_pubkey->key_type = VS_KEY_IOT_DEVICE;
-    own_pubkey->ec_type = ec_type;
-    device_info->data_sz = key_sz + sizeof(vs_pubkey_t);
-    sign = (vs_sign_t *)((uint8_t *)own_pubkey + key_sz + sizeof(vs_pubkey_t));
-
-    buf_sz -= device_info->data_sz;
-
-    // Load signature
-    if (0 != vs_hsm_slot_load(SIGNATURE_SLOT, (uint8_t *)sign, buf_sz, &sign_sz)) {
-        return -1;
-    }
-
-    device_info->data_sz += sign_sz;
-
-    return 0;
-}
-
-/******************************************************************************/
-vs_sdmp_prvs_impl_t
-vs_prvs_impl() {
-    vs_sdmp_prvs_impl_t res;
-
-    memset(&res, 0, sizeof(res));
-
-    res.dnid_func = vs_prvs_dnid;
-    res.device_info_func = vs_prvs_device_info;
-
-    return res;
+const vs_firmware_descriptor_t *
+vs_global_hal_get_own_firmware_descriptor(void) {
+    _create_field(_descriptor.info.manufacture_id, GW_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
+    _create_field(_descriptor.info.device_type, GW_DEVICE_MODEL, DEVICE_TYPE_SIZE);
+    return &_descriptor;
 }

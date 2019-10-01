@@ -26,3 +26,4 @@ ap/bin/psram/fw.bin
 .vscode/
 
 build*/
+ext/deps/*
