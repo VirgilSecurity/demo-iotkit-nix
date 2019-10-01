@@ -79,7 +79,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                     exit(-1);
                 }
                 fw_info->file_type_id = VS_UPDATE_FIRMWARE;
-                VS_IOT_MEMCPY(&fw_info->add_info, &header.descriptor.info, sizeof(vs_firmware_info_t));
+                VS_IOT_MEMCPY(&fw_info->add_info, &header.descriptor.info, sizeof(vs_firmware_info_t)); //-V512 (PVS_IGNORE)
 
                 if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
                     free(fw_info);

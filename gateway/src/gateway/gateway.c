@@ -176,8 +176,8 @@ _gateway_task(void *pvParameters) {
 
             switch (queued_file->file_type_id) {
             case VS_UPDATE_FIRMWARE:
-                if (_is_self_firmware_image((vs_firmware_info_t *)&queued_file->add_info)) {
-                    request = (vs_firmware_info_t *)&queued_file->add_info;
+                if (_is_self_firmware_image((vs_firmware_info_t *)&queued_file->add_info)) { //-V641 (PVS_IGNORE)
+                    request = (vs_firmware_info_t *)&queued_file->add_info; //-V641 (PVS_IGNORE)
                     if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
                         if (VS_STORAGE_OK == vs_firmware_load_firmware_descriptor(&_gtwy.fw_update_ctx,
                                                                                   request->manufacture_id,
