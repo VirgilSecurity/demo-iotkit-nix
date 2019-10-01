@@ -263,6 +263,13 @@ vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t
     vs_file_cache_element_t *element;
     size_t max_avail_sz;
     int res = -1;
+
+    assert(read_sz);
+    assert(data);
+    if (!read_sz || !data) {
+        return -1;
+    }
+
     _safe_mutex_lock(&_lock);
     {
         if (_ctx.enabled) {
