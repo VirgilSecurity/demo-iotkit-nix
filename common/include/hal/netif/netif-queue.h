@@ -38,7 +38,7 @@
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-const vs_netif_t *
+vs_netif_t *
 vs_netif_queued(const vs_netif_t *base_netif);
 
 #endif // IOT_RPI_NETIF_QUEUE_H

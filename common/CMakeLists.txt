@@ -49,7 +49,6 @@ target_sources(rpi-common
 
 		#	Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/netif-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-plc-sim.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
@@ -60,7 +59,6 @@ target_sources(rpi-common
 
 		#	Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-plc-sim.c
 		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c

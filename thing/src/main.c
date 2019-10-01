@@ -38,7 +38,6 @@
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
 
 #include "thing.h"
-#include "hal/netif/rpi-plc-sim.h"
 #include "hal/rpi-global-hal.h"
 #include "helpers/input-params.h"
 #include "fldt-impl-tg.h"
