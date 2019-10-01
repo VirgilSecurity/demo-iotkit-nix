@@ -237,8 +237,6 @@ vs_rpi_start(const char *devices_dir,
              vs_storage_op_ctx_t *fw_ctx,
              const vs_fw_manufacture_id_t manufacture_id,
              const vs_fw_device_type_t device_type) {
-    const vs_netif_t *netif = NULL;
-    const vs_netif_t *queued_netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
