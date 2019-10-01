@@ -79,7 +79,8 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                     exit(-1);
                 }
                 fw_info->file_type_id = VS_UPDATE_FIRMWARE;
-                VS_IOT_MEMCPY(&fw_info->add_info, &header.descriptor.info, sizeof(vs_firmware_info_t)); //-V512 (PVS_IGNORE)
+                VS_IOT_MEMCPY(
+                        &fw_info->add_info, &header.descriptor.info, sizeof(vs_firmware_info_t)); //-V512 (PVS_IGNORE)
 
                 if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
                     free(fw_info);
@@ -116,7 +117,7 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
             tl_info = malloc(sizeof(*tl_info));
-            if(!tl_info) {
+            if (!tl_info) {
                 VS_LOG_ERROR("[MB] Failed memory allocation!!!");
                 goto terminate;
             }
@@ -131,7 +132,7 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             VS_LOG_DEBUG("[MB_NOTIFY]:Error fetch new TL\r\n");
         }
     }
-    terminate:
+terminate:
     (void)pthread_mutex_unlock(&gtwy->tl_mutex);
     VS_LOG_DEBUG("[MB_NOTIFY]:TL semaphore freed\r\n");
     free(request);

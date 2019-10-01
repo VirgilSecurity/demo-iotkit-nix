@@ -43,6 +43,7 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/sdmp/info.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -231,7 +232,9 @@ vs_rpi_start(const char *devices_dir,
              struct in_addr plc_sim_addr,
              vs_mac_addr_t forced_mac_addr,
              vs_storage_op_ctx_t *tl_ctx,
-             vs_storage_op_ctx_t *fw_ctx) {
+             vs_storage_op_ctx_t *fw_ctx,
+             const vs_fw_manufacture_id_t manufacture_id,
+             const vs_fw_device_type_t device_type) {
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
 
@@ -268,6 +271,11 @@ vs_rpi_start(const char *devices_dir,
 
     // Initialize SDMP
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
+
+    // Register SDMP:INFO service
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info(tl_ctx, fw_ctx, manufacture_id, device_type)),
+              -1,
+              "INFO service is not registered");
 
     return 0;
 }
