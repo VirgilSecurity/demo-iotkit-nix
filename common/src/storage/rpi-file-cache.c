@@ -311,7 +311,7 @@ vs_file_cache_write(const char *file_name, uint32_t offset, const uint8_t *data,
                     }
 
                     if (element->file_sz && element->file_sz < offset) {
-                        memset(&element->data[element->file_sz - 1], 0xFF, offset - element->file_sz);
+                        memset(&ptr[element->file_sz - 1], 0xFF, offset - element->file_sz);
                     }
 
                     element->data = ptr;
