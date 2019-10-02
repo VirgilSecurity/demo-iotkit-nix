@@ -268,9 +268,6 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
 
             if (f_sz <= 0) {
                 VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
-                if (0 == strcmp("/Users/maximgrigoryev/keystorage/test/0:0:0:0:0:0/slots/STD_MTP_12", file_path)) {
-                    VS_LOG_ERROR("Debug break");
-                }
                 res = false;
                 goto terminate;
             }
