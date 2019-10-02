@@ -76,7 +76,6 @@ target_sources(rpi-common
 #	Path to crypto lib
 #
 include(GNUInstallDirs)
-message(">>> ${CRYPTO_C_BASE_DIR}")
 if(EXISTS "${CRYPTO_C_BASE_DIR}")
 	set(CRYPTO_C_INCLUDES "${CRYPTO_C_BASE_DIR}/include")
 	set(CRYPTO_C_LIBS "${CRYPTO_C_BASE_DIR}/lib")
