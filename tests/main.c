@@ -181,6 +181,7 @@ main(int argc, char *argv[]) {
     res += vs_firmware_test(&secbox_ctx);
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
+    vs_tl_deinit(&tl_ctx);
 
     return res;
 }
