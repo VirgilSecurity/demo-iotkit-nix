@@ -235,7 +235,8 @@ vs_rpi_start(const char *devices_dir,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx,
              const vs_fw_manufacture_id_t manufacture_id,
-             const vs_fw_device_type_t device_type) {
+             const vs_fw_device_type_t device_type,
+             const uint32_t device_roles) {
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
 
@@ -274,7 +275,7 @@ vs_rpi_start(const char *devices_dir,
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
 
     // Register SDMP:INFO service
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type)),
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
               -1,
               "INFO service is not registered");
 

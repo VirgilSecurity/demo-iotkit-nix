@@ -68,7 +68,8 @@ main(int argc, char *argv[]) {
                           &_tl_storage_ctx,
                           &_fw_storage_ctx,
                           manufacture_id,
-                          device_type)) {
+                          device_type,
+                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER)) {
         return -1;
     }
 
