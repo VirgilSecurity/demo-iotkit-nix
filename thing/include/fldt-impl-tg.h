@@ -36,6 +36,7 @@
 #define KUNLUN_SDMP_FLDT_IMPLEMENTATION_H
 
 #include <virgil/iot/protocols/sdmp/fldt_client.h>
+#include <virgil/iot/status_code/status_code.h>
 
 extern vs_update_interface_t _fw_update_ctx;
 extern vs_update_interface_t _tl_update_ctx;

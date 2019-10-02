@@ -70,7 +70,7 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
 }
 
 /******************************************************************************/
-uint16_t
+vs_status_code_e
 vs_cloud_https_hal(vs_http_method_t type,
                    const char *url,
                    const char *data,
@@ -81,10 +81,10 @@ vs_cloud_https_hal(vs_http_method_t type,
                    size_t *in_out_size) {
     CURL *curl;
     CURLcode curl_res;
-    uint16_t res = HTTPS_RET_CODE_OK;
+    uint16_t res = VS_CODE_OK;
 
     if (NULL == in_out_size) {
-        return HTTPS_RET_CODE_ERROR_PREPARE_REQ;
+        return VS_CODE_ERR_REQUEST_PREPARE;
     }
 
     resp_buff_t resp = {(uint8_t *)out_data, *in_out_size, 0, fetch_handler, hander_data};
@@ -102,14 +102,14 @@ vs_cloud_https_hal(vs_http_method_t type,
 
             break;
         default:
-            res = HTTPS_RET_CODE_ERROR_PREPARE_REQ;
+            res = VS_CODE_ERR_REQUEST_PREPARE;
             goto cleanup;
         }
 
         curl_res = curl_easy_perform(curl);
 
         if (CURLE_OK != curl_res) {
-            res = HTTPS_RET_CODE_ERROR_SEND_REQ;
+            res = VS_CODE_ERR_REQUEST_SEND;
         }
         *in_out_size = resp.used_size;
     }
@@ -117,5 +117,6 @@ vs_cloud_https_hal(vs_http_method_t type,
 cleanup:
     curl_easy_cleanup(curl);
     curl_global_cleanup();
+
     return res;
 }

@@ -65,11 +65,11 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         VS_LOG_DEBUG("[MB_NOTIFY]: Fetch new firmware from URL %s", request->upd_file_url);
 
         res = vs_cloud_fetch_and_store_fw_file(&get_gateway_ctx()->fw_update_ctx, request->upd_file_url, &header);
-        if (VS_CLOUD_ERR_OK == res) {
+        if (VS_CODE_OK == res) {
             VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
 
             res = vs_firmware_verify_firmware(&get_gateway_ctx()->fw_update_ctx, &header.descriptor);
-            if (VS_STORAGE_OK == res) {
+            if (VS_CODE_OK == res) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
@@ -112,7 +112,7 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     if (0 == pthread_mutex_lock(&gtwy->tl_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
 
-        if (VS_CLOUD_ERR_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
+        if (VS_CODE_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
             tl_info = malloc(sizeof(*tl_info));

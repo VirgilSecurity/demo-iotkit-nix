@@ -45,13 +45,16 @@
 
 #include "hal/netif/rpi-plc-sim.h"
 
-static int
+static vs_status_code_e
 _plc_init(const vs_netif_rx_cb_t rx_cb);
-static int
+
+static vs_status_code_e
 _plc_deinit();
-static int
+
+static vs_status_code_e
 _plc_tx(const uint8_t *data, const uint16_t data_sz);
-static int
+
+static vs_status_code_e
 _plc_mac(struct vs_mac_addr_t *mac_addr);
 
 static const vs_netif_t _netif_plc = {
@@ -115,14 +118,14 @@ _plc_receive_processor(void *sock_desc) {
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _plc_connect() {
     struct sockaddr_in server;
 
     // Check is present IP of PLC bus simulator
     if (!_plc_sim_ip_ready) {
         printf("ERROR: IP of PLC bus simulator is not present\n");
-        return -1;
+        return VS_CODE_ERR_NO_SIMULATOR;
     }
 
     // Create socket
@@ -138,14 +141,14 @@ _plc_connect() {
     // Connect to remote server
     if (connect(_plc_sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Connect failed. Error\n");
-        return 1;
+        return VS_CODE_ERR_SOCKET;
     }
 
     printf("Connected to PLC bus\n");
 
     pthread_create(&receive_thread, NULL, _plc_receive_processor, NULL);
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
@@ -173,7 +176,7 @@ _gateway_plc_recv(void *param, iot_pkt_t *pkt) {
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _plc_tx(const uint8_t *data, const uint16_t data_sz) {
     iot_pkt_t pkt;
 
@@ -181,16 +184,16 @@ _plc_tx(const uint8_t *data, const uint16_t data_sz) {
     pkt.tail = pkt.end = pkt.head + data_sz;
 
     if (_plc_sock <= 0) {
-        return 0;
+        return VS_CODE_OK;
     }
 
     send(_plc_sock, pkt.data, pkt.tail - pkt.data, 0);
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _plc_init(const vs_netif_rx_cb_t rx_cb) {
     assert(rx_cb);
     _netif_plc_rx_cb = rx_cb;
@@ -201,13 +204,13 @@ _plc_init(const vs_netif_rx_cb_t rx_cb) {
 
     _plc_connect();
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _plc_deinit() {
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/

@@ -43,6 +43,8 @@
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/converters/crypto_format_converters.h>
+#include <virgil/iot/macros/macros.h>
+#include <virgil/iot/status_code/status_code.h>
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
@@ -71,7 +73,7 @@
 #define RNG_MAX_REQUEST (256)
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    const uint8_t *data,
                    uint16_t data_sz,
@@ -80,13 +82,13 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    uint16_t *hash_sz) {
     vsc_data_t in_data;
     vsc_buffer_t out_data;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_OK;
 
-    NOT_ZERO(data);
-    NOT_ZERO(data_sz);
-    NOT_ZERO(hash);
-    NOT_ZERO(hash_buf_sz);
-    NOT_ZERO(hash_sz);
+    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(data_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(hash, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(hash_buf_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(hash_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     VS_LOG_DEBUG("Generate hash %s for data size %d", vs_hsm_hash_type_descr(hash_type), data_sz);
 
@@ -119,11 +121,11 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
     VS_LOG_DEBUG("Hash size %d, type %s", *hash_sz, vs_hsm_hash_type_descr(hash_type));
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Hash : ", hash, *hash_sz);
 
-    res = VS_HSM_ERR_OK;
+    res = VS_CODE_OK;
 
 terminate:
 
-    if (VS_HSM_ERR_OK != res) {
+    if (VS_CODE_OK != res) {
         vsc_buffer_cleanup(&out_data);
     }
 
@@ -131,19 +133,20 @@ terminate:
 }
 
 /********************************************************************************/
-static int
+static vs_status_code_e
 _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_type_e *keypair_type) {
     uint8_t prvkey_buf[MAX_KEY_SZ];
     uint16_t prvkey_buf_sz = sizeof(prvkey_buf);
     vsc_data_t prvkey_data;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_code_e ret_code;
 
-    NOT_ZERO(prvkey);
-    NOT_ZERO(keypair_type);
+    CHECK_NOT_ZERO_RET(prvkey, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(keypair_type, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
-    CHECK_HSM(vs_hsm_keypair_get_prvkey(key_slot, prvkey_buf, prvkey_buf_sz, &prvkey_buf_sz, keypair_type),
-              "Unable to load private key data from slot %s",
-              get_slot_name(key_slot));
+    STATUS_CHECK_RET(vs_hsm_keypair_get_prvkey(key_slot, prvkey_buf, prvkey_buf_sz, &prvkey_buf_sz, keypair_type),
+                     "Unable to load private key data from slot %s",
+                     get_slot_name(key_slot));
 
     prvkey_data = vsc_data(prvkey_buf, prvkey_buf_sz);
 
@@ -177,11 +180,11 @@ _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_ty
     default:
         assert(false && "Unsupported keypair type");
         VS_LOG_ERROR("Unsupported keypair type %d (%s)", keypair_type, vs_hsm_keypair_type_descr(*keypair_type));
-        res = VS_HSM_ERR_NOT_IMPLEMENTED;
+        res = VS_CODE_ERR_NOT_IMPLEMENTED;
         goto terminate;
     }
 
-    res = VS_HSM_ERR_OK;
+    res = VS_CODE_OK;
 
 terminate:
 
@@ -189,55 +192,53 @@ terminate:
 }
 
 /********************************************************************************/
-static int
+static vs_status_code_e
 _create_pubkey_ctx(vs_hsm_keypair_type_e keypair_type,
                    const uint8_t *public_key,
                    uint16_t public_key_sz,
                    vscf_impl_t **pubkey) {
 
     *pubkey = NULL;
-    int res = VS_HSM_ERR_OK;
+    vs_status_code_e res = VS_CODE_OK;
 
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
         *pubkey = vscf_secp256r1_public_key_impl(vscf_secp256r1_public_key_new());
-        if (vscf_status_SUCCESS != vscf_secp256r1_public_key_import_public_key((vscf_secp256r1_public_key_t *)*pubkey,
-                                                                               vsc_data(public_key, public_key_sz))) {
-            res = VS_HSM_ERR_CRYPTO;
-            VS_LOG_ERROR("Unable to import public key");
-        }
+        CHECK_RET(vscf_status_SUCCESS ==
+                          vscf_secp256r1_public_key_import_public_key((vscf_secp256r1_public_key_t *)*pubkey,
+                                                                      vsc_data(public_key, public_key_sz)),
+                  VS_CODE_ERR_CRYPTO,
+                  "Unable to import public key");
         break;
 
     case VS_KEYPAIR_EC_CURVE25519:
         *pubkey = vscf_curve25519_public_key_impl(vscf_curve25519_public_key_new());
-        if (vscf_status_SUCCESS != vscf_curve25519_public_key_import_public_key((vscf_curve25519_public_key_t *)*pubkey,
-                                                                                vsc_data(public_key, public_key_sz))) {
-            res = VS_HSM_ERR_CRYPTO;
-            VS_LOG_ERROR("Unable to import public key");
-        }
+        CHECK_RET(vscf_status_SUCCESS ==
+                          vscf_curve25519_public_key_import_public_key((vscf_curve25519_public_key_t *)*pubkey,
+                                                                       vsc_data(public_key, public_key_sz)),
+                  VS_CODE_ERR_CRYPTO,
+                  "Unable to import public key");
         break;
 
     case VS_KEYPAIR_EC_ED25519:
         *pubkey = vscf_ed25519_public_key_impl(vscf_ed25519_public_key_new());
-        if (vscf_status_SUCCESS != vscf_ed25519_public_key_import_public_key((vscf_ed25519_public_key_t *)*pubkey,
-                                                                             vsc_data(public_key, public_key_sz))) {
-            res = VS_HSM_ERR_CRYPTO;
-            VS_LOG_ERROR("Unable to import public key");
-        }
+        CHECK_RET(vscf_status_SUCCESS == vscf_ed25519_public_key_import_public_key((vscf_ed25519_public_key_t *)*pubkey,
+                                                                                   vsc_data(public_key, public_key_sz)),
+                  VS_CODE_ERR_CRYPTO,
+                  "Unable to import public key");
         break;
 
     case VS_KEYPAIR_RSA_2048:
         *pubkey = vscf_rsa_public_key_impl(vscf_rsa_public_key_new());
-        if (vscf_status_SUCCESS != vscf_rsa_public_key_import_public_key((vscf_rsa_public_key_t *)*pubkey,
-                                                                         vsc_data(public_key, public_key_sz))) {
-            res = VS_HSM_ERR_CRYPTO;
-            VS_LOG_ERROR("Unable to import public key");
-        }
+        CHECK_RET(vscf_status_SUCCESS == vscf_rsa_public_key_import_public_key((vscf_rsa_public_key_t *)*pubkey,
+                                                                               vsc_data(public_key, public_key_sz)),
+                  VS_CODE_ERR_CRYPTO,
+                  "Unable to import public key");
         break;
 
     default:
         VS_LOG_ERROR("Unsupported keypair type %d (%s)", keypair_type, vs_hsm_keypair_type_descr(keypair_type));
-        res = VS_HSM_ERR_NOT_IMPLEMENTED;
+        res = VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     return res;
@@ -269,7 +270,7 @@ _set_hash_info(vs_hsm_hash_type_e hash_type, vscf_alg_id_t *hash_id, uint16_t *h
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
                   vs_hsm_hash_type_e hash_type,
                   const uint8_t *hash,
@@ -282,18 +283,18 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     vsc_buffer_t sign_data;
     vs_hsm_keypair_type_e keypair_type = VS_KEYPAIR_INVALID;
     uint16_t required_sign_sz = 0;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
-    NOT_ZERO(hash);
-    NOT_ZERO(signature);
-    NOT_ZERO(signature_buf_sz);
-    NOT_ZERO(signature_sz);
+    CHECK_NOT_ZERO_RET(hash, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(signature, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(signature_buf_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(signature_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     vsc_buffer_init(&sign_data);
 
     CHECK_BOOL(_set_hash_info(hash_type, &hash_id, &hash_sz), "Unable to set hash info");
 
-    CHECK_BOOL(VS_HSM_ERR_OK == _load_prvkey(key_slot, &prvkey, &keypair_type),
+    CHECK_BOOL(VS_CODE_OK == _load_prvkey(key_slot, &prvkey, &keypair_type),
                "Unable to load private key from slot %d (%s)",
                key_slot,
                get_slot_name((key_slot)));
@@ -320,7 +321,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     VS_LOG_DEBUG("Output signature size : %d bytes", *signature_sz);
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Output signature : ", signature, *signature_sz);
 
-    res = VS_HSM_ERR_OK;
+    res = VS_CODE_OK;
 
 terminate:
     vsc_buffer_release(&sign_data);
@@ -333,7 +334,7 @@ terminate:
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
                     const uint8_t *public_key,
                     uint16_t public_key_sz,
@@ -347,13 +348,13 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
     vscf_impl_t *pubkey = NULL;
     vscf_alg_id_t hash_id = vscf_alg_id_NONE;
     uint16_t hash_sz = 0;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
-    NOT_ZERO(public_key);
-    NOT_ZERO(public_key_sz);
-    NOT_ZERO(hash);
-    NOT_ZERO(signature);
-    NOT_ZERO(signature_sz);
+    CHECK_NOT_ZERO_RET(public_key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(public_key_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(hash, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(signature, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(signature_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     CHECK_BOOL(vs_converters_raw_sign_to_mbedtls(
                        keypair_type, signature, signature_sz, int_sign, int_sign_sz, &int_sign_sz),
@@ -362,19 +363,16 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
     VS_LOG_DEBUG("Internal signature size : %d bytes", int_sign_sz);
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Internal signature : ", int_sign, int_sign_sz);
 
-    res = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
-    if (VS_HSM_ERR_OK != res) {
-        goto terminate;
-    }
+    STATUS_CHECK(_create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey), "Unable to create public key");
 
-    res = VS_HSM_ERR_CRYPTO;
+    res = VS_CODE_ERR_CRYPTO;
 
     CHECK_BOOL(_set_hash_info(hash_type, &hash_id, &hash_sz), "Unable to set hash info");
 
     CHECK_BOOL(vscf_verify_hash(pubkey, vsc_data(hash, hash_sz), hash_id, vsc_data(int_sign, int_sign_sz)),
                "Unable to verify signature");
 
-    res = VS_HSM_ERR_OK;
+    res = VS_CODE_OK;
 
 terminate:
 
@@ -386,7 +384,7 @@ terminate:
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
             const uint8_t *key,
             uint16_t key_sz,
@@ -400,21 +398,14 @@ vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
     vsc_buffer_t out_buf;
     int hash_sz;
 
-    NOT_ZERO(key);
-    NOT_ZERO(input);
-    NOT_ZERO(output);
-    NOT_ZERO(output_sz);
+    CHECK_NOT_ZERO_RET(key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(input, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     hash_sz = vs_hsm_get_hash_len(hash_type);
-    if (hash_sz < 0) {
-        VS_LOG_ERROR("Unsupported hash type %d", hash_type);
-        return VS_HSM_ERR_CRYPTO;
-    }
-
-    if (output_buf_sz < hash_sz) {
-        VS_LOG_ERROR("Output buffer too small");
-        return VS_HSM_ERR_INVAL;
-    }
+    CHECK_RET(hash_sz >= 0, VS_CODE_ERR_CRYPTO, "Unsupported hash type %d", hash_type);
+    CHECK_RET(output_buf_sz >= hash_sz, VS_CODE_ERR_TOO_SMALL_BUFFER, "Output buffer too small");
 
     vscf_hmac_t *hmac = vscf_hmac_new();
 
@@ -430,8 +421,11 @@ vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
     case VS_HASH_SHA_512:
         hash_impl = vscf_sha512_impl(vscf_sha512_new());
         break;
+
     default:
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        VS_LOG_ERROR("HASH key type %d is not implemented", hash_type);
+        VS_IOT_ASSERT(false);
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     vscf_hmac_take_hash(hmac, hash_impl);
@@ -444,11 +438,11 @@ vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
     *output_sz = (uint16_t)hash_sz;
     vscf_hmac_delete(hmac);
 
-    return VS_HSM_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
            vs_hsm_hash_type_e hash_type,
            const uint8_t *input,
@@ -460,11 +454,9 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
     vscf_impl_t *hash_impl;
     vsc_buffer_t out_buf;
 
-    NOT_ZERO(input);
-    NOT_ZERO(output);
-    if (kdf_type != VS_KDF_2) {
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
-    }
+    CHECK_NOT_ZERO_RET(input, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_RET(kdf_type == VS_KDF_2, VS_CODE_ERR_NOT_IMPLEMENTED, "KDF type %d is not implemented", kdf_type);
 
     kdf2 = vscf_kdf2_new();
 
@@ -481,7 +473,7 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
         hash_impl = vscf_sha512_impl(vscf_sha512_new());
         break;
     default:
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     vsc_buffer_init(&out_buf);
@@ -490,11 +482,11 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
     vscf_kdf2_derive(kdf2, vsc_data(input, input_sz), output_sz, &out_buf);
 
     vscf_kdf2_delete(kdf2);
-    return VS_HSM_ERR_OK;
+    return VS_CODE_OK;
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_hkdf(vs_hsm_hash_type_e hash_type,
             const uint8_t *input,
             uint16_t input_sz,
@@ -505,7 +497,7 @@ vs_hsm_hkdf(vs_hsm_hash_type_e hash_type,
             uint8_t *output,
             uint16_t output_sz) {
 
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
+    return VS_CODE_ERR_NOT_IMPLEMENTED;
 }
 
 /********************************************************************************/
@@ -517,9 +509,9 @@ destroy_random_impl() {
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_random(uint8_t *output, uint16_t output_sz) {
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
     vsc_buffer_t out_buf;
     uint16_t cur_off = 0;
     uint16_t cur_size = 0;
@@ -547,11 +539,11 @@ vs_hsm_random(uint8_t *output, uint16_t output_sz) {
         CHECK_VSCF(vscf_random(random_impl, cur_size, &out_buf), "Unable to generate random sequence");
     }
 
-    res = VS_HSM_ERR_OK;
+    res = VS_CODE_OK;
 
 terminate:
 
-    if (VS_HSM_ERR_OK != res) {
+    if (VS_CODE_OK != res) {
         vsc_buffer_cleanup(&out_buf);
     }
 
@@ -559,7 +551,7 @@ terminate:
 }
 
 /********************************************************************************/
-static int
+static vs_status_code_e
 _aes_gcm_encrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -575,14 +567,14 @@ _aes_gcm_encrypt(const uint8_t *key,
     vsc_buffer_t *out_buf = NULL;
     vsc_buffer_t tag_buf;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
-    NOT_ZERO(tag);
+    CHECK_NOT_ZERO_RET(tag, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     key_len = key_bitlen / 8;
 
     if (key_len != vscf_aes256_gcm_KEY_LEN) {
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     aes256_gcm = vscf_aes256_gcm_new();
@@ -597,7 +589,7 @@ _aes_gcm_encrypt(const uint8_t *key,
 
     if (vscf_status_SUCCESS ==
         vscf_aes256_gcm_auth_encrypt(aes256_gcm, vsc_data(input, buf_len), vsc_data(add, add_len), out_buf, &tag_buf)) {
-        res = VS_HSM_ERR_OK;
+        res = VS_CODE_OK;
         memcpy(output, vsc_buffer_bytes(out_buf), buf_len);
     }
 
@@ -608,7 +600,7 @@ _aes_gcm_encrypt(const uint8_t *key,
 }
 
 /********************************************************************************/
-static int
+static vs_status_code_e
 _aes_cbc_encrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -620,12 +612,12 @@ _aes_cbc_encrypt(const uint8_t *key,
     uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_cbc_t *aes256_cbc = NULL;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
     key_len = key_bitlen / 8;
 
     if (key_len != vscf_aes256_gcm_KEY_LEN) {
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     aes256_cbc = vscf_aes256_cbc_new();
@@ -636,7 +628,7 @@ _aes_cbc_encrypt(const uint8_t *key,
     vscf_aes256_cbc_set_nonce(aes256_cbc, vsc_data(iv, iv_len));
 
     if (vscf_status_SUCCESS == vscf_aes256_cbc_encrypt(aes256_cbc, vsc_data(input, buf_len), out_buf)) {
-        res = VS_HSM_ERR_OK;
+        res = VS_CODE_OK;
         memcpy(output, vsc_buffer_bytes(out_buf), vsc_buffer_len(out_buf));
     }
 
@@ -646,7 +638,7 @@ _aes_cbc_encrypt(const uint8_t *key,
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
                    const uint8_t *key,
                    uint16_t key_bitlen,
@@ -660,10 +652,10 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
                    uint8_t *tag,
                    uint16_t tag_len) {
 
-    NOT_ZERO(key);
-    NOT_ZERO(iv);
-    NOT_ZERO(input);
-    NOT_ZERO(output);
+    CHECK_NOT_ZERO_RET(key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(iv, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(input, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     switch (aes_type) {
     case VS_AES_GCM:
@@ -671,13 +663,13 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
     case VS_AES_CBC:
         return _aes_cbc_encrypt(key, key_bitlen, iv, iv_len, buf_len, input, output);
     default:
-        break;
+        VS_IOT_ASSERT(false);
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
 }
 
 /********************************************************************************/
-static int
+static vs_status_code_e
 _aes_cbc_decrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -688,12 +680,12 @@ _aes_cbc_decrypt(const uint8_t *key,
     uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_cbc_t *aes256_cbc = NULL;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
     key_len = key_bitlen / 8;
 
     if (key_len != vscf_aes256_gcm_KEY_LEN) {
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     aes256_cbc = vscf_aes256_cbc_new();
@@ -704,7 +696,7 @@ _aes_cbc_decrypt(const uint8_t *key,
     vscf_aes256_cbc_set_nonce(aes256_cbc, vsc_data(iv, iv_len));
 
     if (vscf_status_SUCCESS == vscf_aes256_cbc_decrypt(aes256_cbc, vsc_data(input, buf_len), out_buf)) {
-        res = VS_HSM_ERR_OK;
+        res = VS_CODE_OK;
         memcpy(output, vsc_buffer_bytes(out_buf), vsc_buffer_len(out_buf));
     }
 
@@ -716,7 +708,7 @@ _aes_cbc_decrypt(const uint8_t *key,
 
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
                    const uint8_t *key,
                    uint16_t key_bitlen,
@@ -730,23 +722,22 @@ vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
                    uint8_t *tag,
                    uint16_t tag_len) {
 
-    NOT_ZERO(key);
-    NOT_ZERO(iv);
-    NOT_ZERO(input);
-    NOT_ZERO(output);
+    CHECK_NOT_ZERO_RET(key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(iv, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(input, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     switch (aes_type) {
     case VS_AES_CBC:
         return _aes_cbc_decrypt(key, key_bitlen, iv, iv_len, buf_len, input, output);
     default:
-        break;
+        VS_IOT_ASSERT(false);
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
-
-    return VS_HSM_ERR_NOT_IMPLEMENTED;
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
                         const uint8_t *key,
                         uint16_t key_bitlen,
@@ -764,16 +755,16 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     uint8_t add_data = 0;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
-    NOT_ZERO(key);
-    NOT_ZERO(iv);
-    NOT_ZERO(input);
-    NOT_ZERO(output);
-    NOT_ZERO(tag);
+    CHECK_NOT_ZERO_RET(key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(iv, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(input, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(output, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(tag, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     if (add_len) {
-        NOT_ZERO(add);
+        CHECK_NOT_ZERO_RET(add, VS_CODE_ERR_NULLPTR_ARGUMENT);
     }
 
     if (NULL == add) {
@@ -783,7 +774,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     key_len = key_bitlen / 8;
 
     if (VS_AES_GCM != aes_type || key_len != vscf_aes256_gcm_KEY_LEN) {
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 
     aes256_gcm = vscf_aes256_gcm_new();
@@ -796,7 +787,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     if (vscf_status_SUCCESS ==
         vscf_aes256_gcm_auth_decrypt(
                 aes256_gcm, vsc_data(input, buf_len), vsc_data(add, add_len), vsc_data(tag, tag_len), out_buf)) {
-        res = VS_HSM_ERR_OK;
+        res = VS_CODE_OK;
         memcpy(output, vsc_buffer_bytes(out_buf), buf_len);
     }
 
@@ -807,7 +798,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
 }
 
 /********************************************************************************/
-int
+vs_status_code_e
 vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
             vs_hsm_keypair_type_e keypair_type,
             const uint8_t *public_key,
@@ -819,21 +810,21 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
     vscf_impl_t *pubkey = NULL;
     vsc_buffer_t out_buf;
     size_t required_sz;
+    vs_status_code_e res;
+    vs_status_code_e ret_code;
 
-    int res;
+    CHECK_NOT_ZERO_RET(public_key, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(shared_secret, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(shared_secret_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
-    NOT_ZERO(public_key);
-    NOT_ZERO(shared_secret);
-    NOT_ZERO(shared_secret_sz);
-
-    CHECK_HSM(_load_prvkey(slot, &prvkey, &keypair_type),
-              "Unable to load private key from slot %d (%s)",
-              slot,
-              get_slot_name((slot)));
+    STATUS_CHECK_RET(_load_prvkey(slot, &prvkey, &keypair_type),
+                     "Unable to load private key from slot %d (%s)",
+                     slot,
+                     get_slot_name((slot)));
 
     if ((required_sz = vscf_compute_shared_key_shared_key_len(prvkey)) > buf_sz) {
         VS_LOG_ERROR("Output buffer too small");
-        res = VS_HSM_ERR_INVAL;
+        res = VS_CODE_ERR_TOO_SMALL_BUFFER;
         goto terminate;
     }
     *shared_secret_sz = (uint16_t)required_sz;
@@ -843,9 +834,9 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
 
     res = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
 
-    if (VS_HSM_ERR_OK == res) {
-        res = (vscf_status_SUCCESS == vscf_compute_shared_key(prvkey, pubkey, &out_buf)) ? VS_HSM_ERR_OK
-                                                                                         : VS_HSM_ERR_CRYPTO;
+    if (VS_CODE_OK == res) {
+        res = (vscf_status_SUCCESS == vscf_compute_shared_key(prvkey, pubkey, &out_buf)) ? VS_CODE_OK
+                                                                                         : VS_CODE_ERR_CRYPTO;
     }
 
 terminate:
