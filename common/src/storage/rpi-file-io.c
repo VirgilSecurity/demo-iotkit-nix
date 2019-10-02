@@ -219,7 +219,7 @@ vs_rpi_get_file_len(const char *folder, const char *file_name) {
             goto terminate;
         }
     } else {
-        VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
+        VS_LOG_WARNING("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
     }
 
 terminate:
@@ -253,43 +253,51 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
         return false;
     }
 
-    // VS_LOG_TRACE("Write file '%s', %d bytes", file_path, data_sz);
-
-    vs_file_cache_close(file_path);
-
-    fp = fopen(file_path, "rb");
-    if (fp) {
-        long f_sz;
-        UNIX_CALL(fseek(fp, 0, SEEK_END));
-        f_sz = ftell(fp);
-        rewind(fp);
-
-        if (f_sz <= 0) {
-            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
-            res = false;
-            goto terminate;
+    if (0 == vs_file_cache_open(file_path)) { // Cached write
+        if (0 == vs_file_cache_write(file_path, offset, data, data_sz) && 0 == vs_file_cache_sync(file_path)) {
+            return true;
         }
+        return false;
+    } else { // Real write file if cache is disabled or file not found
+        fp = fopen(file_path, "rb");
+        if (fp) {
+            long f_sz;
+            UNIX_CALL(fseek(fp, 0, SEEK_END));
+            f_sz = ftell(fp);
+            rewind(fp);
 
-        new_file_sz = f_sz > offset + data_sz ? f_sz : offset + data_sz;
-        buf = VS_IOT_CALLOC(new_file_sz, 1);
-        NOT_ZERO(buf);
+            if (f_sz <= 0) {
+                VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+                if (0 == strcmp("/Users/maximgrigoryev/keystorage/test/0:0:0:0:0:0/slots/STD_MTP_12", file_path)) {
+                    VS_LOG_ERROR("Debug break");
+                }
+                res = false;
+                goto terminate;
+            }
 
-        if (1 != fread((void *)buf, f_sz, 1, fp)) {
-            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
-            res = false;
-            goto terminate;
+            new_file_sz = f_sz > offset + data_sz ? f_sz : offset + data_sz;
+            buf = VS_IOT_MALLOC(new_file_sz);
+            NOT_ZERO(buf);
+            VS_IOT_MEMSET(buf, 0xFF, new_file_sz);
+
+            if (1 != fread((void *)buf, f_sz, 1, fp)) {
+                VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+                res = false;
+                goto terminate;
+            }
+
+            fclose(fp);
+            VS_IOT_MEMCPY(buf + offset, data, data_sz);
+
+        } else {
+            new_file_sz = offset + data_sz;
+            buf = VS_IOT_CALLOC(offset + data_sz, 1);
+            NOT_ZERO(buf);
+            VS_IOT_MEMSET(buf, 0xFF, offset);
+            VS_IOT_MEMCPY(buf + offset, data, data_sz);
         }
-
-        fclose(fp);
-        VS_IOT_MEMCPY(buf + offset, data, data_sz);
-
-    } else {
-        new_file_sz = offset + data_sz;
-        buf = VS_IOT_CALLOC(offset + data_sz, 1);
-        NOT_ZERO(buf);
-        VS_IOT_MEMSET(buf, 0xFF, offset);
-        VS_IOT_MEMCPY(buf + offset, data, data_sz);
     }
+
 
     fp = fopen(file_path, "wb");
 

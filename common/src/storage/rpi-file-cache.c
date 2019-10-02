@@ -287,6 +287,75 @@ vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t
 }
 
 /******************************************************************************/
+int
+vs_file_cache_write(const char *file_name, uint32_t offset, const uint8_t *data, size_t data_sz) {
+    vs_file_cache_element_t *element;
+    int res = -1;
+
+    assert(data);
+    assert(offset + data_sz <= UINT32_MAX);
+    if (!data || (offset + data_sz > UINT32_MAX)) {
+        return -1;
+    }
+
+    _safe_mutex_lock(&_lock);
+    {
+        if (_ctx.enabled) {
+            element = _find_element(file_name);
+
+            if (element) {
+                if (element->file_sz < offset + data_sz) {
+                    uint8_t *ptr = realloc(element->data, offset + data_sz);
+                    if (!ptr) {
+                        goto terminate;
+                    }
+
+                    if (element->file_sz && element->file_sz < offset) {
+                        memset(&element->data[element->file_sz - 1], 0xFF, offset - element->file_sz);
+                    }
+
+                    element->data = ptr;
+                    element->file_sz = offset + data_sz;
+                }
+                memcpy(&element->data[offset], data, data_sz);
+                res = 0;
+            }
+        }
+    }
+terminate:
+    _safe_mutex_unlock(&_lock);
+    return res;
+}
+
+/******************************************************************************/
+int
+vs_file_cache_sync(const char *file_name) {
+    FILE *fp = NULL;
+    int res = -1;
+    vs_file_cache_element_t *element;
+
+    _safe_mutex_lock(&_lock);
+    {
+        if (_ctx.enabled) {
+            element = _find_element(file_name);
+            if (element) {
+                fp = fopen(file_name, "wb");
+                if (fp) {
+                    if (1 == fwrite(element->data, element->file_sz, 1, fp)) {
+                        res = 0;
+                    } else {
+                        printf("Can't write file\n");
+                    }
+                    fclose(fp);
+                }
+            }
+        }
+    }
+    _safe_mutex_unlock(&_lock);
+    return res;
+}
+
+/******************************************************************************/
 void
 vs_file_cache_close(const char *file_name) {
     _safe_mutex_lock(&_lock);

@@ -49,6 +49,7 @@
 #include "hal/storage/rpi-file-io.h"
 #include "hal/storage/rpi-storage-hal.h"
 #include "hal/rpi-global-hal.h"
+#include "hal/storage/rpi-file-cache.h"
 
 /******************************************************************************/
 static int
@@ -145,6 +146,9 @@ main(int argc, char *argv[]) {
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
+
+    // Enable cached file IO
+    vs_file_cache_enable(true);
 
     vs_hal_files_set_dir("test");
     vs_hal_files_set_mac(mac);
