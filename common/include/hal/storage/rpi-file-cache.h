@@ -47,6 +47,9 @@ vs_file_cache_enable(bool enable);
 int
 vs_file_cache_open(const char *file_name);
 
+int
+vs_file_cache_create(const char *file_name, const uint8_t *data, size_t data_sz);
+
 ssize_t
 vs_file_cache_get_len(const char *file_name);
 

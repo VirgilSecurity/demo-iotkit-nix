@@ -316,6 +316,7 @@ vs_file_cache_write(const char *file_name, uint32_t offset, const uint8_t *data,
 
                     element->data = ptr;
                     element->file_sz = offset + data_sz;
+                    element->last_usage_time = time(NULL);
                 }
                 memcpy(&element->data[offset], data, data_sz);
                 res = 0;
@@ -324,6 +325,53 @@ vs_file_cache_write(const char *file_name, uint32_t offset, const uint8_t *data,
     }
 terminate:
     _safe_mutex_unlock(&_lock);
+    return res;
+}
+
+/******************************************************************************/
+int
+vs_file_cache_create(const char *file_name, const uint8_t *data, size_t data_sz) {
+    vs_file_cache_element_t *element = NULL;
+    int res = -1;
+
+    assert(data);
+    assert(data_sz);
+    if (!data || 0 == data_sz || data_sz >= VS_FILE_CACHE_MAX_FILE_SZ) {
+        return -1;
+    }
+
+    _safe_mutex_lock(&_lock);
+    {
+        if (_ctx.enabled) {
+            element = _find_element(file_name);
+            if (element) {
+                _free_element(element);
+            }
+            // Prepare place for a new element
+            element = _element_to_add();
+            if (element) {
+                element->last_usage_time = time(NULL);
+                element->fn = strdup(file_name);
+                element->file_sz = data_sz;
+
+                element->data = malloc(element->file_sz);
+
+                if (!element->data) {
+                    goto terminate;
+                }
+
+                memcpy(element->data, data, data_sz);
+                res = 0;
+            }
+        }
+    }
+terminate:
+    if (0 != res && element) {
+        _free_element(element);
+    }
+
+    _safe_mutex_unlock(&_lock);
+
     return res;
 }
 

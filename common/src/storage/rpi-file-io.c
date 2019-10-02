@@ -307,7 +307,10 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
                          file_path,
                          errno,
                          strerror(errno));
+            goto terminate;
         }
+        vs_file_cache_create(file_path, buf, new_file_sz);
+
     } else {
         VS_LOG_ERROR("Unable to open file %s. errno = %d (%s)", file_path, errno, strerror(errno));
     }
