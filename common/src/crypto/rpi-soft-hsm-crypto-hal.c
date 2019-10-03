@@ -82,7 +82,7 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    uint16_t *hash_sz) {
     vsc_data_t in_data;
     vsc_buffer_t out_data;
-    vs_status_code_e res = VS_CODE_OK;
+    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(data_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -197,9 +197,9 @@ _create_pubkey_ctx(vs_hsm_keypair_type_e keypair_type,
                    const uint8_t *public_key,
                    uint16_t public_key_sz,
                    vscf_impl_t **pubkey) {
+    vs_status_code_e res = VS_CODE_OK;
 
     *pubkey = NULL;
-    vs_status_code_e res = VS_CODE_OK;
 
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
@@ -472,7 +472,10 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
     case VS_HASH_SHA_512:
         hash_impl = vscf_sha512_impl(vscf_sha512_new());
         break;
+
     default:
+        VS_LOG_ERROR("HASH key type %d is not implemented", hash_type);
+        VS_IOT_ASSERT(false);
         return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 

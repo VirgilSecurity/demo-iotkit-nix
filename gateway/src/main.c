@@ -49,8 +49,8 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    static const uint8_t manufacture_id[MANUFACTURE_ID_SIZE] = GW_MANUFACTURE_ID;
-    static const uint8_t device_type[DEVICE_TYPE_SIZE] = GW_DEVICE_MODEL;
+    static const vs_fw_manufacture_id_t manufacture_id = GW_MANUFACTURE_ID;
+    static const vs_fw_manufacture_id_t device_type = GW_DEVICE_MODEL;
     struct in_addr plc_sim_addr;
 
     printf("\n\n--------------------------------------------\n");

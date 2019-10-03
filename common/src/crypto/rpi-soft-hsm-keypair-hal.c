@@ -402,8 +402,7 @@ vs_hsm_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type
         return vs_hsm_rsa_keypair_create(slot, keypair_type);
 
     default:
-        VS_LOG_ERROR("Unsupported keypair type %s", vs_hsm_keypair_type_descr(keypair_type));
-        VS_IOT_ASSERT(false);
+        VS_LOG_WARNING("Unsupported keypair type %s", vs_hsm_keypair_type_descr(keypair_type));
         return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 }
