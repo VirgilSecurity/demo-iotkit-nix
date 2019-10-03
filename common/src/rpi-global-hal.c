@@ -279,6 +279,9 @@ vs_rpi_start(const char *devices_dir,
               -1,
               "INFO service is not registered");
 
+    // Send broadcast notification about start of this device
+    CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
+
     return 0;
 }
 
