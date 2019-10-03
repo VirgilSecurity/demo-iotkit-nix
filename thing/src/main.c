@@ -51,8 +51,8 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    static vs_fw_manufacture_id_t manufacture_id; // = THING_MANUFACTURE_ID;
-    static vs_fw_device_type_t device_type;       // = THING_DEVICE_MODEL;
+    static vs_fw_manufacture_id_t manufacture_id;
+    static vs_fw_device_type_t device_type;
     struct in_addr plc_sim_addr;
 
     memset(&manufacture_id, 0, sizeof(manufacture_id));
