@@ -41,6 +41,7 @@
 #include "hal/rpi-global-hal.h"
 #include "helpers/input-params.h"
 #include "fldt-impl-tg.h"
+#include "hal/storage/rpi-file-cache.h"
 
 #if SIMULATOR
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
@@ -75,6 +76,9 @@ main(int argc, char *argv[]) {
     }
 
     self_path = argv[0];
+
+    // Enable cached file IO
+    vs_file_cache_enable(true);
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_client()), -1, "FLDT server is not registered");

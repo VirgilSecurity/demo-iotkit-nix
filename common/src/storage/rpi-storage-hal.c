@@ -39,7 +39,29 @@
 
 #include <global-hal.h>
 #include <virgil/iot/status_code/status_code.h>
-#include "hal/storage/rpi-storage-hal.h"
+#include <hal/storage/rpi-file-cache.h>
+#include <hal/storage/rpi-storage-hal.h>
+
+
+#define VS_FIO_PROFILE_WRITE 0
+#define VS_FIO_PROFILE_GETLEN 0
+#define VS_FIO_PROFILE_READ 0
+#define VS_FIO_PROFILE_SYNC 0
+
+#if VS_FIO_PROFILE_WRITE || VS_FIO_PROFILE_READ || VS_FIO_PROFILE_SYNC || VS_FIO_PROFILE_GETLEN
+#include <sys/time.h>
+static long long _processing_time = 0;
+static long _calls_counter = 0;
+
+static long long
+current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL);                            // get current time
+    long long _us = te.tv_sec * 1000000LL + te.tv_usec; // calculate us
+    return _us;
+}
+
+#endif
 
 typedef struct {
     char *dir;
@@ -120,6 +142,32 @@ vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 }
 
 /******************************************************************************/
+vs_status_code_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
+    int res = VS_CODE_ERR_FILE;
+
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+
+#if VS_FIO_PROFILE_SYNC
+    long long t;
+    long long dt;
+    _calls_counter++;
+    t = current_timestamp();
+#endif
+
+    if (vs_rpi_sync_file(ctx->dir, (char *)file)) {
+        res = VS_CODE_OK;
+    }
+#if VS_FIO_PROFILE_SYNC
+    dt = current_timestamp() - t;
+    _processing_time += dt;
+    VS_LOG_INFO("[Sync]. Time op = %lld us Total time: %lld us Calls: %ld", dt, _processing_time, _calls_counter);
+#endif
+    return res;
+}
+
+/******************************************************************************/
 static vs_status_code_e
 vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file_t file) {
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -136,13 +184,28 @@ vs_rpi_storage_save_hal_t(const vs_storage_hal_ctx_t storage_ctx,
                           size_t offset,
                           const uint8_t *data,
                           size_t data_sz) {
+    int res = VS_CODE_ERR_FILE_WRITE;
+
+    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+#if VS_FIO_PROFILE_WRITE
+    long long t;
+    long long dt;
+    _calls_counter++;
+    t = current_timestamp();
+#endif
 
-    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_INCORRECT_PARAMETER);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
-    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
-
-    return vs_rpi_write_file_data(ctx->dir, (char *)file, offset, data, data_sz) ? VS_CODE_OK : VS_CODE_ERR_FILE_WRITE;
+    if (vs_rpi_write_file_data(ctx->dir, (char *)file, offset, data, data_sz)) {
+        res = VS_CODE_OK;
+    }
+#if VS_FIO_PROFILE_WRITE
+    dt = current_timestamp() - t;
+    _processing_time += dt;
+    VS_LOG_INFO("[Write]. Time op = %lld us Total time: %lld us Calls: %ld", dt, _processing_time, _calls_counter);
+#endif
+    return res;
 }
 
 /******************************************************************************/
@@ -153,6 +216,7 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
                         uint8_t *out_data,
                         size_t data_sz) {
     size_t read_sz;
+    vs_status_code_e res = VS_CODE_ERR_FILE_READ;
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(out_data, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -160,28 +224,52 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
+#if VS_FIO_PROFILE_READ
+    long long t;
+    long long dt;
+    _calls_counter++;
+    t = current_timestamp();
+#endif
     if (vs_rpi_read_file_data(ctx->dir, (char *)file, offset, out_data, data_sz, &read_sz) && read_sz == data_sz) {
-        return VS_CODE_OK;
+        res = VS_CODE_OK;
     }
 
-    return VS_CODE_ERR_FILE_READ;
+#if VS_FIO_PROFILE_READ
+    dt = current_timestamp() - t;
+    _processing_time += dt;
+    VS_LOG_INFO("[Read]. Time op = %lld us Total time: %lld us Calls: %ld", dt, _processing_time, _calls_counter);
+#endif
+    return res;
 }
 
 /*******************************************************************************/
 static long
 vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+    long res;
+    uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
+    uint8_t file[len];
 
     CHECK_NOT_ZERO_RET(id, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
-    uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
-    uint8_t file[len];
-
     _data_to_hex(id, sizeof(vs_storage_element_id_t), file, &len);
 
-    return vs_rpi_get_file_len(ctx->dir, (char *)file);
+#if VS_FIO_PROFILE_GETLEN
+    long long t;
+    long long dt;
+    _calls_counter++;
+    t = current_timestamp();
+#endif
+    res = vs_rpi_get_file_len(ctx->dir, (char *)file);
+#if VS_FIO_PROFILE_GETLEN
+    dt = current_timestamp() - t;
+    _processing_time += dt;
+    VS_LOG_INFO(
+            "[Get file len]. Time op = %lld us Total time: %lld us Calls: %ld", dt, _processing_time, _calls_counter);
+#endif
+    return res;
 }
 
 /******************************************************************************/
@@ -209,6 +297,7 @@ vs_rpi_get_storage_impl(vs_storage_op_impl_t *impl) {
     impl->size = vs_rpi_storage_file_size_hal;
     impl->deinit = vs_rpi_storage_deinit_hal;
     impl->open = vs_rpi_storage_open_hal;
+    impl->sync = vs_rpi_storage_sync_hal;
     impl->close = vs_rpi_storage_close_hal;
     impl->save = vs_rpi_storage_save_hal_t;
     impl->load = vs_rpi_storage_load_hal;
