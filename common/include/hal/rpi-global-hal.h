@@ -40,6 +40,7 @@
 
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/firmware/firmware.h>
+#include "hal/storage/rpi-storage-hal.h"
 
 extern char *self_path;
 

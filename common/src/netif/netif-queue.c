@@ -44,7 +44,7 @@
 #define VS_NETIF_QUEUE_SZ (100)
 
 static const vs_netif_t *_base_netif = 0;
-static vs_netif_rx_cb_t _netif_rx_cb = 0;
+static vs_netif_process_cb_t _netif_process_cb = 0;
 static vs_netif_t _queued_netif = {0};
 static vs_msg_queue_ctx_t *_queue_ctx = 0;
 static pthread_t _queue_thread;
@@ -54,7 +54,7 @@ static bool _periodical_ready = false;
 
 /******************************************************************************/
 static vs_status_code_e
-_rx_to_queue(const struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
+_queue_and_process(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
     uint8_t *data_copy = NULL;
 
     assert(_queue_ctx);
@@ -80,7 +80,7 @@ _rx_to_queue(const struct vs_netif_t *netif, const uint8_t *data, const uint16_t
 /******************************************************************************/
 static void *
 _msg_processing(void *ctx) {
-    const vs_netif_t *netif = 0;
+    vs_netif_t *netif = 0;
     const uint8_t *data = 0;
     size_t data_sz = 0;
 
@@ -96,8 +96,8 @@ _msg_processing(void *ctx) {
                   "Error while reading message from queue");
 
         // Invoke callback function
-        if (_netif_rx_cb) {
-            _netif_rx_cb(netif, data, data_sz);
+        if (_netif_process_cb) {
+            _netif_process_cb(netif, data, data_sz);
         }
 
         // Free data from Queue
@@ -118,7 +118,7 @@ _periodical_processing(void *ctx) {
 
 /******************************************************************************/
 static vs_status_code_e
-_init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
+_init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t netif_process_cb) {
     assert(_base_netif);
     CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
 
@@ -127,7 +127,7 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
     CHECK_RET(_queue_ctx, -1, "Cannot create message queue.");
 
     // Save Callback function
-    _netif_rx_cb = netif_rx_cb;
+    _netif_process_cb = netif_process_cb;
 
     // Create thread for periodical actions
     if (0 == pthread_create(&_periodical_thread, NULL, _periodical_processing, NULL)) {
@@ -137,7 +137,7 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb) {
     // Create thread to call Callbacks on data receive
     if (0 == pthread_create(&_queue_thread, NULL, _msg_processing, NULL)) {
         _queue_thread_ready = true;
-        return _base_netif->init(_rx_to_queue);
+        return _base_netif->init(netif_rx_cb, _queue_and_process);
     }
 
     VS_LOG_ERROR("Cannot start thread to process RX Queue");
@@ -180,7 +180,7 @@ _deinit_with_queue() {
 }
 
 /******************************************************************************/
-const vs_netif_t *
+vs_netif_t *
 vs_netif_queued(const vs_netif_t *base_netif) {
     assert(base_netif);
     CHECK_RET(base_netif, NULL, "Unable to initialize queued Netif because of wrong Base Netif");

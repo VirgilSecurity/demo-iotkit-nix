@@ -247,7 +247,7 @@ _queue_get(vs_msg_queue_ctx_t *q, int8_t wait) {
             q->num_waiting[2]--;
 #endif
         } else {
-            if (0 == q->num_adders && 0 == q->n)
+            if (0 == q->num_adders)
                 _queue_close_nolock(q); // close the queue
             _queue_signal(q);
             _safe_mutex_unlock(q->mut);
