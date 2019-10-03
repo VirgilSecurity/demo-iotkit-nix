@@ -590,8 +590,13 @@ vs_rpi_get_secbox_dir() {
 /********************************************************************************/
 int
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) ? VS_HSM_ERR_OK
-                                                                                    : VS_HSM_ERR_FILE_IO;
+    int res = VS_HSM_ERR_FILE_IO;
+
+    if (vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
+        vs_rpi_sync_file(slots_dir, get_slot_name(slot))) {
+        res = VS_HSM_ERR_OK;
+    }
+    return res;
 }
 
 /********************************************************************************/
