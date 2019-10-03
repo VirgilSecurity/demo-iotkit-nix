@@ -51,9 +51,15 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    static const vs_fw_manufacture_id_t manufacture_id = THING_MANUFACTURE_ID;
-    static const vs_fw_device_type_t device_type = THING_DEVICE_MODEL;
+    static vs_fw_manufacture_id_t manufacture_id; // = THING_MANUFACTURE_ID;
+    static vs_fw_device_type_t device_type;       // = THING_DEVICE_MODEL;
     struct in_addr plc_sim_addr;
+
+    memset(&manufacture_id, 0, sizeof(manufacture_id));
+    strncpy((char *)manufacture_id, THING_MANUFACTURE_ID, sizeof(manufacture_id));
+
+    memset(&device_type, 0, sizeof(device_type));
+    strncpy((char *)device_type, THING_DEVICE_MODEL, sizeof(device_type));
 
     vs_rpi_print_title("Thing", argv[0], manufacture_id, device_type);
 
