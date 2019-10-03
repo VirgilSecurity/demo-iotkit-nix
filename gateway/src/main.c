@@ -76,7 +76,7 @@ main(int argc, char *argv[]) {
     self_path = argv[0];
 
     // Enable cached file IO
-    vs_file_cache_enable(false);
+    vs_file_cache_enable(true);
 
     // Init Thing's FLDT implementation
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
