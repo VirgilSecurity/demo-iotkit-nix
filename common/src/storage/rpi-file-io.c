@@ -62,6 +62,23 @@ static const char *secbox_dir = "secbox";
 static bool initialized = false;
 static uint8_t mac[6];
 
+#define VS_FIO_PROFILE 1
+
+#if VS_FIO_PROFILE
+#include <sys/time.h>
+static long long _processing_time = 0;
+static long _calls_counter = 0;
+
+static long long
+current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL);                            // get current time
+    long long _us = te.tv_sec * 1000000LL + te.tv_usec; // calculate us
+    return _us;
+}
+
+#endif
+
 #define VS_IO_BUF_SZ (2048 * 1024)
 static char file_io_buffer[VS_IO_BUF_SZ];
 
@@ -239,6 +256,12 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
     uint8_t *buf = NULL;
     uint32_t new_file_sz;
 
+#if VS_FIO_PROFILE
+    long long t;
+    _calls_counter++;
+    t = current_timestamp();
+#endif
+
     NOT_ZERO(folder);
     NOT_ZERO(file_name);
     NOT_ZERO(data);
@@ -246,17 +269,30 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
 
     if (!initialized && !_init_fio()) {
         VS_LOG_ERROR("Unable to initialize file I/O operations");
+#if VS_FIO_PROFILE
+        _processing_time += current_timestamp() - t;
+#endif
         return false;
     }
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
+#if VS_FIO_PROFILE
+        _processing_time += current_timestamp() - t;
+#endif
         return false;
     }
 
     if (0 == vs_file_cache_open(file_path)) { // Cached write
-        if (0 == vs_file_cache_write(file_path, offset, data, data_sz) && 0 == vs_file_cache_sync(file_path)) {
+        if (0 == vs_file_cache_write(file_path, offset, data, data_sz) /*&& 0 == vs_file_cache_sync(file_path)*/) {
+#if VS_FIO_PROFILE
+            _processing_time += (current_timestamp() - t);
+            VS_LOG_INFO("[Cached write]. Total time: %lld us Calls: %ld", _processing_time, _calls_counter);
+#endif
             return true;
         }
+#if VS_FIO_PROFILE
+        _processing_time += current_timestamp() - t;
+#endif
         return false;
     } else { // Real write file if cache is disabled or file not found
         fp = fopen(file_path, "rb");
@@ -324,7 +360,10 @@ terminate:
     }
 
     VS_IOT_FREE(buf);
-
+#if VS_FIO_PROFILE
+    _processing_time += (current_timestamp() - t);
+    VS_LOG_INFO("[Disk write]. Total time: %u us  Calls: %ld", _processing_time, _calls_counter);
+#endif
     return res;
 }
 
