@@ -290,3 +290,28 @@ vs_rpi_restart(void) {
 }
 
 /******************************************************************************/
+void
+vs_rpi_print_title(const char *device_name,
+                   const char *app_path,
+                   const vs_fw_manufacture_id_t manufacture_id,
+                   const vs_fw_device_type_t device_type) {
+    int i;
+    const char *p;
+    printf("\n\n--------------------------------------------\n");
+    printf("%s app at %s\n", device_name, app_path);
+    printf("Manufacture ID = \"");
+    p = (const char *)manufacture_id;
+    for (i = 0; i < sizeof(vs_fw_manufacture_id_t); i++) {
+        printf("%c", p[i]);
+    }
+
+    printf("\", Device type = \"");
+    p = (const char *)device_type;
+    for (i = 0; i < sizeof(vs_fw_device_type_t); i++) {
+        printf("%c", p[i]);
+    }
+
+    printf("\"\n");
+    printf("--------------------------------------------\n\n");
+}
+/******************************************************************************/

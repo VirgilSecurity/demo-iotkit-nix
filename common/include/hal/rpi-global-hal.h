@@ -65,4 +65,10 @@ vs_rpi_start(const char *devices_dir,
 void
 vs_rpi_restart(void);
 
+void
+vs_rpi_print_title(const char *device_name,
+                   const char *app_path,
+                   const vs_fw_manufacture_id_t manufacture_id,
+                   const vs_fw_device_type_t device_type);
+
 #endif // IOT_RPI_HAL_H

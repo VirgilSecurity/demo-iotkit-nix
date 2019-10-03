@@ -55,10 +55,7 @@ main(int argc, char *argv[]) {
     static const vs_fw_device_type_t device_type = THING_DEVICE_MODEL;
     struct in_addr plc_sim_addr;
 
-    printf("\n\n--------------------------------------------\n");
-    printf("Thing app at %s\n", argv[0]);
-    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", manufacture_id, device_type);
-    printf("--------------------------------------------\n\n");
+    vs_rpi_print_title("Thing", argv[0], manufacture_id, device_type);
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
