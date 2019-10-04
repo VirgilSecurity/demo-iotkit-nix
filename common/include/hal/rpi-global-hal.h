@@ -59,7 +59,7 @@ vs_rpi_start(const char *devices_dir,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx,
              const uint8_t *manufacture_id,
-             const uint8_t *device_type);
+             const uint8_t *device_type,
              const uint32_t device_roles);
 
 void

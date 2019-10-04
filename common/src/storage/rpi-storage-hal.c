@@ -243,7 +243,7 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
 }
 
 /*******************************************************************************/
-static long
+static ssize_t
 vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
     long res;

@@ -33,13 +33,13 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <assert.h>
-#include <stdarg.h>
 #include <stdint.h>
 
 #include "private/helpers.h"
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>

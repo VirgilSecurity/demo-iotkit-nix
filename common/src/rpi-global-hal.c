@@ -275,6 +275,8 @@ vs_rpi_start(const char *devices_dir,
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
 
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
+              -1,
+              0);
     // Send broadcast notification about start of this device
     CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
 
