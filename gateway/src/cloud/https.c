@@ -70,7 +70,7 @@ write_callback(char *contents, size_t size, size_t nmemb, void *userdata) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_cloud_https_hal(vs_http_method_t type,
                    const char *url,
                    const char *data,

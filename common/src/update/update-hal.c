@@ -14,7 +14,7 @@
 char *self_path = NULL;
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_firmware_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
@@ -27,7 +27,7 @@ vs_firmware_install_prepare_space_hal(void) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 
     int res = VS_CODE_ERR_FILE;

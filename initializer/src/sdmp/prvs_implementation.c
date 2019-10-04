@@ -45,7 +45,7 @@
 #include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_prvs_dnid() {
     return VS_CODE_OK;
 }
@@ -67,7 +67,7 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     uint16_t key_sz = 0;
     vs_hsm_keypair_type_e ec_type;
@@ -75,7 +75,7 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     uint16_t sign_sz = 0;
     vs_sign_t *sign;
     uint8_t *ptr;
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
 
     VS_IOT_ASSERT(device_info);
 

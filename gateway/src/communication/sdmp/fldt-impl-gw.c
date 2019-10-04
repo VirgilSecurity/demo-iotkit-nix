@@ -49,7 +49,7 @@ vs_update_interface_t _fw_update_ctx;
 vs_update_interface_t _tl_update_ctx;
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
     assert(file_type);
 
@@ -71,10 +71,10 @@ vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_gateway_trust_list_init(void) {
     vs_update_file_type_t file_type;
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
 
     STATUS_CHECK_RET(vs_update_trust_list_init(&_tl_update_ctx, &_tl_storage_ctx),
                      "Unable to initialize Trust List's Update context");
@@ -89,9 +89,9 @@ vs_fldt_gateway_trust_list_init(void) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_gateway_init(const vs_mac_addr_t *gateway_mac) {
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 

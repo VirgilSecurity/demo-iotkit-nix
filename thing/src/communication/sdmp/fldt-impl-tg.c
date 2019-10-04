@@ -111,12 +111,12 @@ _make_firmware_add_data_element(uint8_t *dst, const char *src, size_t elem_buf_s
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_thing_firmware_init(void) {
     static const char *manufacturer_id = THING_MANUFACTURE_ID;
     static const char *device_id = THING_DEVICE_MODEL;
     vs_update_file_type_t file_type;
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
     uint8_t *filetype_manufacture_id = file_type.add_info;
     uint8_t *filetype_device_type = file_type.add_info + MANUFACTURE_ID_SIZE;
 
@@ -135,10 +135,10 @@ vs_fldt_thing_firmware_init(void) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_thing_trust_list_init(void) {
     vs_update_file_type_t file_type;
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
 
     STATUS_CHECK_RET(vs_update_trust_list_init(&_tl_update_ctx, &_tl_storage_ctx),
                      "Unable to initialize Trust List's Update context");
@@ -153,9 +153,9 @@ vs_fldt_thing_trust_list_init(void) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_fldt_thing_init(void) {
-    vs_status_code_e ret_code;
+    vs_status_e ret_code;
 
     VS_LOG_DEBUG("[FLDT] Initialization");
 

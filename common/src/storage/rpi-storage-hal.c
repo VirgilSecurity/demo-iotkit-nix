@@ -109,7 +109,7 @@ vs_rpi_storage_init(const char *relative_dir) {
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_rpi_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
@@ -141,7 +141,7 @@ vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 }
 
 /******************************************************************************/
-vs_status_code_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
+vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
     int res = VS_CODE_ERR_FILE;
 
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -167,7 +167,7 @@ vs_status_code_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t stora
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file_t file) {
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
 
@@ -177,7 +177,7 @@ vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
@@ -208,14 +208,14 @@ vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         uint8_t *out_data,
                         size_t data_sz) {
     size_t read_sz;
-    vs_status_code_e res = VS_CODE_ERR_FILE_READ;
+    vs_status_e res = VS_CODE_ERR_FILE_READ;
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(out_data, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -272,7 +272,7 @@ vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_st
 }
 
 /******************************************************************************/
-static vs_status_code_e
+static vs_status_e
 vs_rpi_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
@@ -289,7 +289,7 @@ vs_rpi_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_rpi_get_storage_impl(vs_storage_op_impl_t *impl) {
     CHECK_NOT_ZERO_RET(impl, VS_CODE_ERR_INCORRECT_PARAMETER);
 

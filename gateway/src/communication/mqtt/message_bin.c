@@ -77,7 +77,7 @@ _group_callback(AWS_IoT_Client *client,
 }
 
 ///*************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _init_mqtt(const char *host, uint16_t port, const char *device_cert, const char *priv_key, const char *ca_cert) {
 
     return (SUCCESS == iot_init(&_mb_mqtt_handler, host, port, true, device_cert, priv_key, ca_cert))
@@ -86,7 +86,7 @@ _init_mqtt(const char *host, uint16_t port, const char *device_cert, const char 
 }
 
 /*************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _connect_and_subscribe_to_topics(const char *client_id,
                                  const char *login,
                                  const char *password,
@@ -98,7 +98,7 @@ _connect_and_subscribe_to_topics(const char *client_id,
 }
 
 /*************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _mqtt_process() {
     return (SUCCESS == aws_iot_mqtt_yield(&_mb_mqtt_handler.client, 500)) ? VS_CODE_OK : VS_CODE_ERR_CLOUD;
 }

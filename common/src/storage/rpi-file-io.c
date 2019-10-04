@@ -588,7 +588,7 @@ vs_rpi_get_secbox_dir() {
     return secbox_dir;
 }
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
     return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
                            vs_rpi_sync_file(slots_dir, get_slot_name(slot))
@@ -597,10 +597,10 @@ vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) 
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
     size_t out_sz_size_t = *out_sz;
-    vs_status_code_e call_res;
+    vs_status_e call_res;
 
     call_res = vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, &out_sz_size_t)
                        ? VS_CODE_OK
@@ -613,7 +613,7 @@ vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
     return vs_rpi_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
 }
