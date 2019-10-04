@@ -57,9 +57,6 @@
 #define CHECK_VSCF(OPERATION, DESCRIPTION, ...)                                                                        \
     CHECK_BOOL((vscf_status_SUCCESS == (OPERATION)), DESCRIPTION, ##__VA_ARGS__)
 
-#define CHECK_HSM(OPERATION, DESCRIPTION, ...)                                                                         \
-    CHECK_BOOL((VS_CODE_OK == (res = (OPERATION))), DESCRIPTION, ##__VA_ARGS__)
-
 #define NOT_ZERO(ARG)                                                                                                  \
     do {                                                                                                               \
         if (!(ARG)) {                                                                                                  \

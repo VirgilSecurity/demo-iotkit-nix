@@ -73,7 +73,7 @@
 #define RNG_MAX_REQUEST (256)
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    const uint8_t *data,
                    uint16_t data_sz,
@@ -82,7 +82,7 @@ vs_hsm_hash_create(vs_hsm_hash_type_e hash_type,
                    uint16_t *hash_sz) {
     vsc_data_t in_data;
     vsc_buffer_t out_data;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(data_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -133,13 +133,13 @@ terminate:
 }
 
 /********************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_type_e *keypair_type) {
     uint8_t prvkey_buf[MAX_KEY_SZ];
     uint16_t prvkey_buf_sz = sizeof(prvkey_buf);
     vsc_data_t prvkey_data;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
-    vs_status_code_e ret_code;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e ret_code;
 
     CHECK_NOT_ZERO_RET(prvkey, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(keypair_type, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -192,12 +192,12 @@ terminate:
 }
 
 /********************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _create_pubkey_ctx(vs_hsm_keypair_type_e keypair_type,
                    const uint8_t *public_key,
                    uint16_t public_key_sz,
                    vscf_impl_t **pubkey) {
-    vs_status_code_e res = VS_CODE_OK;
+    vs_status_e res = VS_CODE_OK;
 
     *pubkey = NULL;
 
@@ -270,7 +270,7 @@ _set_hash_info(vs_hsm_hash_type_e hash_type, vscf_alg_id_t *hash_id, uint16_t *h
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
                   vs_hsm_hash_type_e hash_type,
                   const uint8_t *hash,
@@ -283,7 +283,7 @@ vs_hsm_ecdsa_sign(vs_iot_hsm_slot_e key_slot,
     vsc_buffer_t sign_data;
     vs_hsm_keypair_type_e keypair_type = VS_KEYPAIR_INVALID;
     uint16_t required_sign_sz = 0;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(hash, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(signature, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -334,7 +334,7 @@ terminate:
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
                     const uint8_t *public_key,
                     uint16_t public_key_sz,
@@ -348,7 +348,7 @@ vs_hsm_ecdsa_verify(vs_hsm_keypair_type_e keypair_type,
     vscf_impl_t *pubkey = NULL;
     vscf_alg_id_t hash_id = vscf_alg_id_NONE;
     uint16_t hash_sz = 0;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(public_key, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(public_key_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -384,7 +384,7 @@ terminate:
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
             const uint8_t *key,
             uint16_t key_sz,
@@ -442,7 +442,7 @@ vs_hsm_hmac(vs_hsm_hash_type_e hash_type,
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
            vs_hsm_hash_type_e hash_type,
            const uint8_t *input,
@@ -489,7 +489,7 @@ vs_hsm_kdf(vs_hsm_kdf_type_e kdf_type,
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_hkdf(vs_hsm_hash_type_e hash_type,
             const uint8_t *input,
             uint16_t input_sz,
@@ -512,9 +512,9 @@ destroy_random_impl() {
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_random(uint8_t *output, uint16_t output_sz) {
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
     vsc_buffer_t out_buf;
     uint16_t cur_off = 0;
     uint16_t cur_size = 0;
@@ -554,7 +554,7 @@ terminate:
 }
 
 /********************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _aes_gcm_encrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -570,7 +570,7 @@ _aes_gcm_encrypt(const uint8_t *key,
     vsc_buffer_t *out_buf = NULL;
     vsc_buffer_t tag_buf;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(tag, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
@@ -603,7 +603,7 @@ _aes_gcm_encrypt(const uint8_t *key,
 }
 
 /********************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _aes_cbc_encrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -615,7 +615,7 @@ _aes_cbc_encrypt(const uint8_t *key,
     uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_cbc_t *aes256_cbc = NULL;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     key_len = key_bitlen / 8;
 
@@ -641,7 +641,7 @@ _aes_cbc_encrypt(const uint8_t *key,
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
                    const uint8_t *key,
                    uint16_t key_bitlen,
@@ -672,7 +672,7 @@ vs_hsm_aes_encrypt(vs_iot_aes_type_e aes_type,
 }
 
 /********************************************************************************/
-static vs_status_code_e
+static vs_status_e
 _aes_cbc_decrypt(const uint8_t *key,
                  uint16_t key_bitlen,
                  const uint8_t *iv,
@@ -683,7 +683,7 @@ _aes_cbc_decrypt(const uint8_t *key,
     uint16_t key_len;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_cbc_t *aes256_cbc = NULL;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     key_len = key_bitlen / 8;
 
@@ -711,7 +711,7 @@ _aes_cbc_decrypt(const uint8_t *key,
 
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
                    const uint8_t *key,
                    uint16_t key_bitlen,
@@ -740,7 +740,7 @@ vs_hsm_aes_decrypt(vs_iot_aes_type_e aes_type,
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
                         const uint8_t *key,
                         uint16_t key_bitlen,
@@ -758,7 +758,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
     uint8_t add_data = 0;
     vsc_buffer_t *out_buf = NULL;
     vscf_aes256_gcm_t *aes256_gcm = NULL;
-    vs_status_code_e res = VS_CODE_ERR_CRYPTO;
+    vs_status_e res = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(key, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(iv, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -801,7 +801,7 @@ vs_hsm_aes_auth_decrypt(vs_iot_aes_type_e aes_type,
 }
 
 /********************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
             vs_hsm_keypair_type_e keypair_type,
             const uint8_t *public_key,
@@ -813,8 +813,8 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
     vscf_impl_t *pubkey = NULL;
     vsc_buffer_t out_buf;
     size_t required_sz;
-    vs_status_code_e res;
-    vs_status_code_e ret_code;
+    vs_status_e res;
+    vs_status_e ret_code;
 
     CHECK_NOT_ZERO_RET(public_key, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(shared_secret, VS_CODE_ERR_NULLPTR_ARGUMENT);

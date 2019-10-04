@@ -352,7 +352,7 @@ vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters) {
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz) {
     vs_queue_data_t *queue_data;
     int8_t res;
@@ -394,7 +394,7 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
 }
 
 /******************************************************************************/
-vs_status_code_e
+vs_status_e
 vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz) {
     vs_queue_data_t *queue_data;
     CHECK_NOT_ZERO_RET(ctx, -1);
