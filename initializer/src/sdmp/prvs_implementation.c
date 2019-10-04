@@ -91,7 +91,8 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     vs_rpi_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key
-    STATUS_CHECK_RET(vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type), "Unable to get public key");
+    STATUS_CHECK_RET(vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type),
+                     "Unable to get public key");
 
     own_pubkey->key_type = VS_KEY_IOT_DEVICE;
     own_pubkey->ec_type = ec_type;
