@@ -230,19 +230,41 @@ vs_rpi_hal_sleep_until_stop(void) {
 /******************************************************************************/
 int
 vs_rpi_start(const char *devices_dir,
-             struct in_addr plc_sim_addr,
+             const char *app_file,
              vs_mac_addr_t forced_mac_addr,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx,
-             const vs_fw_manufacture_id_t manufacture_id,
-             const vs_fw_device_type_t device_type,
+             const char *manufacture_id_str,
+             const char *device_type_str,
              const uint32_t device_roles) {
+    vs_fw_manufacture_id_t manufacture_id;
+    vs_fw_device_type_t device_type;
+    int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     assert(devices_dir);
+    assert(app_file);
+    assert(manufacture_id_str);
+    assert(device_type_str);
+
+    memset(&manufacture_id, 0, sizeof(manufacture_id));
+    sz = strlen(manufacture_id_str);
+    if (sz > sizeof(manufacture_id)) {
+        sz = sizeof(manufacture_id);
+    }
+    memcpy((char *)manufacture_id, manufacture_id_str, sz);
+
+    memset(&device_type, 0, sizeof(device_type));
+    sz = strlen(device_type_str);
+    if (sz > sizeof(device_type)) {
+        sz = sizeof(device_type);
+    }
+    memcpy((char *)device_type, device_type_str, sz);
+
+    vs_rpi_print_title(devices_dir, app_file, manufacture_id, device_type);
 
     // Set storage directory
     vs_hal_files_set_dir(devices_dir);

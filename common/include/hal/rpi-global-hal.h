@@ -54,12 +54,12 @@ vs_rpi_hal_sleep_until_stop(void);
 
 int
 vs_rpi_start(const char *devices_dir,
-             struct in_addr plc_sim_addr,
+             const char *app_file,
              vs_mac_addr_t forced_mac_addr,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx,
-             const uint8_t *manufacture_id,
-             const uint8_t *device_type,
+             const char *manufacture_id,
+             const char *device_type,
              const uint32_t device_roles);
 
 void

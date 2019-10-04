@@ -49,29 +49,19 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    static vs_fw_manufacture_id_t manufacture_id;
-    static vs_fw_device_type_t device_type;
     struct in_addr plc_sim_addr;
-
-    memset(&manufacture_id, 0, sizeof(manufacture_id));
-    strncpy((char *)manufacture_id, GW_MANUFACTURE_ID, sizeof(manufacture_id));
-
-    memset(&device_type, 0, sizeof(device_type));
-    strncpy((char *)device_type, GW_DEVICE_MODEL, sizeof(device_type));
-
-    vs_rpi_print_title("Gateway", argv[0], manufacture_id, device_type);
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
     }
 
     if (0 != vs_rpi_start("gateway",
-                          plc_sim_addr,
+                          argv[0],
                           forced_mac_addr,
                           &_tl_storage_ctx,
                           &_fw_storage_ctx,
-                          manufacture_id,
-                          device_type,
+                          GW_MANUFACTURE_ID,
+                          GW_DEVICE_MODEL,
                           VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER)) {
         return -1;
     }
