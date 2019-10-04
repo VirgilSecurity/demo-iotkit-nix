@@ -92,7 +92,7 @@ _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *
 vs_storage_hal_ctx_t
 vs_rpi_storage_init(const char *relative_dir) {
     vs_rpi_storage_ctx_t *ctx = NULL;
-    
+
     CHECK_NOT_ZERO_RET(relative_dir, NULL);
 
     ctx = VS_IOT_CALLOC(1, sizeof(vs_rpi_storage_ctx_t));
