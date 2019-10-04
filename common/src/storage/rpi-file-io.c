@@ -183,10 +183,10 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
 }
 
 /******************************************************************************/
-long
+ssize_t
 vs_rpi_get_file_len(const char *folder, const char *file_name) {
 
-    long res = -1;
+    ssize_t res = -1;
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
 
@@ -287,7 +287,7 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
     } else { // Real write file if cache is disabled or file not found
         fp = fopen(file_path, "rb");
         if (fp) {
-            long f_sz;
+            ssize_t f_sz;
             UNIX_CALL(fseek(fp, 0, SEEK_END));
             f_sz = ftell(fp);
             rewind(fp);
@@ -590,8 +590,10 @@ vs_rpi_get_secbox_dir() {
 /********************************************************************************/
 vs_status_code_e
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) ? VS_CODE_OK
-                                                                                    : VS_CODE_ERR_FILE_WRITE;
+    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
+                           vs_rpi_sync_file(slots_dir, get_slot_name(slot))
+                   ? VS_CODE_OK
+                   : VS_CODE_ERR_FILE_WRITE;
 }
 
 /********************************************************************************/

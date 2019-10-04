@@ -103,7 +103,7 @@ vs_cloud_https_hal(vs_http_method_t type,
             break;
         default:
             res = VS_CODE_ERR_REQUEST_PREPARE;
-            goto cleanup;
+            goto terminate;
         }
 
         curl_res = curl_easy_perform(curl);
@@ -114,7 +114,7 @@ vs_cloud_https_hal(vs_http_method_t type,
         *in_out_size = resp.used_size;
     }
 
-cleanup:
+terminate:
     curl_easy_cleanup(curl);
     curl_global_cleanup();
 
