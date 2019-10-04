@@ -53,7 +53,7 @@ static pthread_t _periodical_thread;
 static bool _periodical_ready = false;
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _queue_and_process(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
     uint8_t *data_copy = NULL;
 
@@ -74,7 +74,7 @@ _queue_and_process(struct vs_netif_t *netif, const uint8_t *data, const uint16_t
         }
     }
 
-    return -1;
+    return VS_CODE_ERR_NULLPTR_ARGUMENT;
 }
 
 /******************************************************************************/
@@ -117,7 +117,7 @@ _periodical_processing(void *ctx) {
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t netif_process_cb) {
     assert(_base_netif);
     CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
@@ -143,13 +143,13 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t
     VS_LOG_ERROR("Cannot start thread to process RX Queue");
     _queued_netif.deinit();
 
-    return -1;
+    return VS_CODE_ERR_THREAD;
 }
 
 /******************************************************************************/
-static int
+static vs_status_code_e
 _deinit_with_queue() {
-    int res;
+    vs_status_code_e res;
 
     // Stop base Network Interface
     res = _base_netif->deinit();

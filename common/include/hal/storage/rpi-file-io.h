@@ -44,7 +44,7 @@ vs_hal_files_set_mac(uint8_t mac_addr[6]);
 void
 vs_hal_files_set_dir(const char *dir_name);
 
-ssize_t
+long
 vs_rpi_get_file_len(const char *folder, const char *file_name);
 
 bool
@@ -64,6 +64,9 @@ vs_rpi_get_secbox_dir(void);
 
 bool
 vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
+
+bool
+vs_rpi_sync_file(const char *folder, const char *file_name);
 
 bool
 vs_rpi_read_file_data(const char *folder,
