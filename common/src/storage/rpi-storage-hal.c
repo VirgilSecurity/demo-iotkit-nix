@@ -144,7 +144,7 @@ vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 
 /******************************************************************************/
 vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
-    int res = VS_CODE_ERR_FILE;
+    vs_status_e res = VS_CODE_ERR_FILE;
 
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -185,7 +185,7 @@ vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
                         size_t offset,
                         const uint8_t *data,
                         size_t data_sz) {
-    int res = VS_CODE_ERR_FILE_WRITE;
+    vs_status_e res = VS_CODE_ERR_FILE_WRITE;
 
     CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);

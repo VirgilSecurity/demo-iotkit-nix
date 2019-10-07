@@ -30,7 +30,7 @@ vs_firmware_install_prepare_space_hal(void) {
 vs_status_e
 vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 
-    int res = VS_CODE_ERR_FILE;
+    vs_status_e res = VS_CODE_ERR_FILE;
     char filename[FILENAME_MAX];
     FILE *fp = NULL;
 

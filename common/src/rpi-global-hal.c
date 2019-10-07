@@ -252,10 +252,10 @@ vs_rpi_start(const char *devices_dir,
     assert(device_type_str);
 
     // Print title
-    printf("\n\n--------------------------------------------\n");
-    printf("%s app at %s\n", devices_dir, app_file);
-    printf("Manufacture ID = \"%s\" , Device type = \"%s\"\n", manufacture_id_str, device_type_str);
-    printf("--------------------------------------------\n\n");
+    VS_LOG_INFO("\n\n--------------------------------------------");
+    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
+    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
+    VS_LOG_INFO("--------------------------------------------\n");
 
     // Set Manufacture ID
     memset(&manufacture_id, 0, sizeof(manufacture_id));
