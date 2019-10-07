@@ -44,6 +44,7 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/prvs.h>
 #include <trust_list-config.h>
+#include <hal/rpi-global-hal.h>
 
 #include "hal/storage/rpi-storage-hal.h"
 #include "hal/netif/rpi-udp-broadcast.h"
@@ -190,9 +191,10 @@ main(int argc, char *argv[]) {
         // Start SDMP protocol
         _sdmp_start(netif);
 
-        pause();
+        vs_rpi_hal_sleep_until_stop();
 
         vs_sdmp_deinit();
+        tl_ctx.impl.deinit(tl_ctx.storage_ctx);
 
     } else {
         VS_LOG_ERROR("Need to set MAC address of simulated device");
