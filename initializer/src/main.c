@@ -194,7 +194,6 @@ main(int argc, char *argv[]) {
         vs_rpi_hal_sleep_until_stop();
 
         vs_sdmp_deinit();
-        //tl_ctx.impl.deinit(tl_ctx.storage_ctx);
         vs_tl_deinit();
 
     } else {
