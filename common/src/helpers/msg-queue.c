@@ -43,6 +43,7 @@
 #include "private/helpers.h"
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
+#include <virgil/iot/status_code/status_code.h>
 
 typedef struct {
     const void *info;
@@ -351,7 +352,7 @@ vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters) {
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz) {
     vs_queue_data_t *queue_data;
     int8_t res;
@@ -360,7 +361,7 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
     // Allocate structure
     queue_data = malloc(sizeof(vs_queue_data_t));
     if (!queue_data) {
-        return -1;
+        return VS_CODE_ERR_NO_MEMORY;
     }
 
     // Allocate and copy data
@@ -368,7 +369,7 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
         queue_data->data = malloc(data_sz);
         if (!queue_data->data) {
             free(queue_data);
-            return -1;
+            return VS_CODE_ERR_NO_MEMORY;
         }
         memcpy((void *)queue_data->data, data, data_sz);
         queue_data->size = data_sz;
@@ -386,14 +387,14 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
         }
 
         free(queue_data);
-        return -1;
+        return VS_CODE_ERR_NO_MEMORY;
     }
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz) {
     vs_queue_data_t *queue_data;
     CHECK_NOT_ZERO_RET(ctx, -1);
@@ -403,7 +404,7 @@ vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **dat
     queue_data = _queue_get(ctx, true);
 
     if (!queue_data) {
-        return -1;
+        return VS_CODE_ERR_INCORRECT_PARAMETER;
     }
 
     *info = queue_data->info;
@@ -412,7 +413,7 @@ vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **dat
 
     free(queue_data);
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/

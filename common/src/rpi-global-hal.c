@@ -43,7 +43,7 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/info.h>
+#include <virgil/iot/protocols/sdmp/info-server.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -53,6 +53,7 @@
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "hal/rpi-global-hal.h"
+#include "hal/storage/rpi-storage-hal.h"
 
 #include "hal/netif/netif-queue.h"
 #include "hal/netif/rpi-udp-broadcast.h"
@@ -229,18 +230,48 @@ vs_rpi_hal_sleep_until_stop(void) {
 /******************************************************************************/
 int
 vs_rpi_start(const char *devices_dir,
-             struct in_addr plc_sim_addr,
+             const char *app_file,
              vs_mac_addr_t forced_mac_addr,
              vs_storage_op_ctx_t *tl_ctx,
              vs_storage_op_ctx_t *fw_ctx,
-             const vs_fw_manufacture_id_t manufacture_id,
-             const vs_fw_device_type_t device_type) {
+             const char *manufacture_id_str,
+             const char *device_type_str,
+             const uint32_t device_roles) {
+    vs_fw_manufacture_id_t manufacture_id;
+    vs_fw_device_type_t device_type;
+    int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
+    // Check input variables
     assert(devices_dir);
+    assert(app_file);
+    assert(manufacture_id_str);
+    assert(device_type_str);
+
+    // Print title
+    VS_LOG_INFO("\n\n--------------------------------------------");
+    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
+    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
+    VS_LOG_INFO("--------------------------------------------\n");
+
+    // Set Manufacture ID
+    memset(&manufacture_id, 0, sizeof(manufacture_id));
+    sz = strlen(manufacture_id_str);
+    if (sz > sizeof(manufacture_id)) {
+        sz = sizeof(manufacture_id);
+    }
+    memcpy((char *)manufacture_id, manufacture_id_str, sz);
+
+    // Se Device type
+    memset(&device_type, 0, sizeof(device_type));
+    sz = strlen(device_type_str);
+    if (sz > sizeof(device_type)) {
+        sz = sizeof(device_type);
+    }
+    memcpy((char *)device_type, device_type_str, sz);
 
     // Set storage directory
     vs_hal_files_set_dir(devices_dir);
@@ -272,10 +303,11 @@ vs_rpi_start(const char *devices_dir,
     // Initialize SDMP
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
 
-    // Register SDMP:INFO service
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info(tl_ctx, fw_ctx, manufacture_id, device_type)),
+    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
               -1,
-              "INFO service is not registered");
+              0);
+    // Send broadcast notification about start of this device
+    CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
 
     return 0;
 }
@@ -286,5 +318,4 @@ vs_rpi_restart(void) {
     _need_restart = true;
     pthread_mutex_unlock(&_sleep_lock);
 }
-
 /******************************************************************************/

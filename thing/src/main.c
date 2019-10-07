@@ -52,26 +52,21 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    static const vs_fw_manufacture_id_t manufacture_id = THING_MANUFACTURE_ID;
-    static const vs_fw_device_type_t device_type = THING_DEVICE_MODEL;
-    struct in_addr plc_sim_addr;
 
-    printf("\n\n--------------------------------------------\n");
-    printf("Thing app at %s\n", argv[0]);
-    printf("Manufacture ID = \"%s\", Device type = \"%s\"\n", manufacture_id, device_type);
-    printf("--------------------------------------------\n\n");
+    struct in_addr plc_sim_addr;
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
     }
 
     if (0 != vs_rpi_start("thing",
-                          plc_sim_addr,
+                          argv[0],
                           forced_mac_addr,
                           &_tl_storage_ctx,
                           &_fw_storage_ctx,
-                          manufacture_id,
-                          device_type)) {
+                          (const char *)THING_MANUFACTURE_ID,
+                          (const char *)THING_DEVICE_MODEL,
+                          VS_SDMP_DEV_THING)) {
         return -1;
     }
 
@@ -95,6 +90,8 @@ main(int argc, char *argv[]) {
     vs_rpi_hal_sleep_until_stop();
 
     VS_LOG_INFO("\n\n\nTerminating application ...");
+
+    vs_sdmp_deinit();
 
     vs_fldt_destroy_client();
 

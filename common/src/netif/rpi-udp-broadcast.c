@@ -45,13 +45,16 @@
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include <virgil/iot/logger/logger.h>
 
-static int
+static vs_status_e
 _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb);
-static int
+
+static vs_status_e
 _udp_bcast_deinit();
-static int
+
+static vs_status_e
 _udp_bcast_tx(const uint8_t *data, const uint16_t data_sz);
-static int
+
+static vs_status_e
 _udp_bcast_mac(struct vs_mac_addr_t *mac_addr);
 
 static vs_netif_t _netif_udp_bcast = {.user_data = NULL,
@@ -111,7 +114,7 @@ _udp_bcast_receive_processor(void *sock_desc) {
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 _udp_bcast_connect() {
     struct sockaddr_in server;
     struct timeval tv;
@@ -121,7 +124,7 @@ _udp_bcast_connect() {
     _udp_bcast_sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (_udp_bcast_sock == -1) {
         VS_LOG_ERROR("UDP Broadcast: Could not create socket. %s\n", strerror(errno));
-        return -1;
+        return VS_CODE_ERR_SOCKET;
     }
 
     // Set infinite timeout
@@ -167,17 +170,17 @@ _udp_bcast_connect() {
     // Start receive thread
     pthread_create(&receive_thread, NULL, _udp_bcast_receive_processor, NULL);
 
-    return 0;
+    return VS_CODE_OK;
 
 terminate:
 
     _udp_bcast_deinit();
 
-    return -1;
+    return VS_CODE_ERR_SOCKET;
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 _udp_bcast_tx(const uint8_t *data, const uint16_t data_sz) {
     struct sockaddr_in broadcast_addr;
 
@@ -188,11 +191,11 @@ _udp_bcast_tx(const uint8_t *data, const uint16_t data_sz) {
 
     sendto(_udp_bcast_sock, data, data_sz, 0, (struct sockaddr *)&broadcast_addr, sizeof(struct sockaddr_in));
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb) {
     assert(rx_cb);
     _netif_udp_bcast_rx_cb = rx_cb;
@@ -200,30 +203,33 @@ _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t proces
     _netif_udp_bcast.packet_buf_filled = 0;
     _udp_bcast_connect();
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 _udp_bcast_deinit() {
     if (_udp_bcast_sock >= 0) {
+#if !defined(__APPLE__)
+        shutdown(_udp_bcast_sock, SHUT_RDWR);
+#endif
         close(_udp_bcast_sock);
     }
     _udp_bcast_sock = -1;
     pthread_join(receive_thread, NULL);
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 _udp_bcast_mac(struct vs_mac_addr_t *mac_addr) {
 
     if (mac_addr) {
         memcpy(mac_addr->bytes, _sim_mac_addr, sizeof(vs_mac_addr_t));
-        return 0;
+        return VS_CODE_OK;
     }
 
-    return 1;
+    return VS_CODE_ERR_NULLPTR_ARGUMENT;
 }
 
 /******************************************************************************/

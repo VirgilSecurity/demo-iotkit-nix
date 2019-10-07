@@ -36,6 +36,7 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
+#include <virgil/iot/status_code/status_code.h>
 #include <stdlib-config.h>
 
 
@@ -44,9 +45,9 @@
 #include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
-static int
+static vs_status_e
 vs_prvs_dnid() {
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
@@ -66,7 +67,7 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 }
 
 /******************************************************************************/
-static int
+static vs_status_e
 vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     uint16_t key_sz = 0;
     vs_hsm_keypair_type_e ec_type;
@@ -74,6 +75,7 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     uint16_t sign_sz = 0;
     vs_sign_t *sign;
     uint8_t *ptr;
+    vs_status_e ret_code;
 
     VS_IOT_ASSERT(device_info);
 
@@ -89,10 +91,8 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     vs_rpi_hal_get_udid(device_info->udid_of_device);
 
     // Fill own public key
-    if (VS_HSM_ERR_OK !=
-        vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type)) {
-        return -1;
-    }
+    STATUS_CHECK_RET(vs_hsm_keypair_get_pubkey(PRIVATE_KEY_SLOT, own_pubkey->pubkey, PUBKEY_MAX_SZ, &key_sz, &ec_type),
+                     "Unable to get public key");
 
     own_pubkey->key_type = VS_KEY_IOT_DEVICE;
     own_pubkey->ec_type = ec_type;
@@ -102,13 +102,11 @@ vs_prvs_device_info(vs_sdmp_prvs_devi_t *device_info, uint16_t buf_sz) {
     buf_sz -= device_info->data_sz;
 
     // Load signature
-    if (0 != vs_hsm_slot_load(SIGNATURE_SLOT, (uint8_t *)sign, buf_sz, &sign_sz)) {
-        return -1;
-    }
+    STATUS_CHECK_RET(vs_hsm_slot_load(SIGNATURE_SLOT, (uint8_t *)sign, buf_sz, &sign_sz), "Unable to load slot");
 
     device_info->data_sz += sign_sz;
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/

@@ -12,29 +12,30 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 
 char *self_path = NULL;
+
 /******************************************************************************/
-int
+vs_status_e
 vs_firmware_install_prepare_space_hal(void) {
     char filename[FILENAME_MAX];
 
-    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_INCORRECT_PARAMETER);
     VS_IOT_STRCPY(filename, self_path);
 
     strcat(filename, ".new");
     remove(filename);
-    return VS_STORAGE_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 
-    int res = VS_STORAGE_ERROR_GENERAL;
+    vs_status_e res = VS_CODE_ERR_FILE;
     char filename[FILENAME_MAX];
     FILE *fp = NULL;
 
-    CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(self_path, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     VS_IOT_STRCPY(filename, self_path);
 
@@ -50,7 +51,7 @@ vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
                          errno,
                          strerror(errno));
         } else {
-            res = VS_STORAGE_OK;
+            res = VS_CODE_OK;
         }
         fclose(fp);
     }

@@ -33,13 +33,13 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <assert.h>
-#include <stdarg.h>
 #include <stdint.h>
 
 #include "private/helpers.h"
 #include <virgil/iot/hsm/hsm_interface.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/macros/macros.h>
 
 #include <virgil/crypto/foundation/vscf_secp256r1_private_key.h>
 #include <virgil/crypto/foundation/vscf_secp256r1_public_key.h>
@@ -126,14 +126,14 @@
     } while (0)
 
 /********************************************************************************/
-static int
+static vs_status_e
 vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     vscf_secp256r1_private_key_t *prvkey_ctx = NULL;
     vscf_secp256r1_public_key_t *pubkey_ctx = NULL;
     vsc_buffer_t keypair_buf;
     uint8_t buf[KEYPAIR_BUF_SZ] = {0};
     uint8_t key_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
     VS_LOG_DEBUG(
             "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
@@ -172,11 +172,11 @@ vs_hsm_secp256r1_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e ke
 
     LOG_PUBKEY(buf);
 
-    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
-              "Unable to save keypair buffer to the slot %s",
-              get_slot_name(slot));
+    STATUS_CHECK(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+                 "Unable to save keypair buffer to the slot %s",
+                 get_slot_name(slot));
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
@@ -187,18 +187,18 @@ terminate:
         vscf_secp256r1_public_key_delete(pubkey_ctx);
     }
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
-static int
+static vs_status_e
 vs_hsm_curve25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     vscf_curve25519_private_key_t *prvkey_ctx = NULL;
     vscf_curve25519_public_key_t *pubkey_ctx = NULL;
     vsc_buffer_t keypair_buf;
     uint8_t buf[KEYPAIR_BUF_SZ] = {0};
     uint8_t key_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
     VS_LOG_DEBUG(
             "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
@@ -238,11 +238,11 @@ vs_hsm_curve25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e k
 
     LOG_PUBKEY(buf);
 
-    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
-              "Unable to save keypair buffer to the slot %s",
-              get_slot_name(slot));
+    STATUS_CHECK(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+                 "Unable to save keypair buffer to the slot %s",
+                 get_slot_name(slot));
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
@@ -253,18 +253,18 @@ terminate:
         vscf_curve25519_public_key_delete(pubkey_ctx);
     }
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
-static int
+static vs_status_e
 vs_hsm_ed25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     vscf_ed25519_private_key_t *prvkey_ctx = NULL;
     vscf_ed25519_public_key_t *pubkey_ctx = NULL;
     vsc_buffer_t keypair_buf;
     uint8_t buf[KEYPAIR_BUF_SZ] = {0};
     uint8_t key_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
     VS_LOG_DEBUG(
             "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
@@ -301,11 +301,11 @@ vs_hsm_ed25519_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keyp
 
     LOG_PUBKEY(buf);
 
-    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
-              "Unable to save keypair buffer to the slot %s",
-              get_slot_name(slot));
+    STATUS_CHECK(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+                 "Unable to save keypair buffer to the slot %s",
+                 get_slot_name(slot));
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
@@ -316,18 +316,18 @@ terminate:
         vscf_ed25519_public_key_delete(pubkey_ctx);
     }
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
-static int
+static vs_status_e
 vs_hsm_rsa_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     vscf_rsa_private_key_t *prvkey_ctx = NULL;
     vscf_rsa_public_key_t *pubkey_ctx = NULL;
     vsc_buffer_t keypair_buf;
     uint8_t buf[KEYPAIR_BUF_SZ] = {0};
     uint8_t key_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
     VS_LOG_DEBUG(
             "Generate keypair %s and save it to slot %s", vs_hsm_keypair_type_descr(keypair_type), get_slot_name(slot));
@@ -363,11 +363,11 @@ vs_hsm_rsa_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_
 
     LOG_PUBKEY(buf);
 
-    CHECK_HSM(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
-              "Unable to save keypair buffer to the slot %s",
-              get_slot_name(slot));
+    STATUS_CHECK_RET(vs_hsm_slot_save(slot, buf, vsc_buffer_len(&keypair_buf)),
+                     "Unable to save keypair buffer to the slot %s",
+                     get_slot_name(slot));
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
@@ -378,11 +378,11 @@ terminate:
         vscf_rsa_public_key_delete(pubkey_ctx);
     }
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
-int
+vs_status_e
 vs_hsm_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type) {
     switch (keypair_type) {
     case VS_KEYPAIR_EC_SECP256R1:
@@ -398,13 +398,13 @@ vs_hsm_keypair_create(vs_iot_hsm_slot_e slot, vs_hsm_keypair_type_e keypair_type
         return vs_hsm_rsa_keypair_create(slot, keypair_type);
 
     default:
-        VS_LOG_ERROR("Unsupported keypair type %s", vs_hsm_keypair_type_descr(keypair_type));
-        return VS_HSM_ERR_NOT_IMPLEMENTED;
+        VS_LOG_WARNING("Unsupported keypair type %s", vs_hsm_keypair_type_descr(keypair_type));
+        return VS_CODE_ERR_NOT_IMPLEMENTED;
     }
 }
 
 /********************************************************************************/
-int
+vs_status_e
 vs_hsm_keypair_get_pubkey(vs_iot_hsm_slot_e slot,
                           uint8_t *buf,
                           uint16_t buf_sz,
@@ -413,12 +413,12 @@ vs_hsm_keypair_get_pubkey(vs_iot_hsm_slot_e slot,
     uint8_t keypair_buf[KEYPAIR_BUF_SZ];
     uint16_t keypair_buf_sz = sizeof(keypair_buf);
     uint8_t pubkey_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
-    CHECK_HSM(vs_hsm_slot_load(slot, keypair_buf, keypair_buf_sz, &keypair_buf_sz),
-              "Unable to load data from slot %d (%s)",
-              slot,
-              get_slot_name(slot));
+    STATUS_CHECK_RET(vs_hsm_slot_load(slot, keypair_buf, keypair_buf_sz, &keypair_buf_sz),
+                     "Unable to load data from slot %d (%s)",
+                     slot,
+                     get_slot_name(slot));
 
     pubkey_sz = keypair_buf[KEYPAIR_BUF_PUBKEYSZ_OFF(keypair_buf)];
     if (pubkey_sz == 0) {
@@ -441,15 +441,15 @@ vs_hsm_keypair_get_pubkey(vs_iot_hsm_slot_e slot,
                  vs_hsm_keypair_type_descr(*keypair_type));
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Public key : ", buf, *key_sz);
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
-int
+vs_status_e
 vs_hsm_keypair_get_prvkey(vs_iot_hsm_slot_e slot,
                           uint8_t *buf,
                           uint16_t buf_sz,
@@ -458,12 +458,12 @@ vs_hsm_keypair_get_prvkey(vs_iot_hsm_slot_e slot,
     uint8_t keypair_buf[KEYPAIR_BUF_SZ];
     uint16_t keypair_buf_sz = sizeof(keypair_buf);
     uint8_t prvkey_sz;
-    int res = VS_HSM_ERR_CRYPTO;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
-    CHECK_HSM(vs_hsm_slot_load(slot, keypair_buf, keypair_buf_sz, &keypair_buf_sz),
-              "Unable to load data from slot %d (%s)",
-              slot,
-              get_slot_name(slot));
+    STATUS_CHECK_RET(vs_hsm_slot_load(slot, keypair_buf, keypair_buf_sz, &keypair_buf_sz),
+                     "Unable to load data from slot %d (%s)",
+                     slot,
+                     get_slot_name(slot));
 
     prvkey_sz = keypair_buf[KEYPAIR_BUF_PRVKEYSZ_OFF];
     if (prvkey_sz == 0) {
@@ -486,9 +486,9 @@ vs_hsm_keypair_get_prvkey(vs_iot_hsm_slot_e slot,
                  vs_hsm_keypair_type_descr(*keypair_type));
     VS_LOG_HEX(VS_LOGLEV_DEBUG, "Private key : ", buf, *key_sz);
 
-    res = VS_HSM_ERR_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
-    return res;
+    return ret_code;
 }

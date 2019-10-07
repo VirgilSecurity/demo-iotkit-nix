@@ -46,10 +46,10 @@
 #include <stdlib-config.h>
 #include <global-hal.h>
 #include <virgil/iot/hsm/hsm_structs.h>
-#include <virgil/iot/hsm/hsm_errors.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 #include <hal/storage/rpi-file-cache.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
 
 #include "hal/storage/rpi-file-io.h"
 
@@ -287,7 +287,7 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
     } else { // Real write file if cache is disabled or file not found
         fp = fopen(file_path, "rb");
         if (fp) {
-            long f_sz;
+            ssize_t f_sz;
             UNIX_CALL(fseek(fp, 0, SEEK_END));
             f_sz = ftell(fp);
             rewind(fp);
@@ -588,26 +588,23 @@ vs_rpi_get_secbox_dir() {
     return secbox_dir;
 }
 /********************************************************************************/
-int
+vs_status_e
 vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    int res = VS_HSM_ERR_FILE_IO;
-
-    if (vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
-        vs_rpi_sync_file(slots_dir, get_slot_name(slot))) {
-        res = VS_HSM_ERR_OK;
-    }
-    return res;
+    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
+                           vs_rpi_sync_file(slots_dir, get_slot_name(slot))
+                   ? VS_CODE_OK
+                   : VS_CODE_ERR_FILE_WRITE;
 }
 
 /********************************************************************************/
-int
+vs_status_e
 vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
     size_t out_sz_size_t = *out_sz;
-    vs_hsm_err_code_e call_res;
+    vs_status_e call_res;
 
     call_res = vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, &out_sz_size_t)
-                       ? VS_HSM_ERR_OK
-                       : VS_HSM_ERR_FILE_IO;
+                       ? VS_CODE_OK
+                       : VS_CODE_ERR_FILE_READ;
 
     assert(out_sz_size_t <= UINT16_MAX);
     *out_sz = out_sz_size_t;
@@ -616,9 +613,9 @@ vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return vs_rpi_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_HSM_ERR_OK : VS_HSM_ERR_FILE_IO;
+    return vs_rpi_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
 }
 
 /******************************************************************************/

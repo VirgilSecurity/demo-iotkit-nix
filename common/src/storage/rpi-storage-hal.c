@@ -38,8 +38,9 @@
 #include <virgil/iot/logger/logger.h>
 
 #include <global-hal.h>
+#include <virgil/iot/status_code/status_code.h>
 #include <hal/storage/rpi-file-cache.h>
-#include "hal/storage/rpi-storage-hal.h"
+#include <hal/storage/rpi-storage-hal.h>
 
 
 #define VS_FIO_PROFILE_WRITE 0
@@ -71,10 +72,10 @@ typedef struct {
 static void
 _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *_in_out_len) {
     const uint8_t hex_str[] = "0123456789abcdef";
+
     VS_IOT_ASSERT(_in_out_len);
     VS_IOT_ASSERT(_data);
     VS_IOT_ASSERT(_out_data);
-
     VS_IOT_ASSERT(*_in_out_len >= _len * 2 + 1);
 
     *_in_out_len = _len * 2 + 1;
@@ -90,8 +91,11 @@ _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *
 /******************************************************************************/
 vs_storage_hal_ctx_t
 vs_rpi_storage_init(const char *relative_dir) {
+    vs_rpi_storage_ctx_t *ctx = NULL;
+
     CHECK_NOT_ZERO_RET(relative_dir, NULL);
-    vs_rpi_storage_ctx_t *ctx = VS_IOT_CALLOC(1, sizeof(vs_rpi_storage_ctx_t));
+
+    ctx = VS_IOT_CALLOC(1, sizeof(vs_rpi_storage_ctx_t));
     CHECK_NOT_ZERO_RET(ctx, NULL);
 
     ctx->dir = (char *)VS_IOT_CALLOC(1, strlen(relative_dir) + 1);
@@ -107,24 +111,26 @@ vs_rpi_storage_init(const char *relative_dir) {
 }
 
 /******************************************************************************/
-int
+static vs_status_e
 vs_rpi_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     VS_IOT_FREE(ctx->dir);
     VS_IOT_FREE(ctx);
 
-    return VS_STORAGE_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-vs_storage_file_t
+static vs_storage_file_t
 vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+
     CHECK_NOT_ZERO_RET(id, NULL);
     CHECK_NOT_ZERO_RET(storage_ctx, NULL);
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
     CHECK_NOT_ZERO_RET(ctx->dir, NULL);
 
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
@@ -137,12 +143,11 @@ vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 }
 
 /******************************************************************************/
-int
-vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
-    int res = VS_STORAGE_ERROR_GENERAL;
+vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
+    vs_status_e res = VS_CODE_ERR_FILE;
 
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
 #if VS_FIO_PROFILE_SYNC
@@ -153,7 +158,7 @@ vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 #endif
 
     if (vs_rpi_sync_file(ctx->dir, (char *)file)) {
-        res = VS_STORAGE_OK;
+        res = VS_CODE_OK;
     }
 #if VS_FIO_PROFILE_SYNC
     dt = current_timestamp() - t;
@@ -164,27 +169,27 @@ vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 }
 
 /******************************************************************************/
-int
+static vs_status_e
 vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file_t file) {
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     VS_IOT_FREE(file);
 
-    return VS_STORAGE_OK;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-int
-vs_rpi_storage_save_hal_t(const vs_storage_hal_ctx_t storage_ctx,
-                          const vs_storage_file_t file,
-                          size_t offset,
-                          const uint8_t *data,
-                          size_t data_sz) {
-    int res = VS_STORAGE_ERROR_GENERAL;
+static vs_status_e
+vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
+                        const vs_storage_file_t file,
+                        size_t offset,
+                        const uint8_t *data,
+                        size_t data_sz) {
+    vs_status_e res = VS_CODE_ERR_FILE_WRITE;
 
-    CHECK_NOT_ZERO_RET(data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 #if VS_FIO_PROFILE_WRITE
     long long t;
@@ -194,7 +199,7 @@ vs_rpi_storage_save_hal_t(const vs_storage_hal_ctx_t storage_ctx,
 #endif
 
     if (vs_rpi_write_file_data(ctx->dir, (char *)file, offset, data, data_sz)) {
-        res = VS_STORAGE_OK;
+        res = VS_CODE_OK;
     }
 #if VS_FIO_PROFILE_WRITE
     dt = current_timestamp() - t;
@@ -205,19 +210,20 @@ vs_rpi_storage_save_hal_t(const vs_storage_hal_ctx_t storage_ctx,
 }
 
 /******************************************************************************/
-int
+static vs_status_e
 vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         uint8_t *out_data,
                         size_t data_sz) {
     size_t read_sz;
-    int res = VS_STORAGE_ERROR_GENERAL;
-    CHECK_NOT_ZERO_RET(out_data, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(file, VS_STORAGE_ERROR_PARAMS);
+    vs_status_e res = VS_CODE_ERR_FILE_READ;
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+
+    CHECK_NOT_ZERO_RET(out_data, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
 #if VS_FIO_PROFILE_READ
     long long t;
@@ -226,7 +232,7 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
     t = current_timestamp();
 #endif
     if (vs_rpi_read_file_data(ctx->dir, (char *)file, offset, out_data, data_sz, &read_sz) && read_sz == data_sz) {
-        res = VS_STORAGE_OK;
+        res = VS_CODE_OK;
     }
 
 #if VS_FIO_PROFILE_READ
@@ -238,16 +244,16 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
 }
 
 /*******************************************************************************/
-int
+static ssize_t
 vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    ssize_t res;
-    CHECK_NOT_ZERO_RET(id, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
-
+    ssize_t res;
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t file[len];
+
+    CHECK_NOT_ZERO_RET(id, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     _data_to_hex(id, sizeof(vs_storage_element_id_t), file, &len);
 
@@ -268,33 +274,35 @@ vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_st
 }
 
 /******************************************************************************/
-int
+static vs_status_e
 vs_rpi_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    CHECK_NOT_ZERO_RET(id, VS_STORAGE_ERROR_PARAMS);
-    CHECK_NOT_ZERO_RET(storage_ctx, VS_STORAGE_ERROR_PARAMS);
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
-    CHECK_NOT_ZERO_RET(ctx->dir, VS_STORAGE_ERROR_PARAMS);
+
+    CHECK_NOT_ZERO_RET(id, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t file[len];
 
     _data_to_hex(id, sizeof(vs_storage_element_id_t), file, &len);
 
-    return vs_rpi_remove_file_data(ctx->dir, (char *)file) ? VS_STORAGE_OK : VS_STORAGE_ERROR_GENERAL;
+    return vs_rpi_remove_file_data(ctx->dir, (char *)file) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_rpi_get_storage_impl(vs_storage_op_impl_t *impl) {
-    CHECK_NOT_ZERO_RET(impl, VS_STORAGE_ERROR_PARAMS);
+    CHECK_NOT_ZERO_RET(impl, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     impl->size = vs_rpi_storage_file_size_hal;
     impl->deinit = vs_rpi_storage_deinit_hal;
     impl->open = vs_rpi_storage_open_hal;
     impl->sync = vs_rpi_storage_sync_hal;
     impl->close = vs_rpi_storage_close_hal;
-    impl->save = vs_rpi_storage_save_hal_t;
+    impl->save = vs_rpi_storage_save_hal;
     impl->load = vs_rpi_storage_load_hal;
     impl->del = vs_rpi_storage_del_hal;
-    return VS_STORAGE_OK;
+
+    return VS_CODE_OK;
 }
