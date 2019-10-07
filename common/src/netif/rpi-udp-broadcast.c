@@ -210,6 +210,9 @@ _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t proces
 static vs_status_e
 _udp_bcast_deinit() {
     if (_udp_bcast_sock >= 0) {
+#if !defined(__APPLE__)
+        shutdown(_udp_bcast_sock, SHUT_RDWR);
+#endif
         close(_udp_bcast_sock);
     }
     _udp_bcast_sock = -1;
