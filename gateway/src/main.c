@@ -89,6 +89,8 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("Terminating application ...");
 
     pthread_cancel(thr_gateway_starter);
+    pthread_join(thr_gateway_starter, NULL);
+    
     vs_sdmp_deinit();
 
     int res = vs_rpi_hal_update(argc, argv);
