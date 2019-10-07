@@ -87,6 +87,8 @@ main(int argc, char *argv[]) {
 
     VS_LOG_INFO("Terminating application ...");
 
+    vs_sdmp_deinit();
+
     int res = vs_rpi_hal_update(argc, argv);
 
     // Clean File cache

@@ -191,6 +191,9 @@ main(int argc, char *argv[]) {
         _sdmp_start(netif);
 
         pause();
+
+        vs_sdmp_deinit();
+
     } else {
         VS_LOG_ERROR("Need to set MAC address of simulated device");
         return -1;
