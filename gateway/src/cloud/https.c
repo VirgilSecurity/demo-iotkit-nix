@@ -81,7 +81,7 @@ vs_cloud_https_hal(vs_http_method_t type,
                    size_t *in_out_size) {
     CURL *curl;
     CURLcode curl_res;
-    uint16_t res = VS_CODE_OK;
+    vs_status_e res = VS_CODE_OK;
 
     if (NULL == in_out_size) {
         return VS_CODE_ERR_REQUEST_PREPARE;

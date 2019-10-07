@@ -812,7 +812,6 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
     vscf_impl_t *pubkey = NULL;
     vsc_buffer_t out_buf;
     size_t required_sz;
-    vs_status_e res;
     vs_status_e ret_code;
 
     CHECK_NOT_ZERO_RET(public_key, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -826,7 +825,7 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
 
     if ((required_sz = vscf_compute_shared_key_shared_key_len(prvkey)) > buf_sz) {
         VS_LOG_ERROR("Output buffer too small");
-        res = VS_CODE_ERR_TOO_SMALL_BUFFER;
+        ret_code = VS_CODE_ERR_TOO_SMALL_BUFFER;
         goto terminate;
     }
     *shared_secret_sz = (uint16_t)required_sz;
@@ -834,15 +833,15 @@ vs_hsm_ecdh(vs_iot_hsm_slot_e slot,
     vsc_buffer_init(&out_buf);
     vsc_buffer_use(&out_buf, shared_secret, buf_sz);
 
-    res = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
+    ret_code = _create_pubkey_ctx(keypair_type, public_key, public_key_sz, &pubkey);
 
-    if (VS_CODE_OK == res) {
-        res = (vscf_status_SUCCESS == vscf_compute_shared_key(prvkey, pubkey, &out_buf)) ? VS_CODE_OK
-                                                                                         : VS_CODE_ERR_CRYPTO;
+    if (VS_CODE_OK == ret_code) {
+        ret_code = (vscf_status_SUCCESS == vscf_compute_shared_key(prvkey, pubkey, &out_buf)) ? VS_CODE_OK
+                                                                                              : VS_CODE_ERR_CRYPTO;
     }
 
 terminate:
     vscf_impl_delete(prvkey);
     vscf_impl_delete(pubkey);
-    return res;
+    return ret_code;
 }
