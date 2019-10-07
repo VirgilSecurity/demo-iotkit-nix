@@ -227,7 +227,7 @@ _gateway_task(void *pvParameters) {
 }
 
 /******************************************************************************/
-void
+pthread_t
 start_gateway_threads(void) {
     //        void *res;
     if (!is_threads_started) {
@@ -239,4 +239,6 @@ start_gateway_threads(void) {
             exit(-1);
         }
     }
+
+    return &gateway_starter_thread;
 }

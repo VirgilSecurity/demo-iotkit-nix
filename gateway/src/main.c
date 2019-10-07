@@ -50,6 +50,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
     struct in_addr plc_sim_addr;
+    pthread_t thr_gateway_starter;
 
     if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
         return -1;
@@ -80,13 +81,14 @@ main(int argc, char *argv[]) {
     init_gateway_ctx(&forced_mac_addr);
 
     // Start app
-    start_gateway_threads();
+    thr_gateway_starter = start_gateway_threads();
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
 
     VS_LOG_INFO("Terminating application ...");
 
+    pthread_cancel(thr_gateway_starter);
     vs_sdmp_deinit();
 
     int res = vs_rpi_hal_update(argc, argv);
