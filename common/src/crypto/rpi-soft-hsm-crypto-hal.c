@@ -138,8 +138,7 @@ _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_ty
     uint8_t prvkey_buf[MAX_KEY_SZ];
     uint16_t prvkey_buf_sz = sizeof(prvkey_buf);
     vsc_data_t prvkey_data;
-    vs_status_e res = VS_CODE_ERR_CRYPTO;
-    vs_status_e ret_code;
+    vs_status_e ret_code = VS_CODE_ERR_CRYPTO;
 
     CHECK_NOT_ZERO_RET(prvkey, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(keypair_type, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -180,15 +179,15 @@ _load_prvkey(vs_iot_hsm_slot_e key_slot, vscf_impl_t **prvkey, vs_hsm_keypair_ty
     default:
         assert(false && "Unsupported keypair type");
         VS_LOG_ERROR("Unsupported keypair type %d (%s)", keypair_type, vs_hsm_keypair_type_descr(*keypair_type));
-        res = VS_CODE_ERR_NOT_IMPLEMENTED;
+        ret_code = VS_CODE_ERR_NOT_IMPLEMENTED;
         goto terminate;
     }
 
-    res = VS_CODE_OK;
+    ret_code = VS_CODE_OK;
 
 terminate:
 
-    return res;
+    return ret_code;
 }
 
 /********************************************************************************/
