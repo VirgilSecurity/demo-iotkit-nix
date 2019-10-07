@@ -245,11 +245,19 @@ vs_rpi_start(const char *devices_dir,
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
+    // Check input variables
     assert(devices_dir);
     assert(app_file);
     assert(manufacture_id_str);
     assert(device_type_str);
 
+    // Print title
+    printf("\n\n--------------------------------------------\n");
+    printf("%s app at %s\n", devices_dir, app_file);
+    printf("Manufacture ID = \"%s\" , Device type = \"%s\"\n", manufacture_id_str, device_type_str);
+    printf("--------------------------------------------\n\n");
+
+    // Set Manufacture ID
     memset(&manufacture_id, 0, sizeof(manufacture_id));
     sz = strlen(manufacture_id_str);
     if (sz > sizeof(manufacture_id)) {
@@ -257,14 +265,13 @@ vs_rpi_start(const char *devices_dir,
     }
     memcpy((char *)manufacture_id, manufacture_id_str, sz);
 
+    // Se Device type
     memset(&device_type, 0, sizeof(device_type));
     sz = strlen(device_type_str);
     if (sz > sizeof(device_type)) {
         sz = sizeof(device_type);
     }
     memcpy((char *)device_type, device_type_str, sz);
-
-    vs_rpi_print_title(devices_dir, app_file, manufacture_id, device_type);
 
     // Set storage directory
     vs_hal_files_set_dir(devices_dir);
@@ -310,31 +317,5 @@ void
 vs_rpi_restart(void) {
     _need_restart = true;
     pthread_mutex_unlock(&_sleep_lock);
-}
-
-/******************************************************************************/
-void
-vs_rpi_print_title(const char *device_name,
-                   const char *app_path,
-                   const vs_fw_manufacture_id_t manufacture_id,
-                   const vs_fw_device_type_t device_type) {
-    int i;
-    const char *p;
-    printf("\n\n--------------------------------------------\n");
-    printf("%s app at %s\n", device_name, app_path);
-    printf("Manufacture ID = \"");
-    p = (const char *)manufacture_id;
-    for (i = 0; i < sizeof(vs_fw_manufacture_id_t); i++) {
-        printf("%c", p[i]);
-    }
-
-    printf("\", Device type = \"");
-    p = (const char *)device_type;
-    for (i = 0; i < sizeof(vs_fw_device_type_t); i++) {
-        printf("%c", p[i]);
-    }
-
-    printf("\"\n");
-    printf("--------------------------------------------\n\n");
 }
 /******************************************************************************/
