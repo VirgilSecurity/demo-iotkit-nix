@@ -240,5 +240,5 @@ start_gateway_threads(void) {
         }
     }
 
-    return &gateway_starter_thread;
+    return gateway_starter_thread;
 }
