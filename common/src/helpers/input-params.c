@@ -74,7 +74,7 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
-vs_status_e
+int
 vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr) {
     static const char *PLC_SIM_ADDRESS_SHORT = "-a";
     static const char *PLC_SIM_ADDRESS_FULL = "--address";
@@ -85,7 +85,7 @@ vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_ad
 
     if (!argv || !argc || !plc_sim_addr || !forced_mac_addr) {
         printf("Wrong input parameters.");
-        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+        return -1;
     }
 
     mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
@@ -98,18 +98,18 @@ vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_ad
                PLC_SIM_ADDRESS_FULL,
                MAC_SHORT,
                MAC_FULL);
-        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+        return -1;
     }
 
     if (!inet_aton(plc_sim_addr_str, plc_sim_addr)) {
         printf("Incorrect PLC simulator IP address \"%s\" was specified", plc_sim_addr_str);
-        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+        return -1;
     }
 
     if (!_read_mac_address(mac_str, forced_mac_addr)) {
         printf("Incorrect forced MAC address \"%s\" was specified", mac_str);
-        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+        return -1;
     }
 
-    return VS_CODE_OK;
+    return 0;
 }
