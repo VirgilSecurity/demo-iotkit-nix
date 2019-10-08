@@ -39,25 +39,6 @@
 #include "hal/storage/rpi-storage-hal.h"
 #include <hal/rpi-global-hal.h>
 
-//// TODO: Need to use real descriptor, which can be obtain from footer of self image
-// static vs_firmware_descriptor_t _descriptor;
-// static bool _is_descriptor_ready = false;
-//
-///******************************************************************************/
-// static void
-//_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
-//    size_t pos;
-//    size_t len;
-//
-//    assert(src && *src);
-//    assert(elem_buf_size);
-//
-//    len = strlen(src);
-//    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
-//        *dst = *src;
-//    }
-//}
-
 /******************************************************************************/
 int
 vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
@@ -77,29 +58,4 @@ vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
     fw_update_ctx.impl.deinit(fw_update_ctx.storage_ctx);
 
     return res;
-
-    //    if (!_is_descriptor_ready) {
-    //        vs_firmware_descriptor_t desc;
-    //        vs_fw_manufacture_id_t manufacture_id;
-    //        vs_fw_device_type_t device_type;
-    //
-    //        memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
-    //
-    //        _create_field(manufacture_id, THING_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
-    //        _create_field(device_type, THING_DEVICE_MODEL, DEVICE_TYPE_SIZE);
-    //
-    //        if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&fw_update_ctx, manufacture_id, device_type,
-    //        &desc)) {
-    //            VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
-    //            memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
-    //            _create_field(_descriptor.info.manufacture_id, THING_MANUFACTURE_ID, MANUFACTURE_ID_SIZE);
-    //            _create_field(_descriptor.info.device_type, THING_DEVICE_MODEL, DEVICE_TYPE_SIZE);
-    //        } else {
-    //            memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
-    //        }
-    //        _is_descriptor_ready = true;
-    //    }
-    //
-    //    memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
-    //    return 0;
 }

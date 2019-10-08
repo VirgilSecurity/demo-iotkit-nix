@@ -143,6 +143,16 @@ _sdmp_start(vs_netif_t *netif) {
     return vs_sdmp_prvs_configure_hal(vs_prvs_impl());
 }
 
+/******************************************************************************/
+int
+vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+    assert(descriptor);
+    CHECK_NOT_ZERO_RET(descriptor, -1);
+
+    memset(descriptor, 0, sizeof(vs_firmware_descriptor_t));
+
+    return 0;
+}
 
 /******************************************************************************/
 int
