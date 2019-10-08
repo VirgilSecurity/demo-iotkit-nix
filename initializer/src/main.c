@@ -79,7 +79,8 @@ main(int argc, char *argv[]) {
                                   NULL,
                                   (const char *)MANUFACTURE_ID,
                                   (const char *)DEVICE_MODEL,
-                                  VS_SDMP_DEV_INITIALIZER),
+                                  VS_SDMP_DEV_INITIALIZER,
+                                  true),
                      "Cannot start initializer");
 
     STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_service(vs_prvs_impl())), "Cannot register PRVS service");

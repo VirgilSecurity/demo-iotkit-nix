@@ -62,7 +62,8 @@ main(int argc, char *argv[]) {
                           &_fw_storage_ctx,
                           GW_MANUFACTURE_ID,
                           GW_DEVICE_MODEL,
-                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER)) {
+                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER,
+                          false)) {
         return -1;
     }
 

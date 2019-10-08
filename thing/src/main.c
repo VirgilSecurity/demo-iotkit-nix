@@ -66,7 +66,8 @@ main(int argc, char *argv[]) {
                           &_fw_storage_ctx,
                           (const char *)THING_MANUFACTURE_ID,
                           (const char *)THING_DEVICE_MODEL,
-                          VS_SDMP_DEV_THING)) {
+                          VS_SDMP_DEV_THING,
+                          false)) {
         return -1;
     }
 

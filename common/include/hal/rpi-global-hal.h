@@ -52,7 +52,7 @@ vs_rpi_hal_update(int argc, char *argv[]);
 void
 vs_rpi_hal_sleep_until_stop(void);
 
-int
+vs_status_e
 vs_rpi_start(const char *devices_dir,
              const char *app_file,
              vs_mac_addr_t forced_mac_addr,
@@ -60,7 +60,8 @@ vs_rpi_start(const char *devices_dir,
              vs_storage_op_ctx_t *fw_ctx,
              const char *manufacture_id,
              const char *device_type,
-             const uint32_t device_roles);
+             const uint32_t device_roles,
+             bool is_initializer);
 
 void
 vs_rpi_restart(void);

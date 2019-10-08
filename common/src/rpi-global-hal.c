@@ -228,7 +228,7 @@ vs_rpi_hal_sleep_until_stop(void) {
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_rpi_start(const char *devices_dir,
              const char *app_file,
              vs_mac_addr_t forced_mac_addr,
@@ -236,12 +236,14 @@ vs_rpi_start(const char *devices_dir,
              vs_storage_op_ctx_t *fw_ctx,
              const char *manufacture_id_str,
              const char *device_type_str,
-             const uint32_t device_roles) {
+             const uint32_t device_roles,
+             bool is_initializer) {
     vs_fw_manufacture_id_t manufacture_id;
     vs_fw_device_type_t device_type;
     int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
+    vs_status_e ret_code;
 
     vs_logger_init(VS_LOGLEV_DEBUG);
 
@@ -284,14 +286,18 @@ vs_rpi_start(const char *devices_dir,
     vs_rpi_get_storage_impl(&tl_ctx->impl);
     tl_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
     tl_ctx->file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    CHECK_RET(!vs_tl_init(tl_ctx), -1, "Unable to initialize Trust List library");
+    ret_code = vs_tl_init(tl_ctx);
+    if (!is_initializer && VS_CODE_OK != ret_code) {
+        CHECK_RET(false, -1, "Unable to initialize Trust List library");
+    }
+
 
     // Prepare FW storage
-    if (fw_ctx) {
+    if (!is_initializer) {
         vs_rpi_get_storage_impl(&fw_ctx->impl);
         fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
         fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-        CHECK_RET(!vs_firmware_init(fw_ctx), -2, "Unable to initialize Firmware library");
+        CHECK_RET(!vs_firmware_init(fw_ctx), VS_CODE_ERR_INCORRECT_ARGUMENT, "Unable to initialize Firmware library");
     }
 
     // Setup UDP Broadcast as network interface
@@ -304,18 +310,20 @@ vs_rpi_start(const char *devices_dir,
     queued_netif = vs_netif_queued(netif);
 
     // Initialize SDMP
-    CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
+    CHECK_RET(!vs_sdmp_init(queued_netif), VS_CODE_ERR_SDMP_UNKNOWN, "Unable to initialize SDMP");
 
-    if (fw_ctx) {
+    if (!is_initializer) {
         CHECK_RET(!vs_sdmp_register_service(
                           vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
-                  -1,
+                  VS_CODE_ERR_SDMP_UNKNOWN,
                   0);
         // Send broadcast notification about start of this device
-        CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
+        CHECK_RET(!vs_sdmp_info_start_notification(NULL),
+                  VS_CODE_ERR_SDMP_UNKNOWN,
+                  "Cannot send broadcast notification about start");
     }
 
-    return 0;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
