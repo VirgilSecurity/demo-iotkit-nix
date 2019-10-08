@@ -318,4 +318,61 @@ vs_rpi_restart(void) {
     _need_restart = true;
     pthread_mutex_unlock(&_sleep_lock);
 }
+
+
+// TODO: Need to use real descriptor, which can be obtain from footer of self image
+static vs_firmware_descriptor_t _descriptor;
+static bool _is_descriptor_ready = false;
+
 /******************************************************************************/
+static void
+_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
+    size_t pos;
+    size_t len;
+
+    assert(src && *src);
+    assert(elem_buf_size);
+
+    len = strlen(src);
+    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
+        *dst = *src;
+    }
+}
+
+/******************************************************************************/
+int
+vs_load_own_firmware_descriptor(const char *manufacture_id_str,
+                                const char *device_type_str,
+                                vs_storage_op_ctx_t *op_ctx,
+                                vs_firmware_descriptor_t *descriptor) {
+
+    assert(descriptor);
+    CHECK_NOT_ZERO_RET(descriptor, -1);
+
+    if (!_is_descriptor_ready) {
+        vs_firmware_descriptor_t desc;
+        vs_fw_manufacture_id_t manufacture_id;
+        vs_fw_device_type_t device_type;
+
+        memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
+        memset(manufacture_id, 0, sizeof(vs_fw_manufacture_id_t));
+        memset(device_type, 0, sizeof(vs_fw_device_type_t));
+
+        _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
+        _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+
+        if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
+            VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
+            memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
+            memcpy(_descriptor.info.manufacture_id, manufacture_id, MANUFACTURE_ID_SIZE);
+            memcpy(_descriptor.info.device_type, device_type, DEVICE_TYPE_SIZE);
+        } else {
+            memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
+        }
+        _is_descriptor_ready = true;
+    }
+
+    memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
+
+    return 0;
+}
