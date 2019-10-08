@@ -60,8 +60,8 @@ main(int argc, char *argv[]) {
                           forced_mac_addr,
                           &_tl_storage_ctx,
                           &_fw_storage_ctx,
-                          GW_MANUFACTURE_ID,
-                          GW_DEVICE_MODEL,
+                          (const char *)GW_MANUFACTURE_ID,
+                          (const char *)GW_DEVICE_MODEL,
                           VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER)) {
         return -1;
     }
@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
 
     vs_sdmp_deinit();
 
-    int res = vs_rpi_hal_update(argc, argv);
+    int res = vs_rpi_hal_update((const char *)GW_MANUFACTURE_ID, (const char *)GW_DEVICE_MODEL, argc, argv);
 
     // Clean File cache
     vs_file_cache_clean();

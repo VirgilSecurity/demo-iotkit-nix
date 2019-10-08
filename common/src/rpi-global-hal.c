@@ -69,6 +69,10 @@
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
+// TODO: Need to use real descriptor, which can be obtain from footer of self image
+static vs_firmware_descriptor_t _descriptor;
+static bool _is_descriptor_ready = false;
+
 /******************************************************************************/
 void
 vs_iot_assert(int exp) {
@@ -105,8 +109,57 @@ vs_rpi_hal_get_udid(uint8_t *udid) {
 }
 
 /******************************************************************************/
+static void
+_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
+    size_t pos;
+    size_t len;
+
+    assert(src && *src);
+    assert(elem_buf_size);
+
+    len = strlen(src);
+    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
+        *dst = *src;
+    }
+}
+
+/******************************************************************************/
+static void
+_delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str) {
+
+    vs_fw_manufacture_id_t manufacture_id;
+    vs_fw_device_type_t device_type;
+    vs_storage_op_ctx_t op_ctx;
+    vs_firmware_descriptor_t desc;
+
+    assert(manufacture_id_str);
+    assert(device_type_str);
+
+    vs_rpi_get_storage_impl(&op_ctx.impl);
+    assert(op_ctx.impl.deinit);
+    op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+
+    op_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+
+    memset(manufacture_id, 0, sizeof(vs_fw_manufacture_id_t));
+    memset(device_type, 0, sizeof(vs_fw_device_type_t));
+
+    _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
+    _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+
+    if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
+        VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
+    } else {
+        vs_firmware_delete_firmware(&op_ctx, &desc);
+    }
+
+    op_ctx.impl.deinit(op_ctx.storage_ctx);
+    VS_LOG_INFO("Bad firmware has been deleted");
+}
+
+/******************************************************************************/
 int
-vs_rpi_hal_update(int argc, char *argv[]) {
+vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]) {
     char old_app[FILENAME_MAX];
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
@@ -175,6 +228,9 @@ vs_rpi_hal_update(int argc, char *argv[]) {
     // Start new app
     if (-1 == execv(self_path, argv)) {
         VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
+
+        // remove the bad stored firmware image
+        _delete_bad_firmware(manufacture_id_str, device_type_str);
 
         // restore current app
         VS_LOG_INFO("Restore current app");
@@ -317,26 +373,6 @@ void
 vs_rpi_restart(void) {
     _need_restart = true;
     pthread_mutex_unlock(&_sleep_lock);
-}
-
-
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor;
-static bool _is_descriptor_ready = false;
-
-/******************************************************************************/
-static void
-_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
-    size_t pos;
-    size_t len;
-
-    assert(src && *src);
-    assert(elem_buf_size);
-
-    len = strlen(src);
-    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
-        *dst = *src;
-    }
 }
 
 /******************************************************************************/
