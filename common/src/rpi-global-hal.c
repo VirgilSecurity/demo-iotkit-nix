@@ -252,7 +252,8 @@ vs_rpi_start(const char *devices_dir,
     assert(device_type_str);
 
     // Print title
-    VS_LOG_INFO("\n\n--------------------------------------------");
+    VS_LOG_INFO("\n\n");
+    VS_LOG_INFO("--------------------------------------------");
     VS_LOG_INFO("%s app at %s", devices_dir, app_file);
     VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
     VS_LOG_INFO("--------------------------------------------\n");
@@ -286,10 +287,12 @@ vs_rpi_start(const char *devices_dir,
     CHECK_RET(!vs_tl_init(tl_ctx), -1, "Unable to initialize Trust List library");
 
     // Prepare FW storage
-    vs_rpi_get_storage_impl(&fw_ctx->impl);
-    fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-    fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    CHECK_RET(!vs_firmware_init(fw_ctx), -2, "Unable to initialize Firmware library");
+    if (fw_ctx) {
+        vs_rpi_get_storage_impl(&fw_ctx->impl);
+        fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+        fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+        CHECK_RET(!vs_firmware_init(fw_ctx), -2, "Unable to initialize Firmware library");
+    }
 
     // Setup UDP Broadcast as network interface
     vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
@@ -303,11 +306,14 @@ vs_rpi_start(const char *devices_dir,
     // Initialize SDMP
     CHECK_RET(!vs_sdmp_init(queued_netif), -1, "Unable to initialize SDMP");
 
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
-              -1,
-              0);
-    // Send broadcast notification about start of this device
-    CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
+    if (fw_ctx) {
+        CHECK_RET(!vs_sdmp_register_service(
+                          vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
+                  -1,
+                  0);
+        // Send broadcast notification about start of this device
+        CHECK_RET(!vs_sdmp_info_start_notification(NULL), -1, "Cannot send broadcast notification about start");
+    }
 
     return 0;
 }
