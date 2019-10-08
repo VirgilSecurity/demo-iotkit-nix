@@ -133,6 +133,17 @@ _assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
+/******************************************************************************/
+int
+vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+    assert(descriptor);
+    CHECK_NOT_ZERO_RET(descriptor, -1);
+
+    memset(descriptor, 0, sizeof(vs_firmware_descriptor_t));
+
+    return 0;
+}
+
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
