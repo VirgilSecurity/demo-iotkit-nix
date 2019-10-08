@@ -49,9 +49,8 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    struct in_addr plc_sim_addr;
 
-    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
         return -1;
     }
 
@@ -62,7 +61,8 @@ main(int argc, char *argv[]) {
                           &_fw_storage_ctx,
                           (const char *)GW_MANUFACTURE_ID,
                           (const char *)GW_DEVICE_MODEL,
-                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER)) {
+                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER,
+                          false)) {
         return -1;
     }
 

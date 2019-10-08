@@ -53,9 +53,7 @@ main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
 
-    struct in_addr plc_sim_addr;
-
-    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
         return -1;
     }
 
@@ -66,7 +64,8 @@ main(int argc, char *argv[]) {
                           &_fw_storage_ctx,
                           (const char *)THING_MANUFACTURE_ID,
                           (const char *)THING_DEVICE_MODEL,
-                          VS_SDMP_DEV_THING)) {
+                          VS_SDMP_DEV_THING,
+                          false)) {
         return -1;
     }
 

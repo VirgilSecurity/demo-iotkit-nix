@@ -74,42 +74,31 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 }
 
 /******************************************************************************/
-int
-vs_process_commandline_params(int argc, char *argv[], struct in_addr *plc_sim_addr, vs_mac_addr_t *forced_mac_addr) {
-    static const char *PLC_SIM_ADDRESS_SHORT = "-a";
-    static const char *PLC_SIM_ADDRESS_FULL = "--address";
+vs_status_e
+vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr) {
     static const char *MAC_SHORT = "-m";
     static const char *MAC_FULL = "--mac";
     char *mac_str;
-    char *plc_sim_addr_str;
 
-    if (!argv || !argc || !plc_sim_addr || !forced_mac_addr) {
+    if (!argv || !argc || !forced_mac_addr) {
         printf("Wrong input parameters.");
-        return -1;
+        return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
     mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
-    plc_sim_addr_str = _get_commandline_arg(argc, argv, PLC_SIM_ADDRESS_SHORT, PLC_SIM_ADDRESS_FULL);
 
     // Check input parameters
-    if (!mac_str || !plc_sim_addr_str) {
-        printf("usage: gateway %s/%s <PLC simulator IP> %s/%s <forces MAC address>\n",
-               PLC_SIM_ADDRESS_SHORT,
-               PLC_SIM_ADDRESS_FULL,
-               MAC_SHORT,
-               MAC_FULL);
-        return -1;
-    }
-
-    if (!inet_aton(plc_sim_addr_str, plc_sim_addr)) {
-        printf("Incorrect PLC simulator IP address \"%s\" was specified", plc_sim_addr_str);
-        return -1;
+    if (!mac_str) {
+        printf("usage: %s/%s <forces MAC address>\n", MAC_SHORT, MAC_FULL);
+        return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
     if (!_read_mac_address(mac_str, forced_mac_addr)) {
         printf("Incorrect forced MAC address \"%s\" was specified", mac_str);
-        return -1;
+        return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
-    return 0;
+    return VS_CODE_OK;
 }
+
+/******************************************************************************/
