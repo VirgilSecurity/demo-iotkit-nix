@@ -64,8 +64,6 @@ static const char _test_message[] = TEST_UPDATE_MESSAGE;
 static pthread_t *message_bin_thread;
 static pthread_t *upd_http_retrieval_thread;
 
-extern const vs_firmware_descriptor_t *
-vs_global_hal_get_own_firmware_descriptor(void);
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
@@ -96,10 +94,13 @@ get_gateway_ctx(void) {
 /*************************************************************************/
 static bool
 _is_self_firmware_image(vs_firmware_info_t *fw_info) {
-    const vs_firmware_descriptor_t *desc = vs_global_hal_get_own_firmware_descriptor();
+    vs_firmware_descriptor_t desc;
+    if (0 != vs_global_hal_get_own_firmware_descriptor(&desc)) {
+        return false;
+    }
 
-    return (0 == VS_IOT_MEMCMP(desc->info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
-            0 == VS_IOT_MEMCMP(desc->info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
+    return (0 == VS_IOT_MEMCMP(desc.info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
+            0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
 }
 
 /*************************************************************************/
@@ -107,16 +108,8 @@ static int
 _cancel_thread(pthread_t *thread) {
     void *res;
 
-    if (0 != pthread_cancel(*thread)) {
-        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+    if (0 != pthread_cancel(*thread) || 0 != pthread_join(*thread, &res) || PTHREAD_CANCELED != res) {
         return -1;
-    }
-
-    if (0 != pthread_join(*thread, &res) || PTHREAD_CANCELED != res) {
-        VS_LOG_ERROR("Error during joining to thread");
-        return -1;
-    } else {
-        VS_LOG_INFO("thread canceled");
     }
 
     return 0;
@@ -131,12 +124,14 @@ _restart_app() {
         VS_LOG_ERROR("Unable to cancel message_bin_thread");
         exit(-1);
     }
+    VS_LOG_INFO("message_bin_thread thread canceled");
 
     // Stop retrieval thread
     if (0 != _cancel_thread(upd_http_retrieval_thread)) {
-        VS_LOG_ERROR("Unable to cancel message_bin_thread");
+        VS_LOG_ERROR("Unable to cancel upd_http_retrieval_thread");
         exit(-1);
     }
+    VS_LOG_INFO("upd_http_retrieval_thread thread canceled");
 
     // Destroy sdmp services
     vs_fldt_destroy_server();
