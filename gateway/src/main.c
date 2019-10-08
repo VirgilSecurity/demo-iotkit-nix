@@ -49,9 +49,8 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    struct in_addr plc_sim_addr;
 
-    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
         return -1;
     }
 
