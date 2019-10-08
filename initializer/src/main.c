@@ -64,15 +64,18 @@ main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     vs_storage_op_ctx_t tl_ctx;
     vs_status_e ret_code;
+#if GATEWAY
+    const char *base_dir = "gateway";
+#else
+    const char *base_dir = "thing";
+#endif
 
-    struct in_addr plc_sim_addr;
 
-
-    if (0 != vs_process_commandline_params(argc, argv, &plc_sim_addr, &forced_mac_addr)) {
+    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
         return -1;
     }
 
-    STATUS_CHECK_RET(vs_rpi_start("thing",
+    STATUS_CHECK_RET(vs_rpi_start(base_dir,
                                   argv[0],
                                   forced_mac_addr,
                                   &tl_ctx,
