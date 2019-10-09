@@ -41,13 +41,13 @@
 
 /******************************************************************************/
 void
-vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
-    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
+vs_impl_device_serial(uint8_t *udid) {
+    memcpy(udid, get_gateway_ctx()->udid_of_device, VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/
 int
-vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+vs_impl_own_firmware_descriptor(void *descriptor) {
     assert(descriptor);
     CHECK_NOT_ZERO_RET(descriptor, -1);
 

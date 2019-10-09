@@ -33,12 +33,11 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <stdio.h>
-#include <arpa/inet.h>
 
+#include <virgil/iot/high-level/default/sdmp/prvs-server-impl.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
-#include <prvs_implementation.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/prvs.h>
 #include <virgil/iot/status_code/status_code.h>
@@ -48,7 +47,7 @@
 
 /******************************************************************************/
 int
-vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+vs_impl_own_firmware_descriptor(void *descriptor) {
     assert(descriptor);
     CHECK_NOT_ZERO_RET(descriptor, -1);
 
@@ -86,7 +85,8 @@ main(int argc, char *argv[]) {
                                   true),
                      "Cannot start initializer");
 
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_service(vs_prvs_impl())), "Cannot register PRVS service");
+    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_service(vs_prvs_server_default_impl())),
+                     "Cannot register PRVS service");
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
