@@ -353,6 +353,10 @@ vs_rpi_start(const char *devices_dir,
         fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
         fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
         CHECK_RET(!vs_firmware_init(fw_ctx), VS_CODE_ERR_INCORRECT_ARGUMENT, "Unable to initialize Firmware library");
+
+        // TODO: Dirty hack until correct reading own descriptor won't be implemented
+        vs_firmware_descriptor_t desc;
+        vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_ctx, &desc);
     }
 
     // Setup UDP Broadcast as network interface
