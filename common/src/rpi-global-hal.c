@@ -389,7 +389,7 @@ vs_rpi_restart(void) {
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_load_own_firmware_descriptor(const char *manufacture_id_str,
                                 const char *device_type_str,
                                 vs_storage_op_ctx_t *op_ctx,
@@ -421,5 +421,5 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
 
     memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
 
-    return 0;
+    return VS_CODE_OK;
 }
