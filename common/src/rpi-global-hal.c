@@ -43,7 +43,7 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/info-server.h>
+#include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>

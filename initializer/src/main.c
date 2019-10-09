@@ -39,7 +39,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs.h>
+#include <virgil/iot/protocols/sdmp/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <hal/rpi-global-hal.h>
 
@@ -69,7 +69,6 @@ main(int argc, char *argv[]) {
     const char *base_dir = "thing";
 #endif
 
-
     if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
         return -1;
     }
@@ -85,8 +84,7 @@ main(int argc, char *argv[]) {
                                   true),
                      "Cannot start initializer");
 
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_service(vs_prvs_server_default_impl())),
-                     "Cannot register PRVS service");
+    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_server()), "Cannot register PRVS service");
 
     // Sleep until CTRL_C
     vs_rpi_hal_sleep_until_stop();
