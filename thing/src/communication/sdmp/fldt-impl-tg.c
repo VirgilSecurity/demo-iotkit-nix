@@ -118,7 +118,7 @@ vs_fldt_thing_firmware_init(void) {
     vs_update_file_type_t file_type;
     vs_status_e ret_code;
     uint8_t *filetype_manufacture_id = file_type.add_info;
-    uint8_t *filetype_device_type = file_type.add_info + MANUFACTURE_ID_SIZE;
+    uint8_t *filetype_device_type = file_type.add_info + VS_DEVICE_MANUFACTURE_ID_SIZE;
 
     STATUS_CHECK_RET(vs_update_firmware_init(&_fw_update_ctx, &_fw_storage_ctx),
                      "Unable to initialize Firmware's Update context");
@@ -126,8 +126,8 @@ vs_fldt_thing_firmware_init(void) {
     memset(&file_type, 0, sizeof(file_type));
 
     file_type.file_type_id = VS_UPDATE_FIRMWARE;
-    _make_firmware_add_data_element(filetype_manufacture_id, manufacturer_id, MANUFACTURE_ID_SIZE);
-    _make_firmware_add_data_element(filetype_device_type, device_id, DEVICE_TYPE_SIZE);
+    _make_firmware_add_data_element(filetype_manufacture_id, manufacturer_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    _make_firmware_add_data_element(filetype_device_type, device_id, VS_DEVICE_DEVICE_TYPE_SIZE);
 
     STATUS_CHECK_RET(vs_fldt_update_client_file_type(&file_type, &_fw_update_ctx), "Unable to add firmware file type");
 

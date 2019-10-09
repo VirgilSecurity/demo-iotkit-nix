@@ -135,7 +135,7 @@ _assert_handler_fn(const char *message, const char *file, int line) {
 
 /******************************************************************************/
 int
-vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+vs_impl_own_firmware_descriptor(void *descriptor) {
     assert(descriptor);
     CHECK_NOT_ZERO_RET(descriptor, -1);
 

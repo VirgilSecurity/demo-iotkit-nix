@@ -41,7 +41,7 @@
 
 /******************************************************************************/
 int
-vs_global_hal_get_own_firmware_descriptor(void *descriptor) {
+vs_impl_own_firmware_descriptor(void *descriptor) {
 
     int res;
     assert(descriptor);

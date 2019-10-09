@@ -81,7 +81,7 @@ vs_iot_assert(int exp) {
 
 /******************************************************************************/
 void
-vs_global_hal_msleep(size_t msec) {
+vs_impl_msleep(size_t msec) {
     usleep(msec * 1000);
 }
 
@@ -99,13 +99,13 @@ vs_logger_output_hal(const char *buffer) {
 
 /******************************************************************************/
 void
-vs_rpi_hal_get_udid(uint8_t *udid) {
+vs_rpi_get_serial(vs_device_serial_t serial) {
     vs_mac_addr_t mac;
     vs_sdmp_mac_addr(0, &mac);
 
     // TODO: Need to use real serial
-    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
-    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
+    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
+    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
 }
 
 /******************************************************************************/
@@ -127,8 +127,8 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 static void
 _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str) {
 
-    vs_fw_manufacture_id_t manufacture_id;
-    vs_fw_device_type_t device_type;
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
     vs_storage_op_ctx_t op_ctx;
     vs_firmware_descriptor_t desc;
 
@@ -141,11 +141,11 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
 
     op_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 
-    memset(manufacture_id, 0, sizeof(vs_fw_manufacture_id_t));
-    memset(device_type, 0, sizeof(vs_fw_device_type_t));
+    memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
+    memset(device_type, 0, sizeof(vs_device_type_t));
 
-    _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
-    _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    _create_field(device_type, device_type_str, VS_DEVICE_DEVICE_TYPE_SIZE);
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
         VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
@@ -294,8 +294,9 @@ vs_rpi_start(const char *devices_dir,
              const char *device_type_str,
              const uint32_t device_roles,
              bool is_initializer) {
-    vs_fw_manufacture_id_t manufacture_id;
-    vs_fw_device_type_t device_type;
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
+    vs_device_serial_t serial;
     int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
@@ -366,13 +367,13 @@ vs_rpi_start(const char *devices_dir,
     queued_netif = vs_netif_queued(netif);
 
     // Initialize SDMP
-    CHECK_RET(!vs_sdmp_init(queued_netif), VS_CODE_ERR_SDMP_UNKNOWN, "Unable to initialize SDMP");
+    vs_rpi_get_serial(serial);
+    CHECK_RET(!vs_sdmp_init(queued_netif, manufacture_id, device_type, serial, device_roles),
+              VS_CODE_ERR_SDMP_UNKNOWN,
+              "Unable to initialize SDMP");
 
     if (!is_initializer) {
-        CHECK_RET(!vs_sdmp_register_service(
-                          vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
-                  VS_CODE_ERR_SDMP_UNKNOWN,
-                  0);
+        CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx)), VS_CODE_ERR_SDMP_UNKNOWN, 0);
         // Send broadcast notification about start of this device
         CHECK_RET(!vs_sdmp_info_start_notification(NULL),
                   VS_CODE_ERR_SDMP_UNKNOWN,
@@ -401,21 +402,21 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
 
     if (!_is_descriptor_ready) {
         vs_firmware_descriptor_t desc;
-        vs_fw_manufacture_id_t manufacture_id;
-        vs_fw_device_type_t device_type;
+        vs_device_manufacture_id_t manufacture_id;
+        vs_device_type_t device_type;
 
         memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
-        memset(manufacture_id, 0, sizeof(vs_fw_manufacture_id_t));
-        memset(device_type, 0, sizeof(vs_fw_device_type_t));
+        memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
+        memset(device_type, 0, sizeof(vs_device_type_t));
 
-        _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
-        _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+        _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+        _create_field(device_type, device_type_str, VS_DEVICE_DEVICE_TYPE_SIZE);
 
         if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
             VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
             memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
-            memcpy(_descriptor.info.manufacture_id, manufacture_id, MANUFACTURE_ID_SIZE);
-            memcpy(_descriptor.info.device_type, device_type, DEVICE_TYPE_SIZE);
+            memcpy(_descriptor.info.manufacture_id, manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
+            memcpy(_descriptor.info.device_type, device_type, VS_DEVICE_DEVICE_TYPE_SIZE);
         } else {
             memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
         }

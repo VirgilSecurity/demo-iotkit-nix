@@ -44,7 +44,7 @@
 extern char *self_path;
 
 void
-vs_rpi_hal_get_udid(uint8_t *udid);
+vs_rpi_get_serial(uint8_t serial[VS_DEVICE_SERIAL_SIZE]);
 
 int
 vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
