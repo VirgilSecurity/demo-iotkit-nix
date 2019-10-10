@@ -120,7 +120,7 @@ _mb_mqtt_task(void *pvParameters) {
             vs_impl_msleep(5000);
         }
     }
-    return (void *)0;
+    return NULL;
 }
 
 /*************************************************************************/

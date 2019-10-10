@@ -215,7 +215,7 @@ _gateway_task(void *pvParameters) {
         }
 #endif
     }
-    return (void *)0;
+    return NULL;
 }
 
 /******************************************************************************/

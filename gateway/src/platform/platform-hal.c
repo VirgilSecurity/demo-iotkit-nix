@@ -49,3 +49,5 @@ vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
     return vs_load_own_firmware_descriptor(
             GW_MANUFACTURE_ID, GW_DEVICE_MODEL, &get_gateway_ctx()->fw_update_ctx, descriptor);
 }
+
+/******************************************************************************/
