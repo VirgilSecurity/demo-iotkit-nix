@@ -65,8 +65,10 @@ main(int argc, char *argv[]) {
     vs_status_e ret_code;
 #if GATEWAY
     const char *base_dir = "gateway";
+    uint32_t roles = VS_SDMP_DEV_GATEWAY;
 #else
     const char *base_dir = "thing";
+    uint32_t roles = VS_SDMP_DEV_THING;
 #endif
 
     if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
@@ -80,7 +82,7 @@ main(int argc, char *argv[]) {
                                   NULL,
                                   (const char *)MANUFACTURE_ID,
                                   (const char *)DEVICE_MODEL,
-                                  VS_SDMP_DEV_INITIALIZER,
+                                  roles,
                                   true),
                      "Cannot start initializer");
 

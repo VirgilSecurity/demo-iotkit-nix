@@ -100,12 +100,13 @@ vs_logger_output_hal(const char *buffer) {
 /******************************************************************************/
 void
 vs_rpi_get_serial(vs_device_serial_t serial) {
-    vs_mac_addr_t mac;
-    vs_sdmp_mac_addr(0, &mac);
+    int i;
+    srand(time(NULL));
+    uint8_t *p = (uint8_t *)serial;
 
-    // TODO: Need to use real serial
-    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
-    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
+    for (i = 0; i < sizeof(vs_device_serial_t); i++, p++) {
+        *p = rand() % 256;
+    }
 }
 
 /******************************************************************************/
