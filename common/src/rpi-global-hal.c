@@ -145,9 +145,7 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
     op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
 
     op_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-
-    memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
-    memset(device_type, 0, sizeof(vs_device_type_t));
+    
     _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
     _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
@@ -414,8 +412,6 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
         vs_device_type_t device_type;
 
         memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
-        memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
-        memset(device_type, 0, sizeof(vs_device_type_t));
 
         _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
         _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
