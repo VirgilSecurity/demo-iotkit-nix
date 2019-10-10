@@ -98,7 +98,7 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
     }
 
     return (0 == VS_IOT_MEMCMP(desc.info.manufacture_id, fw_info->manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE) &&
-            0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, VS_DEVICE_DEVICE_TYPE_SIZE));
+            0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, VS_DEVICE_TYPE_SIZE));
 }
 
 /*************************************************************************/

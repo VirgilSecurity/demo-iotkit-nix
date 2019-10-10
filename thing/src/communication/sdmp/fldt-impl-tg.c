@@ -127,7 +127,7 @@ vs_fldt_thing_firmware_init(void) {
 
     file_type.file_type_id = VS_UPDATE_FIRMWARE;
     _make_firmware_add_data_element(filetype_manufacture_id, manufacturer_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    _make_firmware_add_data_element(filetype_device_type, device_id, VS_DEVICE_DEVICE_TYPE_SIZE);
+    _make_firmware_add_data_element(filetype_device_type, device_id, VS_DEVICE_TYPE_SIZE);
 
     STATUS_CHECK_RET(vs_fldt_update_client_file_type(&file_type, &_fw_update_ctx), "Unable to add firmware file type");
 

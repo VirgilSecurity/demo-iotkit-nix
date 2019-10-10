@@ -148,7 +148,7 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
     memset(device_type, 0, sizeof(vs_device_type_t));
 
     _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    _create_field(device_type, device_type_str, VS_DEVICE_DEVICE_TYPE_SIZE);
+    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
         VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
@@ -413,13 +413,13 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
         memset(device_type, 0, sizeof(vs_device_type_t));
 
         _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-        _create_field(device_type, device_type_str, VS_DEVICE_DEVICE_TYPE_SIZE);
+        _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
         if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
             VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
             memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
             memcpy(_descriptor.info.manufacture_id, manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
-            memcpy(_descriptor.info.device_type, device_type, VS_DEVICE_DEVICE_TYPE_SIZE);
+            memcpy(_descriptor.info.device_type, device_type, VS_DEVICE_TYPE_SIZE);
         } else {
             memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
         }
