@@ -49,6 +49,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
 #include <update-config.h>
@@ -68,10 +69,6 @@
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
-
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor;
-static bool _is_descriptor_ready = false;
 
 /******************************************************************************/
 void
@@ -353,10 +350,6 @@ vs_rpi_start(const char *devices_dir,
         fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
         fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
         CHECK_RET(!vs_firmware_init(fw_ctx), VS_CODE_ERR_INCORRECT_ARGUMENT, "Unable to initialize Firmware library");
-
-        // TODO: Dirty hack until correct reading own descriptor won't be implemented
-        vs_firmware_descriptor_t desc;
-        vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_ctx, &desc);
     }
 
     // Setup UDP Broadcast as network interface
@@ -392,38 +385,62 @@ vs_rpi_restart(void) {
     pthread_mutex_unlock(&_sleep_lock);
 }
 
+static void
+_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
+    desc->chunk_size = ntohs(desc->chunk_size);
+    desc->app_size = ntohl(desc->app_size);
+    desc->firmware_length = ntohl(desc->firmware_length);
+    desc->info.version.timestamp = ntohl(desc->info.version.timestamp);
+}
+
 /******************************************************************************/
 vs_status_e
-vs_load_own_firmware_descriptor(const char *manufacture_id_str,
-                                const char *device_type_str,
-                                vs_storage_op_ctx_t *op_ctx,
-                                vs_firmware_descriptor_t *descriptor) {
+vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
+    FILE *fp = NULL;
+    vs_status_e res = VS_CODE_ERR_FILE_READ;
+    ssize_t length;
+
+    uint16_t key_sz = vs_hsm_get_pubkey_len(VS_KEYPAIR_EC_SECP256R1);
+    uint16_t sign_sz = (uint16_t)vs_hsm_get_signature_len(VS_KEYPAIR_EC_SECP256R1);
+    uint16_t footer_sz = sizeof(vs_firmware_footer_t) + VS_FW_SIGNATURES_QTY * (sizeof(vs_sign_t) + key_sz + sign_sz);
+    uint8_t buf[footer_sz];
+    vs_firmware_footer_t *own_desc = (vs_firmware_footer_t *)buf;
 
     assert(descriptor);
-    CHECK_NOT_ZERO_RET(descriptor, -1);
+    assert(self_path);
 
-    if (!_is_descriptor_ready) {
-        vs_firmware_descriptor_t desc;
-        vs_fw_manufacture_id_t manufacture_id;
-        vs_fw_device_type_t device_type;
+    CHECK_NOT_ZERO_RET(descriptor, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
 
-        memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
+    fp = fopen(self_path, "rb");
 
-        _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
-        _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
 
-        if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
-            VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
-            memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
-            memcpy(_descriptor.info.manufacture_id, manufacture_id, MANUFACTURE_ID_SIZE);
-            memcpy(_descriptor.info.device_type, device_type, DEVICE_TYPE_SIZE);
-        } else {
-            memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
-        }
-        _is_descriptor_ready = true;
+    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+
+    length = ftell(fp);
+    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
+    CHECK(length > footer_sz, "Wrong self file format");
+
+    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
+          "Unable to seek file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+
+    CHECK(1 == fread((void *)buf, footer_sz, 1, fp),
+          "Unable to read file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+    _ntoh_fw_desdcriptor(&own_desc->descriptor);
+    memcpy(descriptor, &own_desc->descriptor, sizeof(vs_firmware_descriptor_t));
+    res = VS_CODE_OK;
+
+terminate:
+    if (fp) {
+        fclose(fp);
     }
 
-    memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
-
-    return VS_CODE_OK;
+    return res;
 }

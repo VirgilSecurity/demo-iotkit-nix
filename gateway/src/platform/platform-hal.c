@@ -49,9 +49,9 @@ vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
 vs_status_e
 vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
     assert(descriptor);
-    CHECK_NOT_ZERO_RET(descriptor, -1);
+    CHECK_NOT_ZERO_RET(descriptor, VS_CODE_ERR_NULLPTR_ARGUMENT);
+
     CHECK_RET(buf_sz == sizeof(vs_firmware_descriptor_t), VS_CODE_ERR_INCORRECT_ARGUMENT, "Buffer too small");
 
-    return vs_load_own_firmware_descriptor(
-            GW_MANUFACTURE_ID, GW_DEVICE_MODEL, &get_gateway_ctx()->fw_update_ctx, descriptor);
+    return vs_load_own_firmware_descriptor(descriptor);
 }
