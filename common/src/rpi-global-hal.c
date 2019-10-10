@@ -297,7 +297,7 @@ vs_rpi_start(const char *devices_dir,
              bool is_initializer) {
     vs_device_manufacture_id_t manufacture_id;
     vs_device_type_t device_type;
-    vs_device_serial_t serial;
+    vs_device_serial_t serial = {0};
     int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
