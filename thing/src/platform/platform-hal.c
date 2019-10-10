@@ -40,12 +40,13 @@
 #include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
-int
-vs_impl_own_firmware_descriptor(void *descriptor) {
+vs_status_e
+vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
 
-    int res;
+    vs_status_e res;
     assert(descriptor);
     CHECK_NOT_ZERO_RET(descriptor, -1);
+    CHECK_RET(buf_sz == sizeof(vs_firmware_descriptor_t), VS_CODE_ERR_INCORRECT_ARGUMENT, "Buffer too small");
 
     vs_storage_op_ctx_t fw_update_ctx;
     vs_rpi_get_storage_impl(&fw_update_ctx.impl);

@@ -44,6 +44,7 @@
 #include <update-config.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
+#include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/protocols/sdmp/fldt_private.h>
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
 
@@ -93,9 +94,7 @@ get_gateway_ctx(void) {
 static bool
 _is_self_firmware_image(vs_firmware_info_t *fw_info) {
     vs_firmware_descriptor_t desc;
-    if (0 != vs_impl_own_firmware_descriptor(&desc)) {
-        return false;
-    }
+    STATUS_CHECK_RET_BOOL(vs_firmware_get_own_firmware_descriptor(&desc), "Unable to get own firmware descriptor");
 
     return (0 == VS_IOT_MEMCMP(desc.info.manufacture_id, fw_info->manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE) &&
             0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, VS_DEVICE_TYPE_SIZE));

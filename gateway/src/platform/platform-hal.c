@@ -34,15 +34,17 @@
 
 #include <assert.h>
 #include <string.h>
+#include <global-hal.h>
 #include <gateway.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
-int
-vs_impl_own_firmware_descriptor(void *descriptor) {
+vs_status_e
+vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
     assert(descriptor);
     CHECK_NOT_ZERO_RET(descriptor, -1);
+    CHECK_RET(buf_sz == sizeof(vs_firmware_descriptor_t), VS_CODE_ERR_INCORRECT_ARGUMENT, "Buffer too small");
 
     return vs_load_own_firmware_descriptor(
             GW_MANUFACTURE_ID, GW_DEVICE_MODEL, &get_gateway_ctx()->fw_update_ctx, descriptor);

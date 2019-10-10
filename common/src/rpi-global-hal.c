@@ -120,6 +120,8 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
     assert(src && *src);
     assert(elem_buf_size);
 
+    memset(dst, 0, elem_buf_size);
+
     len = strlen(src);
     for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
         *dst = *src;
@@ -146,7 +148,6 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
 
     memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
     memset(device_type, 0, sizeof(vs_device_type_t));
-
     _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
     _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
@@ -358,6 +359,10 @@ vs_rpi_start(const char *devices_dir,
         fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
         fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
         CHECK_RET(!vs_firmware_init(fw_ctx), VS_CODE_ERR_INCORRECT_ARGUMENT, "Unable to initialize Firmware library");
+
+        // TODO: Dirty hack until correct reading own descriptor won't be implemented
+        vs_firmware_descriptor_t desc;
+        vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_ctx, &desc);
     }
 
     // Setup UDP Broadcast as network interface
@@ -394,7 +399,7 @@ vs_rpi_restart(void) {
 }
 
 /******************************************************************************/
-int
+vs_status_e
 vs_load_own_firmware_descriptor(const char *manufacture_id_str,
                                 const char *device_type_str,
                                 vs_storage_op_ctx_t *op_ctx,
@@ -428,5 +433,5 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
 
     memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
 
-    return 0;
+    return VS_CODE_OK;
 }
