@@ -89,9 +89,10 @@ create_text_option(APP_DEV_BUILD "3" "0" "Application build version")
 set(APP_VERSION "${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}.${APP_DEV_MILESTONE}.${APP_DEV_BUILD}")
 
 # Path to config file for a firmware signer
-if(NOT VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH)
+if(NOT VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH AND NOT GO_DISABLE)
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json" "[{\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-auth1.key\", \"key_type\": 1, \"ec_type\": 3}, {\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-firmware1.key\", \"key_type\": 3, \"ec_type\": 3}]")
     set(VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json")
+    message(WARNING "VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH is not defined. Use default config with dummy keys")
 endif()
 
 option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
