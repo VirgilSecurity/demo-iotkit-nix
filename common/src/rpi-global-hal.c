@@ -98,14 +98,17 @@ vs_logger_output_hal(const char *buffer) {
 }
 
 /******************************************************************************/
+static void
+_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
+    // TODO: Need to use real serial
+    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
+    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
+}
+
+/******************************************************************************/
 void
 vs_impl_device_serial(vs_device_serial_t serial_number) {
-    vs_mac_addr_t mac;
-    vs_sdmp_mac_addr(0, &mac);
-
-    // TODO: Need to use real serial
-    VS_IOT_MEMSET(serial_number, 0x03, VS_DEVICE_SERIAL_SIZE);
-    VS_IOT_MEMCPY(serial_number, mac.bytes, ETH_ADDR_LEN);
+    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/
@@ -367,7 +370,7 @@ vs_rpi_start(const char *devices_dir,
     queued_netif = vs_netif_queued(netif);
 
     // Initialize SDMP
-    vs_impl_device_serial(serial);
+    _get_serial(serial, forced_mac_addr);
     CHECK_RET(!vs_sdmp_init(queued_netif, manufacture_id, device_type, serial, device_roles),
               VS_CODE_ERR_SDMP_UNKNOWN,
               "Unable to initialize SDMP");
