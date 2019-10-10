@@ -91,7 +91,7 @@ _udp_bcast_receive_processor(void *sock_desc) {
         recv_sz = recvfrom(
                 _udp_bcast_sock, received_data, sizeof received_data, 0, (struct sockaddr *)&client_addr, &addr_sz);
         if (recv_sz < 0) {
-            VS_LOG_ERROR("UDP broadcast: recv failed. %s\n", strerror(errno));
+            VS_LOG_ERROR("UDP broadcast: recv stop");
             break;
         }
 

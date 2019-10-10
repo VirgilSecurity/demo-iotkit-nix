@@ -68,8 +68,6 @@ static pthread_t *upd_http_retrieval_thread;
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
-    vs_rpi_hal_get_udid(_gtwy.udid_of_device);
-
     vs_rpi_get_storage_impl(&_gtwy.fw_update_ctx.impl);
     _gtwy.fw_update_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 
@@ -98,8 +96,8 @@ _is_self_firmware_image(vs_firmware_info_t *fw_info) {
     vs_firmware_descriptor_t desc;
     STATUS_CHECK_RET_BOOL(vs_firmware_get_own_firmware_descriptor(&desc), "Unable to get own firmware descriptor");
 
-    return (0 == VS_IOT_MEMCMP(desc.info.manufacture_id, fw_info->manufacture_id, MANUFACTURE_ID_SIZE) &&
-            0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, DEVICE_TYPE_SIZE));
+    return (0 == VS_IOT_MEMCMP(desc.info.manufacture_id, fw_info->manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE) &&
+            0 == VS_IOT_MEMCMP(desc.info.device_type, fw_info->device_type, VS_DEVICE_TYPE_SIZE));
 }
 
 /*************************************************************************/
@@ -217,7 +215,7 @@ _gateway_task(void *pvParameters) {
         }
 #endif
     }
-    return (void *)0;
+    return NULL;
 }
 
 /******************************************************************************/

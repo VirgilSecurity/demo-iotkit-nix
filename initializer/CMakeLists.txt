@@ -60,12 +60,8 @@ function(initializer_executable _is_gateway _manufacture _model)
     target_sources(${_targetname}
             PRIVATE
 
-            # Headers
-            ${CMAKE_CURRENT_LIST_DIR}/include/prvs_implementation.h
-
             # Sources
             ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-            ${CMAKE_CURRENT_LIST_DIR}/src/sdmp/prvs_implementation.c
             )
 
     #

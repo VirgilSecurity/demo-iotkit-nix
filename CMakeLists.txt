@@ -130,7 +130,7 @@ include(cmake/helpers.cmake)
 #
 set(VIRGIL_IOT_MCU_BUILD OFF CACHE BOOL "Turn off MCU build" FORCE)
 set(VIRGIL_IOT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk CACHE STRING "Path to the Virgil IoT SDK")
-set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/rpi CACHE STRING "Path to the Virgil IoT SDK configuration")
+set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
 add_subdirectory(${VIRGIL_IOT_DIRECTORY})
 
 #
