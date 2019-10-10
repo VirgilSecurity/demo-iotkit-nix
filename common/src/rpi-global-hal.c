@@ -437,7 +437,7 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
 
     if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
         0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_fw_device_type_t)) ||
-        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_fw_device_type_t))) {
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_fw_manufacture_id_t))) {
         VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
         exit(-1);
     }
