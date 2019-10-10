@@ -38,20 +38,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void
-vs_hal_files_set_mac(uint8_t mac_addr[6]);
-
-void
-vs_hal_files_set_dir(const char *dir_name);
+bool
+vs_hal_files_set_dir(const char *base_dir);
 
 ssize_t
 vs_rpi_get_file_len(const char *folder, const char *file_name);
 
-bool
-vs_rpi_get_keystorage_base_dir(char *dir);
-
-const char *
-vs_rpi_get_trust_list_dir(void);
+// bool
+// vs_rpi_get_keystorage_base_dir(char *dir);
 
 const char *
 vs_rpi_get_slots_dir(void);

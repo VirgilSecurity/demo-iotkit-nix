@@ -38,11 +38,6 @@
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 
-extern vs_update_interface_t _fw_update_ctx;
-extern vs_update_interface_t _tl_update_ctx;
-extern vs_storage_op_ctx_t _fw_storage_ctx;
-extern vs_storage_op_ctx_t _tl_storage_ctx;
-
 vs_status_e
 vs_fldt_gateway_init(const vs_mac_addr_t *mac_addr);
 

@@ -55,7 +55,6 @@ int
 main(int argc, char *argv[]) {
     // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    vs_storage_op_ctx_t tl_ctx;
     vs_status_e ret_code;
 #if GATEWAY
     const char *base_dir = "gateway";
@@ -72,8 +71,6 @@ main(int argc, char *argv[]) {
     STATUS_CHECK_RET(vs_rpi_start(base_dir,
                                   argv[0],
                                   forced_mac_addr,
-                                  &tl_ctx,
-                                  NULL,
                                   (const char *)MANUFACTURE_ID,
                                   (const char *)DEVICE_MODEL,
                                   roles,
@@ -88,8 +85,6 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("\n\n\nTerminating application ...");
 
     vs_sdmp_deinit();
-
-    vs_tl_deinit();
 
     return 0;
 }

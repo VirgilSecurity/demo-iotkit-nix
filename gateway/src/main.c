@@ -57,8 +57,6 @@ main(int argc, char *argv[]) {
     if (0 != vs_rpi_start("gateway",
                           argv[0],
                           forced_mac_addr,
-                          &_tl_storage_ctx,
-                          &_fw_storage_ctx,
                           (const char *)GW_MANUFACTURE_ID,
                           (const char *)GW_DEVICE_MODEL,
                           VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER,

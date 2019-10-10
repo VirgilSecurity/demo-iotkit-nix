@@ -234,14 +234,9 @@ _udp_bcast_mac(struct vs_mac_addr_t *mac_addr) {
 
 /******************************************************************************/
 vs_netif_t *
-vs_hal_netif_udp_bcast() {
-    return &_netif_udp_bcast;
-}
-
-/******************************************************************************/
-void
-vs_hal_netif_udp_bcast_force_mac(vs_mac_addr_t mac_addr) {
+vs_hal_netif_udp_bcast(vs_mac_addr_t mac_addr) {
     memcpy(_sim_mac_addr, mac_addr.bytes, 6);
+    return &_netif_udp_bcast;
 }
 
 /******************************************************************************/

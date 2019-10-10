@@ -39,10 +39,10 @@
 #include "rpi-file-io.h"
 #include <virgil/iot/status_code/status_code.h>
 
-vs_storage_hal_ctx_t
-vs_rpi_storage_init(const char *dir);
+vs_storage_impl_data_ctx_t
+vs_rpi_storage_impl_data_init(const char *dir);
 
-vs_status_e
-vs_rpi_get_storage_impl(vs_storage_op_impl_t *impl);
+vs_storage_impl_func_t
+vs_rpi_storage_impl_func(void);
 
 #endif // IOT_RPI_STORAGE_HAL_H

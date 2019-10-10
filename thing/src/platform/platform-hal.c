@@ -49,14 +49,14 @@ vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
     CHECK_RET(buf_sz == sizeof(vs_firmware_descriptor_t), VS_CODE_ERR_INCORRECT_ARGUMENT, "Buffer too small");
 
     vs_storage_op_ctx_t fw_update_ctx;
-    vs_rpi_get_storage_impl(&fw_update_ctx.impl);
-    assert(fw_update_ctx.impl.deinit);
+    vs_rpi_storage_impl_func(&fw_update_ctx.impl_func);
+    assert(fw_update_ctx.impl_func.deinit);
 
-    fw_update_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
+    fw_update_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
 
     res = vs_load_own_firmware_descriptor(THING_MANUFACTURE_ID, THING_DEVICE_MODEL, &fw_update_ctx, descriptor);
 
-    fw_update_ctx.impl.deinit(fw_update_ctx.storage_ctx);
+    fw_update_ctx.impl_func.deinit(fw_update_ctx.impl_data);
 
     return res;
 }

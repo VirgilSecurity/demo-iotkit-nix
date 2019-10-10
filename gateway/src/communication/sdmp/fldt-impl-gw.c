@@ -42,11 +42,6 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 
-vs_storage_op_ctx_t _fw_storage_ctx;
-vs_storage_op_ctx_t _tl_storage_ctx;
-vs_update_interface_t _fw_update_ctx;
-vs_update_interface_t _tl_update_ctx;
-
 /******************************************************************************/
 vs_status_e
 vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {

@@ -60,8 +60,6 @@ main(int argc, char *argv[]) {
     if (0 != vs_rpi_start("thing",
                           argv[0],
                           forced_mac_addr,
-                          &_tl_storage_ctx,
-                          &_fw_storage_ctx,
                           (const char *)THING_MANUFACTURE_ID,
                           (const char *)THING_DEVICE_MODEL,
                           VS_SDMP_DEV_THING,

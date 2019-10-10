@@ -66,6 +66,9 @@
 #define CMD_STR_MV_TEMPLATE "mv %s %s"
 #define CMD_STR_START_TEMPLATE "%s %s"
 
+static const char *_tl_dir = "trust_list";
+static const char *_firmware_dir = "firmware";
+
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
@@ -140,12 +143,12 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
     assert(manufacture_id_str);
     assert(device_type_str);
 
-    vs_rpi_get_storage_impl(&op_ctx.impl);
-    assert(op_ctx.impl.deinit);
+    op_ctx.impl_func = vs_rpi_storage_impl_func();
+    assert(op_ctx.impl_func.deinit);
     op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
 
-    op_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-    
+    op_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
+
     _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
     _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
@@ -155,7 +158,7 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
         vs_firmware_delete_firmware(&op_ctx, &desc);
     }
 
-    op_ctx.impl.deinit(op_ctx.storage_ctx);
+    op_ctx.impl_func.deinit(op_ctx.impl_data);
     VS_LOG_INFO("Bad firmware has been deleted");
 }
 
@@ -286,25 +289,73 @@ vs_rpi_hal_sleep_until_stop(void) {
 }
 
 /******************************************************************************/
+static vs_netif_t *
+_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
+    vs_netif_t *netif = NULL;
+    vs_netif_t *queued_netif = NULL;
+
+    // Get Network interface
+    netif = vs_hal_netif_udp_bcast(forced_mac_addr);
+
+    // Prepare queued network interface
+    queued_netif = vs_netif_queued(netif);
+
+    return queued_netif;
+}
+
+/******************************************************************************/
+static vs_status_e
+_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max) {
+
+    CHECK_NOT_ZERO_RET(storage_impl, VS_CODE_ERR_INCORRECT_ARGUMENT);
+    CHECK_NOT_ZERO_RET(base_dir, VS_CODE_ERR_INCORRECT_ARGUMENT);
+
+    memset(storage_impl, 0, sizeof(*storage_impl));
+
+    // Prepare TL storage
+    storage_impl->impl_func = vs_rpi_storage_impl_func();
+    storage_impl->impl_data = vs_rpi_storage_impl_data_init(base_dir);
+    storage_impl->file_sz_limit = file_size_max;
+
+    /*
+    // TODO: Dirty hack until correct reading own descriptor won't be implemented
+    vs_firmware_descriptor_t desc;
+    vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_storage_impl, &desc);
+ */
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
+static void
+_print_title(const char *devices_dir,
+             const char *app_file,
+             const char *manufacture_id_str,
+             const char *device_type_str) {
+    VS_LOG_INFO("\n\n");
+    VS_LOG_INFO("--------------------------------------------");
+    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
+    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
+    VS_LOG_INFO("--------------------------------------------\n");
+}
+
+/******************************************************************************/
 vs_status_e
 vs_rpi_start(const char *devices_dir,
              const char *app_file,
              vs_mac_addr_t forced_mac_addr,
-             vs_storage_op_ctx_t *tl_ctx,
-             vs_storage_op_ctx_t *fw_ctx,
              const char *manufacture_id_str,
              const char *device_type_str,
              const uint32_t device_roles,
              bool is_initializer) {
-    vs_device_manufacture_id_t manufacture_id;
-    vs_device_type_t device_type;
+    vs_device_manufacture_id_t manufacture_id = {0};
+    vs_device_type_t device_type = {0};
     vs_device_serial_t serial = {0};
-    int sz;
-    vs_netif_t *netif = NULL;
-    vs_netif_t *queued_netif = NULL;
-    vs_status_e ret_code;
 
-    vs_logger_init(VS_LOGLEV_DEBUG);
+    // Implementation variables
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
 
     // Check input variables
     assert(devices_dir);
@@ -312,79 +363,54 @@ vs_rpi_start(const char *devices_dir,
     assert(manufacture_id_str);
     assert(device_type_str);
 
+    // Initialize Logger module
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
     // Print title
-    VS_LOG_INFO("\n\n");
-    VS_LOG_INFO("--------------------------------------------");
-    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
-    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
-    VS_LOG_INFO("--------------------------------------------\n");
+    _print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
 
-    // Set Manufacture ID
-    memset(&manufacture_id, 0, sizeof(manufacture_id));
-    sz = strlen(manufacture_id_str);
-    if (sz > sizeof(manufacture_id)) {
-        sz = sizeof(manufacture_id);
-    }
-    memcpy((char *)manufacture_id, manufacture_id_str, sz);
-
-    // Se Device type
-    memset(&device_type, 0, sizeof(device_type));
-    sz = strlen(device_type_str);
-    if (sz > sizeof(device_type)) {
-        sz = sizeof(device_type);
-    }
-    memcpy((char *)device_type, device_type_str, sz);
 
     // Set storage directory
-    vs_hal_files_set_dir(devices_dir);
+//    vs_hal_files_set_dir(base_dir); !!!
 
-    // Set MAC for emulated device
-    vs_hal_files_set_mac(forced_mac_addr.bytes);
-
-    // Prepare TL storage
-    vs_rpi_get_storage_impl(&tl_ctx->impl);
-    tl_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
-    tl_ctx->file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    ret_code = vs_tl_init(tl_ctx);
-    if (!is_initializer && VS_CODE_OK != ret_code) {
-        CHECK_RET(false, -1, "Unable to initialize Trust List library");
-    }
-
-
-    // Prepare FW storage
-    if (!is_initializer) {
-        vs_rpi_get_storage_impl(&fw_ctx->impl);
-        fw_ctx->storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-        fw_ctx->file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-        CHECK_RET(!vs_firmware_init(fw_ctx), VS_CODE_ERR_INCORRECT_ARGUMENT, "Unable to initialize Firmware library");
-
-        // TODO: Dirty hack until correct reading own descriptor won't be implemented
-        vs_firmware_descriptor_t desc;
-        vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_ctx, &desc);
-    }
-
-    // Setup UDP Broadcast as network interface
-    vs_hal_netif_udp_bcast_force_mac(forced_mac_addr);
-
-    // Get PLC Network interface
-    netif = vs_hal_netif_udp_bcast();
-
-    // Prepare queued network interface
-    queued_netif = vs_netif_queued(netif);
-
-    // Initialize SDMP
+    //
+    // ---------- Prepare device parameters ----------
+    //
     _get_serial(serial, forced_mac_addr);
-    CHECK_RET(!vs_sdmp_init(queued_netif, manufacture_id, device_type, serial, device_roles),
-              VS_CODE_ERR_SDMP_UNKNOWN,
-              "Unable to initialize SDMP");
+    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
-    if (!is_initializer) {
-        CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx)), VS_CODE_ERR_SDMP_UNKNOWN, 0);
-        // Send broadcast notification about start of this device
-        CHECK_RET(!vs_sdmp_info_start_notification(NULL),
-                  VS_CODE_ERR_SDMP_UNKNOWN,
-                  "Cannot send broadcast notification about start");
-    }
+
+    //
+    // ---------- Create implementations ----------
+    //
+
+    // Network interface
+    netif_impl = _create_netif_impl(forced_mac_addr);
+
+    // TrustList storage
+    STATUS_CHECK(_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE), "Cannot create TrustList storage");
+
+    // Firmware storage implementation
+    STATUS_CHECK(_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE), "Cannot create Firmware storage");
+
+
+    //
+    // ---------- Initialize Virgil SDK modules ----------
+    //
+
+    // TrustList module
+    STATUS_CHECK(vs_tl_init(&tl_storage_impl), "Unable to initialize Trust List module");
+
+    // SDMP module
+    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+                 "Unable to initialize SDMP module");
+
+    // Register SDMP services
+    STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
+                 "Cannot register SDMP:INFO service");
+
+terminate:
 
     return VS_CODE_OK;
 }

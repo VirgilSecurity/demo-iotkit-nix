@@ -89,8 +89,8 @@ _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *
 }
 
 /******************************************************************************/
-vs_storage_hal_ctx_t
-vs_rpi_storage_init(const char *relative_dir) {
+vs_storage_impl_data_ctx_t
+vs_rpi_storage_impl_data_init(const char *relative_dir) {
     vs_rpi_storage_ctx_t *ctx = NULL;
 
     CHECK_NOT_ZERO_RET(relative_dir, NULL);
@@ -112,7 +112,7 @@ vs_rpi_storage_init(const char *relative_dir) {
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
+vs_rpi_storage_deinit_hal(vs_storage_impl_data_ctx_t storage_ctx) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -126,7 +126,7 @@ vs_rpi_storage_deinit_hal(vs_storage_hal_ctx_t storage_ctx) {
 
 /******************************************************************************/
 static vs_storage_file_t
-vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+vs_rpi_storage_open_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(id, NULL);
@@ -143,7 +143,7 @@ vs_rpi_storage_open_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage
 }
 
 /******************************************************************************/
-vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_file_t file) {
+vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_file_t file) {
     vs_status_e res = VS_CODE_ERR_FILE;
 
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
@@ -170,7 +170,7 @@ vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_hal_ctx_t storage_ct
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file_t file) {
+vs_rpi_storage_close_hal(const vs_storage_impl_data_ctx_t storage_ctx, vs_storage_file_t file) {
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     VS_IOT_FREE(file);
@@ -180,7 +180,7 @@ vs_rpi_storage_close_hal(const vs_storage_hal_ctx_t storage_ctx, vs_storage_file
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
+vs_rpi_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         const uint8_t *data,
@@ -211,7 +211,7 @@ vs_rpi_storage_save_hal(const vs_storage_hal_ctx_t storage_ctx,
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
+vs_rpi_storage_load_hal(const vs_storage_impl_data_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         uint8_t *out_data,
@@ -245,7 +245,7 @@ vs_rpi_storage_load_hal(const vs_storage_hal_ctx_t storage_ctx,
 
 /*******************************************************************************/
 static ssize_t
-vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+vs_rpi_storage_file_size_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
     ssize_t res;
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
@@ -275,7 +275,7 @@ vs_rpi_storage_file_size_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_st
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+vs_rpi_storage_del_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
     vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(id, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -291,18 +291,22 @@ vs_rpi_storage_del_hal(const vs_storage_hal_ctx_t storage_ctx, const vs_storage_
 }
 
 /******************************************************************************/
-vs_status_e
-vs_rpi_get_storage_impl(vs_storage_op_impl_t *impl) {
-    CHECK_NOT_ZERO_RET(impl, VS_CODE_ERR_INCORRECT_PARAMETER);
+vs_storage_impl_func_t
+vs_rpi_storage_impl_func(void) {
+    vs_storage_impl_func_t impl;
 
-    impl->size = vs_rpi_storage_file_size_hal;
-    impl->deinit = vs_rpi_storage_deinit_hal;
-    impl->open = vs_rpi_storage_open_hal;
-    impl->sync = vs_rpi_storage_sync_hal;
-    impl->close = vs_rpi_storage_close_hal;
-    impl->save = vs_rpi_storage_save_hal;
-    impl->load = vs_rpi_storage_load_hal;
-    impl->del = vs_rpi_storage_del_hal;
+    memset(&impl, 0, sizeof(impl));
 
-    return VS_CODE_OK;
+    impl.size = vs_rpi_storage_file_size_hal;
+    impl.deinit = vs_rpi_storage_deinit_hal;
+    impl.open = vs_rpi_storage_open_hal;
+    impl.sync = vs_rpi_storage_sync_hal;
+    impl.close = vs_rpi_storage_close_hal;
+    impl.save = vs_rpi_storage_save_hal;
+    impl.load = vs_rpi_storage_load_hal;
+    impl.del = vs_rpi_storage_del_hal;
+
+    return impl;
 }
+
+/******************************************************************************/

@@ -53,14 +53,10 @@
 
 #include "hal/storage/rpi-file-io.h"
 
-static char base_dir[FILENAME_MAX] = {0};
-static char *main_storage_dir = 0;
+static char _base_dir[FILENAME_MAX] = {0};
 static const char *slots_dir = "slots";
-static const char *tl_dir = "trust_list";
-static const char *firmware_dir = "firmware";
 static const char *secbox_dir = "secbox";
 static bool initialized = false;
-static uint8_t mac[6];
 
 #define VS_IO_BUF_SZ (2048 * 1024)
 static char file_io_buffer[VS_IO_BUF_SZ];
@@ -81,13 +77,6 @@ static char file_io_buffer[VS_IO_BUF_SZ];
             goto terminate;                                                                                            \
         }                                                                                                              \
     } while (0)
-
-/******************************************************************************/
-
-void
-vs_hal_files_set_mac(uint8_t mac_addr[6]) {
-    VS_IOT_MEMCPY(mac, mac_addr, 6);
-}
 
 /******************************************************************************/
 static int
@@ -125,29 +114,27 @@ static bool
 _init_fio(void) {
     char tmp[FILENAME_MAX];
 
-    vs_rpi_get_keystorage_base_dir(base_dir);
+    VS_LOG_DEBUG("Base directory for slots : %s", _base_dir);
 
-    VS_LOG_DEBUG("Base directory for slots : %s", base_dir);
-
-    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, slots_dir);
+    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, slots_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
     }
 
-    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, tl_dir);
+    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, tl_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
     }
 
-    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, firmware_dir);
+    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, firmware_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
     }
 
-    CHECK_SNPRINTF(tmp, "%s/%s", base_dir, secbox_dir);
+    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, secbox_dir);
 
     if (-1 == _mkdir_recursive(tmp)) {
         goto terminate;
@@ -168,7 +155,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
         return false;
     }
 
-    if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", base_dir, folder) < 0) {
+    if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", _base_dir, folder) < 0) {
         return false;
     }
 
@@ -443,35 +430,6 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
 }
 
 /******************************************************************************/
-bool
-vs_rpi_get_keystorage_base_dir(char *dir) {
-    struct passwd *pwd = NULL;
-
-    assert(main_storage_dir);
-    if (!main_storage_dir) {
-        return false;
-    }
-
-    pwd = getpwuid(getuid());
-
-    if (VS_IOT_SNPRINTF(dir,
-                        FILENAME_MAX,
-                        "%s/%s/%s/%x:%x:%x:%x:%x:%x",
-                        pwd->pw_dir,
-                        "keystorage",
-                        main_storage_dir,
-                        mac[0],
-                        mac[1],
-                        mac[2],
-                        mac[3],
-                        mac[4],
-                        mac[5]) <= 0) {
-        return false;
-    }
-    return true;
-}
-
-/******************************************************************************/
 const char *
 get_slot_name(vs_iot_hsm_slot_e slot) {
     switch (slot) {
@@ -619,15 +577,17 @@ vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
 }
 
 /******************************************************************************/
-void
-vs_hal_files_set_dir(const char *dir_name) {
-    assert(dir_name && dir_name[0]);
+bool
+vs_hal_files_set_dir(const char *base_dir) {
+    struct passwd *pwd = NULL;
 
-    if (main_storage_dir) {
-        free(main_storage_dir);
-        main_storage_dir = 0;
+    assert(base_dir && base_dir[0]);
+
+    pwd = getpwuid(getuid());
+
+    if (VS_IOT_SNPRINTF(_base_dir, FILENAME_MAX, "%s/%s/%s", pwd->pw_dir, "keystorage", base_dir) <= 0) {
+        return false;
     }
-
-    main_storage_dir = strdup(dir_name);
+    return true;
 }
 /******************************************************************************/
