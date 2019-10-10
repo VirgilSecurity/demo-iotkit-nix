@@ -400,17 +400,16 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
     vs_status_e res = VS_CODE_ERR_FILE_READ;
     ssize_t length;
 
-    uint16_t key_sz = vs_hsm_get_pubkey_len(VS_KEYPAIR_EC_SECP256R1);
-    uint16_t sign_sz = (uint16_t)vs_hsm_get_signature_len(VS_KEYPAIR_EC_SECP256R1);
-    uint16_t footer_sz = sizeof(vs_firmware_footer_t) + VS_FW_SIGNATURES_QTY * (sizeof(vs_sign_t) + key_sz + sign_sz);
-    uint8_t buf[footer_sz];
-    vs_firmware_footer_t *own_desc = (vs_firmware_footer_t *)buf;
-
     assert(descriptor);
     assert(self_path);
 
     CHECK_NOT_ZERO_RET(descriptor, VS_CODE_ERR_FILE_READ);
     CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
+
+    int footer_sz = vs_firmware_get_expected_footer_len();
+    CHECK_RET(footer_sz > 0, VS_CODE_ERR_INCORRECT_ARGUMENT, "Can't get footer size");
+    uint8_t buf[footer_sz];
+    vs_firmware_footer_t *own_desc = (vs_firmware_footer_t *)buf;
 
     fp = fopen(self_path, "rb");
 

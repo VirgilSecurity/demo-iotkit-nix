@@ -85,7 +85,7 @@ _got_file(vs_update_file_type_t *file_type,
                 file_type_descr,
                 successfully_updated ? "successfully installed" : "did not installed successfully",
                 upd_int->describe_version(upd_ctx, file_type, new_file_ver, file_descr, sizeof(file_descr), false));
-    VS_LOG_INFO("Gateway : " FLDT_GATEWAY_TEMPLATE, FLDT_GATEWAY_ARG(*gateway));
+    VS_LOG_INFO("Thing : " FLDT_GATEWAY_TEMPLATE, FLDT_GATEWAY_ARG(*gateway));
     VS_LOG_INFO("Previous %s : %s",
                 file_type,
                 upd_int->describe_version(upd_ctx, file_type, prev_file_ver, file_descr, sizeof(file_descr), false));
