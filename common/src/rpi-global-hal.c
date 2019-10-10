@@ -70,6 +70,9 @@
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
+static vs_fw_manufacture_id_t _manufacture_id;
+static vs_fw_device_type_t _device_type;
+
 /******************************************************************************/
 void
 vs_iot_assert(int exp) {
@@ -290,8 +293,6 @@ vs_rpi_start(const char *devices_dir,
              const char *device_type_str,
              const uint32_t device_roles,
              bool is_initializer) {
-    vs_fw_manufacture_id_t manufacture_id;
-    vs_fw_device_type_t device_type;
     int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
@@ -313,20 +314,20 @@ vs_rpi_start(const char *devices_dir,
     VS_LOG_INFO("--------------------------------------------\n");
 
     // Set Manufacture ID
-    memset(&manufacture_id, 0, sizeof(manufacture_id));
+    memset(&_manufacture_id, 0, sizeof(_manufacture_id));
     sz = strlen(manufacture_id_str);
-    if (sz > sizeof(manufacture_id)) {
-        sz = sizeof(manufacture_id);
+    if (sz > sizeof(_manufacture_id)) {
+        sz = sizeof(_manufacture_id);
     }
-    memcpy((char *)manufacture_id, manufacture_id_str, sz);
+    memcpy((char *)_manufacture_id, manufacture_id_str, sz);
 
     // Se Device type
-    memset(&device_type, 0, sizeof(device_type));
+    memset(&_device_type, 0, sizeof(_device_type));
     sz = strlen(device_type_str);
-    if (sz > sizeof(device_type)) {
-        sz = sizeof(device_type);
+    if (sz > sizeof(_device_type)) {
+        sz = sizeof(_device_type);
     }
-    memcpy((char *)device_type, device_type_str, sz);
+    memcpy((char *)_device_type, device_type_str, sz);
 
     // Set storage directory
     vs_hal_files_set_dir(devices_dir);
@@ -366,7 +367,7 @@ vs_rpi_start(const char *devices_dir,
 
     if (!is_initializer) {
         CHECK_RET(!vs_sdmp_register_service(
-                          vs_sdmp_info_server(tl_ctx, fw_ctx, manufacture_id, device_type, device_roles)),
+                          vs_sdmp_info_server(tl_ctx, fw_ctx, _manufacture_id, _device_type, device_roles)),
                   VS_CODE_ERR_SDMP_UNKNOWN,
                   0);
         // Send broadcast notification about start of this device
@@ -409,7 +410,7 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
     int footer_sz = vs_firmware_get_expected_footer_len();
     CHECK_RET(footer_sz > 0, VS_CODE_ERR_INCORRECT_ARGUMENT, "Can't get footer size");
     uint8_t buf[footer_sz];
-    vs_firmware_footer_t *own_desc = (vs_firmware_footer_t *)buf;
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)buf;
 
     fp = fopen(self_path, "rb");
 
@@ -432,8 +433,16 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
           self_path,
           errno,
           strerror(errno));
-    _ntoh_fw_desdcriptor(&own_desc->descriptor);
-    memcpy(descriptor, &own_desc->descriptor, sizeof(vs_firmware_descriptor_t));
+    _ntoh_fw_desdcriptor(&own_footer->descriptor);
+
+    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
+        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_fw_device_type_t)) ||
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_fw_device_type_t))) {
+        VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
+        exit(-1);
+    }
+
+    memcpy(descriptor, &own_footer->descriptor, sizeof(vs_firmware_descriptor_t));
     res = VS_CODE_OK;
 
 terminate:
