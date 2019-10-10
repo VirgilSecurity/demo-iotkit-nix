@@ -34,7 +34,6 @@
 
 #include <stdio.h>
 
-#include <virgil/iot/high-level/default/sdmp/prvs-server-impl.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>

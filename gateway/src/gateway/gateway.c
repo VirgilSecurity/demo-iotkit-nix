@@ -67,8 +67,6 @@ static pthread_t *upd_http_retrieval_thread;
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
-    vs_rpi_get_serial(_gtwy.udid_of_device);
-
     vs_rpi_get_storage_impl(&_gtwy.fw_update_ctx.impl);
     _gtwy.fw_update_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 

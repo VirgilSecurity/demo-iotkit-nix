@@ -34,16 +34,9 @@
 
 #include <assert.h>
 #include <string.h>
-#include <global-hal.h>
 #include <gateway.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <hal/rpi-global-hal.h>
-
-/******************************************************************************/
-void
-vs_impl_device_serial(uint8_t *udid) {
-    memcpy(udid, get_gateway_ctx()->udid_of_device, VS_DEVICE_SERIAL_SIZE);
-}
 
 /******************************************************************************/
 int
