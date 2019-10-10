@@ -391,7 +391,7 @@ vs_rpi_start(const char *devices_dir,
     // TrustList storage
     STATUS_CHECK(_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE), "Cannot create TrustList storage");
 
-    // Firmware storage implementation
+    // Firmware storage
     STATUS_CHECK(_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE), "Cannot create Firmware storage");
 
 
