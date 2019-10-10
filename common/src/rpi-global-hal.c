@@ -406,7 +406,11 @@ vs_rpi_start(const char *devices_dir,
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
                  "Unable to initialize SDMP module");
 
-    // Register SDMP services
+    //
+    // ---------- Register SDMP services ----------
+    //
+
+    //  INFO service
     STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
                  "Cannot register SDMP:INFO service");
 
