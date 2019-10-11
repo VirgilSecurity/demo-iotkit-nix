@@ -35,7 +35,7 @@
 #include "upd_http_retrieval_thread.h"
 #include "message_bin.h"
 #include "gateway.h"
-#include <threads/event-group-bits.h>
+#include <helpers/event-group-bits.h>
 #include "event-flags.h"
 
 #include <virgil/iot/macros/macros.h>
