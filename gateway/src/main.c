@@ -38,6 +38,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/vs-curl-https/curl-https.h>
 #include "gateway.h"
 #include "helpers/input-params.h"
 #include "fldt-impl-gw.h"
@@ -76,6 +77,8 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
     CHECK_RET(!vs_fldt_gateway_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
 
+    // Init cloud library
+    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_https_impl()), -2, "Unable to initialize FLDT");
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
 

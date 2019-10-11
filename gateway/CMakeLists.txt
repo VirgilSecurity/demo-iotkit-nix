@@ -58,7 +58,6 @@ target_sources(gateway
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/cloud/https.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
@@ -108,8 +107,8 @@ target_link_libraries(gateway
 		rpi-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		curl
 		aws-mqtt
+		vs-default-curl-https
 		cloud
 		update
 		virgil-iot-status-code
