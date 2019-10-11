@@ -45,7 +45,7 @@
 
 #include <stdlib-config.h>
 #include <global-hal.h>
-#include <virgil/iot/hsm/hsm_structs.h>
+#include <virgil/iot/hsm/hsm.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 #include <hal/storage/rpi-file-cache.h>
@@ -427,96 +427,6 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
     return true;
 }
 
-/******************************************************************************/
-const char *
-get_slot_name(vs_iot_hsm_slot_e slot) {
-    switch (slot) {
-    case VS_KEY_SLOT_STD_OTP_0:
-        return "STD_OTP_0";
-    case VS_KEY_SLOT_STD_OTP_1:
-        return "STD_OTP_1";
-    case VS_KEY_SLOT_STD_OTP_2:
-        return "STD_OTP_2";
-    case VS_KEY_SLOT_STD_OTP_3:
-        return "STD_OTP_3";
-    case VS_KEY_SLOT_STD_OTP_4:
-        return "STD_OTP_4";
-    case VS_KEY_SLOT_STD_OTP_5:
-        return "STD_OTP_5";
-    case VS_KEY_SLOT_STD_OTP_6:
-        return "STD_OTP_6";
-    case VS_KEY_SLOT_STD_OTP_7:
-        return "STD_OTP_7";
-    case VS_KEY_SLOT_STD_OTP_8:
-        return "STD_OTP_8";
-    case VS_KEY_SLOT_STD_OTP_9:
-        return "STD_OTP_9";
-    case VS_KEY_SLOT_STD_OTP_10:
-        return "STD_OTP_10";
-    case VS_KEY_SLOT_STD_OTP_11:
-        return "STD_OTP_11";
-    case VS_KEY_SLOT_STD_OTP_12:
-        return "STD_OTP_12";
-    case VS_KEY_SLOT_STD_OTP_13:
-        return "STD_OTP_13";
-    case VS_KEY_SLOT_STD_OTP_14:
-        return "STD_OTP_14";
-    case VS_KEY_SLOT_EXT_OTP_0:
-        return "EXT_OTP_0";
-    case VS_KEY_SLOT_STD_MTP_0:
-        return "STD_MTP_0";
-    case VS_KEY_SLOT_STD_MTP_1:
-        return "STD_MTP_1";
-    case VS_KEY_SLOT_STD_MTP_2:
-        return "STD_MTP_2";
-    case VS_KEY_SLOT_STD_MTP_3:
-        return "STD_MTP_3";
-    case VS_KEY_SLOT_STD_MTP_4:
-        return "STD_MTP_4";
-    case VS_KEY_SLOT_STD_MTP_5:
-        return "STD_MTP_5";
-    case VS_KEY_SLOT_STD_MTP_6:
-        return "STD_MTP_6";
-    case VS_KEY_SLOT_STD_MTP_7:
-        return "STD_MTP_7";
-    case VS_KEY_SLOT_STD_MTP_8:
-        return "STD_MTP_8";
-    case VS_KEY_SLOT_STD_MTP_9:
-        return "STD_MTP_9";
-    case VS_KEY_SLOT_STD_MTP_10:
-        return "STD_MTP_10";
-    case VS_KEY_SLOT_STD_MTP_11:
-        return "STD_MTP_11";
-    case VS_KEY_SLOT_STD_MTP_12:
-        return "STD_MTP_12";
-    case VS_KEY_SLOT_STD_MTP_13:
-        return "STD_MTP_13";
-    case VS_KEY_SLOT_STD_MTP_14:
-        return "STD_MTP_14";
-    case VS_KEY_SLOT_EXT_MTP_0:
-        return "EXT_MTP_0";
-    case VS_KEY_SLOT_STD_TMP_0:
-        return "STD_TMP_0";
-    case VS_KEY_SLOT_STD_TMP_1:
-        return "STD_TMP_1";
-    case VS_KEY_SLOT_STD_TMP_2:
-        return "STD_TMP_2";
-    case VS_KEY_SLOT_STD_TMP_3:
-        return "STD_TMP_3";
-    case VS_KEY_SLOT_STD_TMP_4:
-        return "STD_TMP_4";
-    case VS_KEY_SLOT_STD_TMP_5:
-        return "STD_TMP_5";
-    case VS_KEY_SLOT_STD_TMP_6:
-        return "STD_TMP_6";
-    case VS_KEY_SLOT_EXT_TMP_0:
-        return "EXT_TMP_0";
-
-    default:
-        assert(false && "Unsupported slot");
-        return NULL;
-    }
-}
 #undef UNIX_CALL
 #undef CHECK_SNPRINTF
 
@@ -530,36 +440,6 @@ vs_rpi_get_slots_dir() {
 const char *
 vs_rpi_get_secbox_dir() {
     return secbox_dir;
-}
-/********************************************************************************/
-vs_status_e
-vs_hsm_slot_save(vs_iot_hsm_slot_e slot, const uint8_t *data, uint16_t data_sz) {
-    return vs_rpi_write_file_data(slots_dir, get_slot_name(slot), 0, data, data_sz) &&
-                           vs_rpi_sync_file(slots_dir, get_slot_name(slot))
-                   ? VS_CODE_OK
-                   : VS_CODE_ERR_FILE_WRITE;
-}
-
-/********************************************************************************/
-vs_status_e
-vs_hsm_slot_load(vs_iot_hsm_slot_e slot, uint8_t *data, uint16_t buf_sz, uint16_t *out_sz) {
-    size_t out_sz_size_t = *out_sz;
-    vs_status_e call_res;
-
-    call_res = vs_rpi_read_file_data(slots_dir, get_slot_name(slot), 0, data, buf_sz, &out_sz_size_t)
-                       ? VS_CODE_OK
-                       : VS_CODE_ERR_FILE_READ;
-
-    assert(out_sz_size_t <= UINT16_MAX);
-    *out_sz = out_sz_size_t;
-
-    return call_res;
-}
-
-/******************************************************************************/
-vs_status_e
-vs_hsm_slot_delete(vs_iot_hsm_slot_e slot) {
-    return vs_rpi_remove_file_data(slots_dir, get_slot_name(slot)) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
 }
 
 /******************************************************************************/

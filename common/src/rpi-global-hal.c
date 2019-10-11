@@ -55,8 +55,8 @@
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
 
-#include "hal/netif/netif-queue.h"
-#include "hal/netif/rpi-udp-broadcast.h"
+#include "sdk-impl/netif/netif-queue.h"
+#include "sdk-impl/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 
 #define NEW_APP_EXTEN ".new"
@@ -78,6 +78,7 @@ static bool _is_descriptor_ready = false;
 
 
 // Implementation variables
+static vs_hsm_impl_t *hsm_impl = NULL;
 static vs_netif_t *netif_impl = NULL;
 static vs_storage_op_ctx_t tl_storage_impl;
 static vs_storage_op_ctx_t fw_storage_impl;
@@ -418,6 +419,9 @@ vs_rpi_start(const char *devices_dir,
     // TrustList storage
     STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
                  "Cannot create TrustList storage");
+
+    // HSM
+    hsm_impl = vs_softhsm_impl();
 
     // Firmware storage
     if (!is_initializer) {

@@ -63,8 +63,6 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-cache.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
@@ -73,25 +71,11 @@ target_sources(rpi-common
 		)
 
 #
-#	Path to crypto lib
-#
-include(GNUInstallDirs)
-if(EXISTS "${CRYPTO_C_BASE_DIR}")
-	set(CRYPTO_C_INCLUDES "${CRYPTO_C_BASE_DIR}/include")
-	set(CRYPTO_C_LIBS "${CRYPTO_C_BASE_DIR}/lib")
-else()
-	set(CRYPTO_C_INCLUDES "/usr/include/cryptoc-shsm")
-	set(CRYPTO_C_LIBS "/usr/${CMAKE_INSTALL_LIBDIR}/cryptoc-shsm")
-endif ()
-
-#
 #   Include directories
 #
 target_include_directories(rpi-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${CRYPTO_C_INCLUDES}
-		${CRYPTO_C_INCLUDES}/virgil/crypto/common
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 		)
@@ -103,14 +87,11 @@ find_package (Threads)
 target_link_libraries(rpi-common
 		PUBLIC
 		converters
-		${CRYPTO_C_LIBS}/libvsc_foundation.a
-		${CRYPTO_C_LIBS}/libvsc_common.a
-		${CRYPTO_C_LIBS}/libmbedcrypto.a
-		${CRYPTO_C_LIBS}/libed25519.a
 		secbox
 		trust_list
 		firmware
 		vs-module-high-level
+		vs-default-soft-hsm
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
