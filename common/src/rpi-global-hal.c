@@ -76,6 +76,12 @@ static bool _need_restart = false;
 static vs_firmware_descriptor_t _descriptor;
 static bool _is_descriptor_ready = false;
 
+
+// Implementation variables
+static vs_netif_t *netif_impl = NULL;
+static vs_storage_op_ctx_t tl_storage_impl;
+static vs_storage_op_ctx_t fw_storage_impl;
+
 /******************************************************************************/
 void
 vs_iot_assert(int exp) {
@@ -101,8 +107,8 @@ vs_logger_output_hal(const char *buffer) {
 }
 
 /******************************************************************************/
-static void
-_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
+void
+vs_rpi_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
     // TODO: Need to use real serial
     VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
     VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
@@ -115,8 +121,8 @@ vs_impl_device_serial(vs_device_serial_t serial_number) {
 }
 
 /******************************************************************************/
-static void
-_create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
+void
+vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size) {
     size_t pos;
     size_t len;
 
@@ -135,31 +141,31 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 static void
 _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str) {
 
-    vs_device_manufacture_id_t manufacture_id;
-    vs_device_type_t device_type;
-    vs_storage_op_ctx_t op_ctx;
-    vs_firmware_descriptor_t desc;
-
-    assert(manufacture_id_str);
-    assert(device_type_str);
-
-    op_ctx.impl_func = vs_rpi_storage_impl_func();
-    assert(op_ctx.impl_func.deinit);
-    op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-
-    op_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
-
-    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
-
-    if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
-        VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
-    } else {
-        vs_firmware_delete_firmware(&op_ctx, &desc);
-    }
-
-    op_ctx.impl_func.deinit(op_ctx.impl_data);
-    VS_LOG_INFO("Bad firmware has been deleted");
+    //    vs_device_manufacture_id_t manufacture_id;
+    //    vs_device_type_t device_type;
+    //    vs_storage_op_ctx_t op_ctx;
+    //    vs_firmware_descriptor_t desc;
+    //
+    //    assert(manufacture_id_str);
+    //    assert(device_type_str);
+    //
+    //    op_ctx.impl_func = vs_rpi_storage_impl_func();
+    //    assert(op_ctx.impl_func.deinit);
+    //    op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    //
+    //    op_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
+    //
+    //    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    //    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+    //
+    //    if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
+    //        VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
+    //    } else {
+    //        vs_firmware_delete_firmware(&op_ctx, &desc);
+    //    }
+    //
+    //    op_ctx.impl_func.deinit(op_ctx.impl_data);
+    //    VS_LOG_INFO("Bad firmware has been deleted");
 }
 
 /******************************************************************************/
@@ -260,7 +266,7 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
 
 /******************************************************************************/
 static void
-_wave_signal_process(int sig, siginfo_t *si, void *context) {
+_wait_signal_process(int sig, siginfo_t *si, void *context) {
     pthread_mutex_unlock(&_sleep_lock);
 }
 
@@ -273,7 +279,7 @@ vs_rpi_hal_sleep_until_stop(void) {
 
     // Catch Signals to terminate application correctly
     sigaction_ctx.sa_flags = SA_SIGINFO;
-    sigaction_ctx.sa_sigaction = _wave_signal_process;
+    sigaction_ctx.sa_sigaction = _wait_signal_process;
     sigaction(SIGINT, &sigaction_ctx, NULL);
     sigaction(SIGTERM, &sigaction_ctx, NULL);
 
@@ -289,8 +295,31 @@ vs_rpi_hal_sleep_until_stop(void) {
 }
 
 /******************************************************************************/
-static vs_netif_t *
-_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
+vs_status_e
+vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac) {
+    static char base_dir[FILENAME_MAX] = {0};
+
+    CHECK_NOT_ZERO_RET(devices_dir && devices_dir[0], VS_CODE_ERR_INCORRECT_ARGUMENT);
+
+    if (VS_IOT_SNPRINTF(base_dir,
+                        FILENAME_MAX,
+                        "%s/%x:%x:%x:%x:%x:%x",
+                        devices_dir,
+                        device_mac.bytes[0],
+                        device_mac.bytes[1],
+                        device_mac.bytes[2],
+                        device_mac.bytes[3],
+                        device_mac.bytes[4],
+                        device_mac.bytes[5]) <= 0) {
+        return VS_CODE_ERR_TOO_SMALL_BUFFER;
+    }
+
+    return vs_hal_files_set_dir(base_dir) ? VS_CODE_OK : VS_CODE_ERR_FILE;
+}
+
+/******************************************************************************/
+vs_netif_t *
+vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
 
@@ -304,8 +333,8 @@ _create_netif_impl(vs_mac_addr_t forced_mac_addr) {
 }
 
 /******************************************************************************/
-static vs_status_e
-_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max) {
+vs_status_e
+vs_rpi_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max) {
 
     CHECK_NOT_ZERO_RET(storage_impl, VS_CODE_ERR_INCORRECT_ARGUMENT);
     CHECK_NOT_ZERO_RET(base_dir, VS_CODE_ERR_INCORRECT_ARGUMENT);
@@ -327,11 +356,11 @@ _create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, si
 }
 
 /******************************************************************************/
-static void
-_print_title(const char *devices_dir,
-             const char *app_file,
-             const char *manufacture_id_str,
-             const char *device_type_str) {
+void
+vs_rpi_print_title(const char *devices_dir,
+                   const char *app_file,
+                   const char *manufacture_id_str,
+                   const char *device_type_str) {
     VS_LOG_INFO("\n\n");
     VS_LOG_INFO("--------------------------------------------");
     VS_LOG_INFO("%s app at %s", devices_dir, app_file);
@@ -348,14 +377,13 @@ vs_rpi_start(const char *devices_dir,
              const char *device_type_str,
              const uint32_t device_roles,
              bool is_initializer) {
+
+    vs_status_e ret_code;
+
+    // Device parameters
     vs_device_manufacture_id_t manufacture_id = {0};
     vs_device_type_t device_type = {0};
     vs_device_serial_t serial = {0};
-
-    // Implementation variables
-    vs_netif_t *netif_impl = NULL;
-    vs_storage_op_ctx_t tl_storage_impl;
-    vs_storage_op_ctx_t fw_storage_impl;
 
     // Check input variables
     assert(devices_dir);
@@ -367,18 +395,17 @@ vs_rpi_start(const char *devices_dir,
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Print title
-    _print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
+    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
 
-
-    // Set storage directory
-//    vs_hal_files_set_dir(base_dir); !!!
+    // Prepare local storage
+    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
 
     //
     // ---------- Prepare device parameters ----------
     //
-    _get_serial(serial, forced_mac_addr);
-    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+    vs_rpi_get_serial(serial, forced_mac_addr);
+    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
 
     //
@@ -386,13 +413,17 @@ vs_rpi_start(const char *devices_dir,
     //
 
     // Network interface
-    netif_impl = _create_netif_impl(forced_mac_addr);
+    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
-    STATUS_CHECK(_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE), "Cannot create TrustList storage");
+    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
+                 "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE), "Cannot create Firmware storage");
+    if (!is_initializer) {
+        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
+                     "Cannot create Firmware storage");
+    }
 
 
     //
@@ -400,7 +431,10 @@ vs_rpi_start(const char *devices_dir,
     //
 
     // TrustList module
-    STATUS_CHECK(vs_tl_init(&tl_storage_impl), "Unable to initialize Trust List module");
+    ret_code = vs_tl_init(&tl_storage_impl);
+    if (!is_initializer) {
+        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
+    }
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
@@ -411,8 +445,10 @@ vs_rpi_start(const char *devices_dir,
     //
 
     //  INFO service
-    STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-                 "Cannot register SDMP:INFO service");
+    if (!is_initializer) {
+        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
+                     "Cannot register SDMP:INFO service");
+    }
 
 terminate:
 
@@ -443,8 +479,8 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
 
         memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
 
-        _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-        _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+        vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+        vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
         if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
             VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
@@ -461,3 +497,17 @@ vs_load_own_firmware_descriptor(const char *manufacture_id_str,
 
     return VS_CODE_OK;
 }
+
+/******************************************************************************/
+const char *
+vs_rpi_trustlist_dir(void) {
+    return _tl_dir;
+}
+
+/******************************************************************************/
+const char *
+vs_rpi_firmware_dir(void) {
+    return _firmware_dir;
+}
+
+/******************************************************************************/

@@ -81,7 +81,7 @@ vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_
     char *mac_str;
 
     if (!argv || !argc || !forced_mac_addr) {
-        printf("Wrong input parameters.");
+        VS_LOG_ERROR("Wrong input parameters.");
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
@@ -89,12 +89,12 @@ vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_
 
     // Check input parameters
     if (!mac_str) {
-        printf("usage: %s/%s <forces MAC address>\n", MAC_SHORT, MAC_FULL);
+        VS_LOG_ERROR("usage: %s/%s <forces MAC address>", MAC_SHORT, MAC_FULL);
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
     if (!_read_mac_address(mac_str, forced_mac_addr)) {
-        printf("Incorrect forced MAC address \"%s\" was specified", mac_str);
+        VS_LOG_ERROR("Incorrect forced MAC address \"%s\" was specified", mac_str);
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 

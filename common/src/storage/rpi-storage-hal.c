@@ -107,6 +107,9 @@ vs_rpi_storage_impl_data_init(const char *relative_dir) {
 
     VS_IOT_STRCPY(ctx->dir, relative_dir);
 
+    // Create path
+    vs_rpi_create_subdir(relative_dir);
+
     return ctx;
 }
 

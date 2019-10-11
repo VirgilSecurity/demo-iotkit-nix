@@ -51,9 +51,6 @@ const char *
 vs_rpi_get_slots_dir(void);
 
 const char *
-vs_rpi_get_firmware_dir(void);
-
-const char *
 vs_rpi_get_secbox_dir(void);
 
 bool
@@ -72,5 +69,8 @@ vs_rpi_read_file_data(const char *folder,
 
 bool
 vs_rpi_remove_file_data(const char *folder, const char *file_name);
+
+bool
+vs_rpi_create_subdir(const char *folder);
 
 #endif // IOT_RPI_FILE_IO_HAL_H

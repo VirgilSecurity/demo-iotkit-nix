@@ -110,33 +110,31 @@ _mkdir_recursive(const char *dir) {
 }
 
 /******************************************************************************/
+bool
+vs_rpi_create_subdir(const char *folder) {
+    static char tmp[FILENAME_MAX];
+
+    CHECK_NOT_ZERO(folder && folder[0]);
+
+    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, folder);
+
+    return 0 == _mkdir_recursive(tmp);
+
+terminate:
+
+    return false;
+}
+
+/******************************************************************************/
 static bool
 _init_fio(void) {
-    char tmp[FILENAME_MAX];
-
     VS_LOG_DEBUG("Base directory for slots : %s", _base_dir);
 
-    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, slots_dir);
-
-    if (-1 == _mkdir_recursive(tmp)) {
+    if (!vs_rpi_create_subdir(slots_dir)) {
         goto terminate;
     }
 
-    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, tl_dir);
-
-    if (-1 == _mkdir_recursive(tmp)) {
-        goto terminate;
-    }
-
-    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, firmware_dir);
-
-    if (-1 == _mkdir_recursive(tmp)) {
-        goto terminate;
-    }
-
-    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, secbox_dir);
-
-    if (-1 == _mkdir_recursive(tmp)) {
+    if (!vs_rpi_create_subdir(secbox_dir)) {
         goto terminate;
     }
 
@@ -524,20 +522,8 @@ get_slot_name(vs_iot_hsm_slot_e slot) {
 
 /********************************************************************************/
 const char *
-vs_rpi_get_trust_list_dir() {
-    return tl_dir;
-}
-
-/********************************************************************************/
-const char *
 vs_rpi_get_slots_dir() {
     return slots_dir;
-}
-
-/********************************************************************************/
-const char *
-vs_rpi_get_firmware_dir() {
-    return firmware_dir;
 }
 
 /********************************************************************************/
