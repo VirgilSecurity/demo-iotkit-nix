@@ -401,21 +401,18 @@ _ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
 
 /******************************************************************************/
 vs_status_e
-vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
+vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
     FILE *fp = NULL;
     vs_status_e res = VS_CODE_ERR_FILE_READ;
     ssize_t length;
 
-    assert(descriptor);
+    assert(footer);
     assert(self_path);
 
-    CHECK_NOT_ZERO_RET(descriptor, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
     CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
 
-    int footer_sz = vs_firmware_get_expected_footer_len();
-    CHECK_RET(footer_sz > 0, VS_CODE_ERR_INCORRECT_ARGUMENT, "Can't get footer size");
-    uint8_t buf[footer_sz];
-    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)buf;
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
 
     fp = fopen(self_path, "rb");
 
@@ -433,13 +430,14 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
           errno,
           strerror(errno));
 
-    CHECK(1 == fread((void *)buf, footer_sz, 1, fp),
+    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
           "Unable to read file %s. errno = %d (%s)",
           self_path,
           errno,
           strerror(errno));
     _ntoh_fw_desdcriptor(&own_footer->descriptor);
 
+    // Simple validation of own descriptor
     if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
         0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
         0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
@@ -447,7 +445,6 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
         exit(-1);
     }
 
-    memcpy(descriptor, &own_footer->descriptor, sizeof(vs_firmware_descriptor_t));
     res = VS_CODE_OK;
 
 terminate:

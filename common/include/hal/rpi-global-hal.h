@@ -64,5 +64,5 @@ void
 vs_rpi_restart(void);
 
 vs_status_e
-vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor);
+vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
 #endif // IOT_RPI_HAL_H
