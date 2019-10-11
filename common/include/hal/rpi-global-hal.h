@@ -63,9 +63,6 @@ vs_rpi_start(const char *devices_dir,
 void
 vs_rpi_restart(void);
 
-int
-vs_load_own_firmware_descriptor(const char *manufacture_id_str,
-                                const char *device_type_str,
-                                vs_storage_op_ctx_t *op_ctx,
-                                vs_firmware_descriptor_t *descriptor);
+vs_status_e
+vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
 #endif // IOT_RPI_HAL_H
