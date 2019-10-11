@@ -68,18 +68,18 @@ static pthread_t *upd_http_retrieval_thread;
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
-    vs_rpi_storage_impl_func(&_gtwy.fw_update_ctx.impl_func);
-    _gtwy.fw_update_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
-
-    if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
-        exit(-1);
-    }
-    if (0 != vs_event_group_init(&_gtwy.message_bin_events)) {
-        exit(-1);
-    }
-    if (0 != vs_event_group_init(&_gtwy.shared_events)) {
-        exit(-1);
-    }
+    //    vs_rpi_storage_impl_func(&_gtwy.fw_update_ctx.impl_func);
+    //    _gtwy.fw_update_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
+    //
+    //    if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
+    //        exit(-1);
+    //    }
+    //    if (0 != vs_event_group_init(&_gtwy.message_bin_events)) {
+    //        exit(-1);
+    //    }
+    //    if (0 != vs_event_group_init(&_gtwy.shared_events)) {
+    //        exit(-1);
+    //    }
 
     return &_gtwy;
 }
@@ -92,7 +92,7 @@ get_gateway_ctx(void) {
 
 /*************************************************************************/
 static bool
-_is_self_firmware_image(vs_firmware_info_t *fw_info) {
+_is_self_firmware_image(vs_file_info_t *fw_info) {
     vs_firmware_descriptor_t desc;
     STATUS_CHECK_RET_BOOL(vs_firmware_get_own_firmware_descriptor(&desc), "Unable to get own firmware descriptor");
 
@@ -151,7 +151,7 @@ static void *
 _gateway_task(void *pvParameters) {
     vs_firmware_descriptor_t desc;
     vs_update_file_type_t *queued_file;
-    vs_firmware_info_t *request;
+    vs_file_info_t *request;
 
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
@@ -166,10 +166,10 @@ _gateway_task(void *pvParameters) {
 
         while (vs_upd_http_retrieval_get_request(&queued_file)) {
 
-            switch (queued_file->file_type_id) {
+            switch (queued_file->type) {
             case VS_UPDATE_FIRMWARE:
-                if (_is_self_firmware_image((vs_firmware_info_t *)&queued_file->add_info)) { //-V641 (PVS_IGNORE)
-                    request = (vs_firmware_info_t *)&queued_file->add_info;                  //-V641 (PVS_IGNORE)
+                if (_is_self_firmware_image((vs_file_info_t *)&queued_file->add_info)) { //-V641 (PVS_IGNORE)
+                    request = (vs_file_info_t *)&queued_file->add_info;                  //-V641 (PVS_IGNORE)
                     if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
                         if (VS_CODE_OK == vs_firmware_load_firmware_descriptor(&_gtwy.fw_update_ctx,
                                                                                request->manufacture_id,
@@ -202,7 +202,7 @@ _gateway_task(void *pvParameters) {
                 break;
 
             default:
-                VS_LOG_ERROR("Unsupported file type %d", queued_file->file_type_id);
+                VS_LOG_ERROR("Unsupported file type %d", queued_file->type);
                 break;
             }
 

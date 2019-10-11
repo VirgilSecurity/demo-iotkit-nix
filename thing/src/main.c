@@ -90,6 +90,8 @@ main(int argc, char *argv[]) {
 
     vs_sdmp_deinit();
 
+
+    // TODO: Move to vs_sdmp_deinit
     vs_fldt_destroy_client();
 
     int res = vs_rpi_hal_update((const char *)THING_MANUFACTURE_ID, (const char *)THING_DEVICE_MODEL, argc, argv);

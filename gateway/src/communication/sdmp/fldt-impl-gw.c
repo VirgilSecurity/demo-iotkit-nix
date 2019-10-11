@@ -43,21 +43,21 @@
 #include <virgil/iot/macros/macros.h>
 
 /******************************************************************************/
-vs_status_e
+static vs_status_e
 vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
     assert(file_type);
 
-    switch (file_type->file_type_id) {
+    switch (file_type->type) {
     case VS_UPDATE_FIRMWARE:
-        *update_ctx = &_fw_update_ctx;
+        //        *update_ctx = &_fw_update_ctx;
         break;
 
     case VS_UPDATE_TRUST_LIST:
-        *update_ctx = &_tl_update_ctx;
+        //        *update_ctx = &_tl_update_ctx;
         break;
 
     default:
-        VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %d", file_type->file_type_id);
+        VS_LOG_ERROR("[FLDT:add_filetype] Unsupported file type %d", file_type->type);
         return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
     }
 
@@ -68,16 +68,16 @@ vs_fldt_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface
 vs_status_e
 vs_fldt_gateway_trust_list_init(void) {
     vs_update_file_type_t file_type;
-    vs_status_e ret_code;
+    //    vs_status_e ret_code;
 
-    STATUS_CHECK_RET(vs_update_trust_list_init(&_tl_update_ctx, &_tl_storage_ctx),
-                     "Unable to initialize Trust List's Update context");
+    //    STATUS_CHECK_RET(vs_update_trust_list_init(&_tl_update_ctx, &_tl_storage_ctx),
+    //                     "Unable to initialize Trust List's Update context");
 
     memset(&file_type, 0, sizeof(file_type));
-    file_type.file_type_id = VS_UPDATE_TRUST_LIST;
+    file_type.type = VS_UPDATE_TRUST_LIST;
 
-    STATUS_CHECK_RET(vs_fldt_update_server_file_type(&file_type, &_tl_update_ctx, true),
-                     "Unable to add Trust List file type");
+    //    STATUS_CHECK_RET(vs_fldt_update_server_file_type(&file_type, &_tl_update_ctx, true),
+    //                     "Unable to add Trust List file type");
 
     return VS_CODE_OK;
 }
@@ -92,8 +92,8 @@ vs_fldt_gateway_init(const vs_mac_addr_t *gateway_mac) {
     STATUS_CHECK_RET(vs_fldt_init_server(gateway_mac, vs_fldt_add_filetype),
                      "Unable to initialize FLDT's server service");
 
-    STATUS_CHECK_RET(vs_update_firmware_init(&_fw_update_ctx, &_fw_storage_ctx),
-                     "Unable to initialize Firmware's Update context");
+    //    STATUS_CHECK_RET(vs_update_firmware_init(&_fw_update_ctx, &_fw_storage_ctx),
+    //                     "Unable to initialize Firmware's Update context");
 
     STATUS_CHECK_RET(vs_fldt_gateway_trust_list_init(), "Unable to initialize Trust List");
 
