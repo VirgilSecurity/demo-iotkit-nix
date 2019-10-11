@@ -48,8 +48,8 @@ target_sources(rpi-common
 		PRIVATE
 
 		#	Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/netif-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-queue.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/rpi-udp-broadcast.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/event-group-bits.h
@@ -58,8 +58,8 @@ target_sources(rpi-common
 		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-cache.h
 
 		#	Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-queue.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/rpi-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
 		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-cache.c
