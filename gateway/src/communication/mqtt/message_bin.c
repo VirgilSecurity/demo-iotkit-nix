@@ -115,12 +115,12 @@ _mb_mqtt_task(void *pvParameters) {
                                               _init_mqtt,
                                               _connect_and_subscribe_to_topics,
                                               _mqtt_process)) {
-            vs_global_hal_msleep(500);
+            vs_impl_msleep(500);
         } else {
-            vs_global_hal_msleep(5000);
+            vs_impl_msleep(5000);
         }
     }
-    return (void *)0;
+    return NULL;
 }
 
 /*************************************************************************/

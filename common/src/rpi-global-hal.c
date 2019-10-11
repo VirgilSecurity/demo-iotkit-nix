@@ -43,7 +43,7 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/info-server.h>
+#include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
@@ -70,8 +70,8 @@
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
-static vs_fw_manufacture_id_t _manufacture_id;
-static vs_fw_device_type_t _device_type;
+static vs_device_manufacture_id_t _manufacture_id;
+static vs_device_type_t _device_type;
 
 /******************************************************************************/
 void
@@ -81,7 +81,7 @@ vs_iot_assert(int exp) {
 
 /******************************************************************************/
 void
-vs_global_hal_msleep(size_t msec) {
+vs_impl_msleep(size_t msec) {
     usleep(msec * 1000);
 }
 
@@ -98,14 +98,17 @@ vs_logger_output_hal(const char *buffer) {
 }
 
 /******************************************************************************/
-void
-vs_rpi_hal_get_udid(uint8_t *udid) {
-    vs_mac_addr_t mac;
-    vs_sdmp_mac_addr(0, &mac);
-
+static void
+_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
     // TODO: Need to use real serial
-    VS_IOT_MEMCPY(udid, mac.bytes, ETH_ADDR_LEN);
-    VS_IOT_MEMSET(&udid[ETH_ADDR_LEN], 0x03, 32 - ETH_ADDR_LEN);
+    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
+    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
+}
+
+/******************************************************************************/
+void
+vs_impl_device_serial(vs_device_serial_t serial_number) {
+    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/
@@ -129,8 +132,8 @@ _create_field(uint8_t *dst, const char *src, size_t elem_buf_size) {
 static void
 _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str) {
 
-    vs_fw_manufacture_id_t manufacture_id;
-    vs_fw_device_type_t device_type;
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
     vs_storage_op_ctx_t op_ctx;
     vs_firmware_descriptor_t desc;
 
@@ -143,8 +146,8 @@ _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str
 
     op_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
 
-    _create_field(manufacture_id, manufacture_id_str, MANUFACTURE_ID_SIZE);
-    _create_field(device_type, device_type_str, DEVICE_TYPE_SIZE);
+    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
         VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
@@ -293,6 +296,8 @@ vs_rpi_start(const char *devices_dir,
              const char *device_type_str,
              const uint32_t device_roles,
              bool is_initializer) {
+    vs_device_serial_t serial = {0};
+
     int sz;
     vs_netif_t *netif = NULL;
     vs_netif_t *queued_netif = NULL;
@@ -363,13 +368,13 @@ vs_rpi_start(const char *devices_dir,
     queued_netif = vs_netif_queued(netif);
 
     // Initialize SDMP
-    CHECK_RET(!vs_sdmp_init(queued_netif), VS_CODE_ERR_SDMP_UNKNOWN, "Unable to initialize SDMP");
+    _get_serial(serial, forced_mac_addr);
+    CHECK_RET(!vs_sdmp_init(queued_netif, _manufacture_id, _device_type, serial, device_roles),
+              VS_CODE_ERR_SDMP_UNKNOWN,
+              "Unable to initialize SDMP");
 
     if (!is_initializer) {
-        CHECK_RET(!vs_sdmp_register_service(
-                          vs_sdmp_info_server(tl_ctx, fw_ctx, _manufacture_id, _device_type, device_roles)),
-                  VS_CODE_ERR_SDMP_UNKNOWN,
-                  0);
+        CHECK_RET(!vs_sdmp_register_service(vs_sdmp_info_server(tl_ctx, fw_ctx)), VS_CODE_ERR_SDMP_UNKNOWN, 0);
         // Send broadcast notification about start of this device
         CHECK_RET(!vs_sdmp_info_start_notification(NULL),
                   VS_CODE_ERR_SDMP_UNKNOWN,
@@ -436,8 +441,8 @@ vs_load_own_firmware_descriptor(vs_firmware_descriptor_t *descriptor) {
     _ntoh_fw_desdcriptor(&own_footer->descriptor);
 
     if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
-        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_fw_device_type_t)) ||
-        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_fw_manufacture_id_t))) {
+        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
         VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
         exit(-1);
     }

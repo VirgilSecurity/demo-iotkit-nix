@@ -40,12 +40,6 @@
 #include <hal/rpi-global-hal.h>
 
 /******************************************************************************/
-void
-vs_global_hal_get_udid_of_device(uint8_t udid[SERIAL_SIZE]) {
-    memcpy(udid, get_gateway_ctx()->udid_of_device, SERIAL_SIZE);
-}
-
-/******************************************************************************/
 vs_status_e
 vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
     assert(descriptor);
@@ -55,3 +49,5 @@ vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
 
     return vs_load_own_firmware_descriptor(descriptor);
 }
+
+/******************************************************************************/

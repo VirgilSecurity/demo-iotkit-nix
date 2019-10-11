@@ -46,7 +46,6 @@
 #include <global-hal.h>
 
 typedef struct gtwy_s {
-    uint8_t udid_of_device[SERIAL_SIZE];
     vs_storage_op_ctx_t fw_update_ctx;
 
     vs_event_group_bits_t shared_events;

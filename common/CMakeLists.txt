@@ -107,14 +107,15 @@ target_link_libraries(rpi-common
 		${CRYPTO_C_LIBS}/libvsc_common.a
 		${CRYPTO_C_LIBS}/libmbedcrypto.a
 		${CRYPTO_C_LIBS}/libed25519.a
-		sdmp
 		secbox
 		trust_list
 		firmware
+		vs-module-high-level
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
 		enable_pedantic_mode
+		enable_sanitizers
 		)
 #
 # Format code
