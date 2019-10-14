@@ -42,7 +42,7 @@
 
 #include <virgil/iot/protocols/sdmp/sdmp_structs.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
-#include <threads/event-group-bits.h>
+#include <helpers/event-group-bits.h>
 #include <global-hal.h>
 
 typedef struct gtwy_s {

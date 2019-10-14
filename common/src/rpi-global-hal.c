@@ -49,14 +49,15 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
 
-#include "hal/netif/netif-queue.h"
-#include "hal/netif/rpi-udp-broadcast.h"
+#include "sdk-impl/netif/netif-queue.h"
+#include "sdk-impl/netif/rpi-udp-broadcast.h"
 #include "hal/storage/rpi-file-io.h"
 
 #define NEW_APP_EXTEN ".new"
@@ -68,19 +69,20 @@
 
 static const char *_tl_dir = "trust_list";
 static const char *_firmware_dir = "firmware";
+static const char *_slots_dir = "slots";
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor;
-static bool _is_descriptor_ready = false;
+static vs_device_manufacture_id_t _manufacture_id;
+static vs_device_type_t _device_type;
 
 
 // Implementation variables
-static vs_netif_t *netif_impl = NULL;
-static vs_storage_op_ctx_t tl_storage_impl;
-static vs_storage_op_ctx_t fw_storage_impl;
+// static vs_hsm_impl_t *hsm_impl = NULL;
+// static vs_netif_t *netif_impl = NULL;
+// static vs_storage_op_ctx_t tl_storage_impl;
+// static vs_storage_op_ctx_t fw_storage_impl;
 
 /******************************************************************************/
 void
@@ -299,6 +301,7 @@ vs_status_e
 vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac) {
     static char base_dir[FILENAME_MAX] = {0};
 
+
     CHECK_NOT_ZERO_RET(devices_dir && devices_dir[0], VS_CODE_ERR_INCORRECT_ARGUMENT);
 
     if (VS_IOT_SNPRINTF(base_dir,
@@ -378,79 +381,82 @@ vs_rpi_start(const char *devices_dir,
              const uint32_t device_roles,
              bool is_initializer) {
 
-    vs_status_e ret_code;
-
-    // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {0};
-    vs_device_type_t device_type = {0};
-    vs_device_serial_t serial = {0};
-
-    // Check input variables
-    assert(devices_dir);
-    assert(app_file);
-    assert(manufacture_id_str);
-    assert(device_type_str);
-
-    // Initialize Logger module
-    vs_logger_init(VS_LOGLEV_DEBUG);
-
-    // Print title
-    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
-
-    // Prepare local storage
-    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
-
+    //    vs_status_e ret_code;
     //
-    // ---------- Prepare device parameters ----------
+    //    // Device parameters
+    //    vs_device_manufacture_id_t manufacture_id = {0};
+    //    vs_device_type_t device_type = {0};
+    //    vs_device_serial_t serial = {0};
     //
-    vs_rpi_get_serial(serial, forced_mac_addr);
-    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
-
-
+    //    // Check input variables
+    //    assert(devices_dir);
+    //    assert(app_file);
+    //    assert(manufacture_id_str);
+    //    assert(device_type_str);
     //
-    // ---------- Create implementations ----------
+    //    // Initialize Logger module
+    //    vs_logger_init(VS_LOGLEV_DEBUG);
     //
-
-    // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
-
-    // TrustList storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
-                 "Cannot create TrustList storage");
-
-    // Firmware storage
-    if (!is_initializer) {
-        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
-                     "Cannot create Firmware storage");
-    }
-
-
+    //    // Print title
+    //    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
     //
-    // ---------- Initialize Virgil SDK modules ----------
+    //    // Prepare local storage
+    //    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
     //
-
-    // TrustList module
-    ret_code = vs_tl_init(&tl_storage_impl);
-    if (!is_initializer) {
-        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
-    }
-
-    // SDMP module
-    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
-                 "Unable to initialize SDMP module");
-
+    //    //
+    //    // ---------- Prepare device parameters ----------
+    //    //
+    //    vs_rpi_get_serial(serial, forced_mac_addr);
+    //    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    //    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
     //
-    // ---------- Register SDMP services ----------
     //
-
-    //  INFO service
-    if (!is_initializer) {
-        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-                     "Cannot register SDMP:INFO service");
-    }
-
-terminate:
+    //    //
+    //    // ---------- Create implementations ----------
+    //    //
+    //
+    //    // Network interface
+    //    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    //
+    //    // TrustList storage
+    //    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
+    //                 "Cannot create TrustList storage");
+    //
+    //    // HSM
+    //    hsm_impl = vs_softhsm_impl();
+    //
+    //    // Firmware storage
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
+    //                     "Cannot create Firmware storage");
+    //    }
+    //
+    //
+    //    //
+    //    // ---------- Initialize Virgil SDK modules ----------
+    //    //
+    //
+    //    // TrustList module
+    //    ret_code = vs_tl_init(&tl_storage_impl);
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
+    //    }
+    //
+    //    // SDMP module
+    //    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+    //                 "Unable to initialize SDMP module");
+    //
+    //    //
+    //    // ---------- Register SDMP services ----------
+    //    //
+    //
+    //    //  INFO service
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
+    //                     "Cannot register SDMP:INFO service");
+    //    }
+    //
+    // terminate:
 
     return VS_CODE_OK;
 }
@@ -462,40 +468,68 @@ vs_rpi_restart(void) {
     pthread_mutex_unlock(&_sleep_lock);
 }
 
+static void
+_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
+    desc->chunk_size = ntohs(desc->chunk_size);
+    desc->app_size = ntohl(desc->app_size);
+    desc->firmware_length = ntohl(desc->firmware_length);
+    desc->info.version.timestamp = ntohl(desc->info.version.timestamp);
+}
+
 /******************************************************************************/
 vs_status_e
-vs_load_own_firmware_descriptor(const char *manufacture_id_str,
-                                const char *device_type_str,
-                                vs_storage_op_ctx_t *op_ctx,
-                                vs_firmware_descriptor_t *descriptor) {
+vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
+    FILE *fp = NULL;
+    vs_status_e res = VS_CODE_ERR_FILE_READ;
+    ssize_t length;
 
-    assert(descriptor);
-    CHECK_NOT_ZERO_RET(descriptor, -1);
+    assert(footer);
+    assert(self_path);
 
-    if (!_is_descriptor_ready) {
-        vs_firmware_descriptor_t desc;
-        vs_device_manufacture_id_t manufacture_id;
-        vs_device_type_t device_type;
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
 
-        memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
 
-        vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-        vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+    fp = fopen(self_path, "rb");
 
-        if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
-            VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
-            memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
-            memcpy(_descriptor.info.manufacture_id, manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
-            memcpy(_descriptor.info.device_type, device_type, VS_DEVICE_TYPE_SIZE);
-        } else {
-            memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
-        }
-        _is_descriptor_ready = true;
+    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+
+    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+
+    length = ftell(fp);
+    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
+    CHECK(length > footer_sz, "Wrong self file format");
+
+    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
+          "Unable to seek file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+
+    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
+          "Unable to read file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+    _ntoh_fw_desdcriptor(&own_footer->descriptor);
+
+    // Simple validation of own descriptor
+    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
+        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
+        VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
+        exit(-1);
     }
 
-    memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
+    res = VS_CODE_OK;
 
-    return VS_CODE_OK;
+terminate:
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
 }
 
 /******************************************************************************/
@@ -508,6 +542,12 @@ vs_rpi_trustlist_dir(void) {
 const char *
 vs_rpi_firmware_dir(void) {
     return _firmware_dir;
+}
+
+/******************************************************************************/
+const char *
+vs_rpi_slots_dir(void) {
+    return _slots_dir;
 }
 
 /******************************************************************************/

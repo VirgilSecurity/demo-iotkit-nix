@@ -38,7 +38,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <threads/event-group-bits.h>
+#include <helpers/event-group-bits.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
