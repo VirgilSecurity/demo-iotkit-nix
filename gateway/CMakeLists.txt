@@ -113,6 +113,7 @@ target_link_libraries(gateway
 		cloud
 		update
 		virgil-iot-status-code
+		sdmp-gateway
 
 		enable_sanitizers
         enable_pedantic_mode
