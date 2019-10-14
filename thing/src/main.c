@@ -43,7 +43,6 @@
 #include <trust_list-config.h>
 #include <update-config.h>
 
-#include "thing.h"
 #include "hal/rpi-global-hal.h"
 #include "helpers/input-params.h"
 #include "hal/storage/rpi-file-cache.h"
@@ -131,6 +130,9 @@ main(int argc, char *argv[]) {
     // TrustList module
     vs_tl_init(&tl_storage_impl, hsm_impl);
 
+    // Firmware module
+    vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type);
+
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
                  "Unable to initialize SDMP module");
@@ -148,7 +150,8 @@ main(int argc, char *argv[]) {
                      "Cannot register FLDT client service");
     STATUS_CHECK_RET(vs_fldt_client_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx()),
                      "Unable to add firmware file type");
-    //    CHECK_RET(!vs_fldt_thing_init(), -2, "Unable to initialize Thing's FLDT implementation");
+    STATUS_CHECK_RET(vs_fldt_client_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx()),
+                     "Unable to add firmware file type");
 
 
     //

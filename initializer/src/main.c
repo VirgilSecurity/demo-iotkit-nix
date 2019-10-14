@@ -53,12 +53,6 @@ static vs_storage_op_ctx_t tl_storage_impl;
 static vs_storage_op_ctx_t slots_storage_impl;
 
 /******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    return VS_CODE_ERR_NOT_IMPLEMENTED;
-}
-
-/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;

@@ -534,6 +534,15 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
 }
 
 /******************************************************************************/
+vs_status_e
+vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
+    assert(footer);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
+
+    return vs_load_own_footer(footer, footer_sz);
+}
+
+/******************************************************************************/
 const char *
 vs_rpi_trustlist_dir(void) {
     return _tl_dir;
