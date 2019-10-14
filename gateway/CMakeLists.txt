@@ -50,7 +50,6 @@ target_sources(gateway
         # Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/event-flags.h
         ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/iot_mqtt.h
         ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
         ${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-gw.h
         ${CMAKE_CURRENT_LIST_DIR}/include/test_update_thread.h
@@ -58,10 +57,8 @@ target_sources(gateway
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/cloud/https.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-gw.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
@@ -108,8 +105,8 @@ target_link_libraries(gateway
 		rpi-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		curl
-		aws-mqtt
+		vs-default-curl-http
+		vs-default-aws-message-bin
 		cloud
 		update
 		virgil-iot-status-code
@@ -124,11 +121,11 @@ target_link_libraries(gateway
 #
 if (NOT GO_DISABLE)
 	if (NOT GW_APP_FILE_SIZE)
-		set(GW_APP_FILE_SIZE "1000000" CACHE STRING "Full gateway application file size")
+		set(GW_APP_FILE_SIZE "1048576" CACHE STRING "Full gateway application file size")
 	endif ()
 
 	if (NOT GW_APP_CHUNK_SIZE)
-		set(GW_APP_CHUNK_SIZE "64000" CACHE STRING "Gateway application chunk size")
+		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
 	endif ()
 
 	include(signFirmware)
