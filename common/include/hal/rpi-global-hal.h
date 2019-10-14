@@ -75,6 +75,9 @@ vs_rpi_trustlist_dir(void);
 const char *
 vs_rpi_firmware_dir(void);
 
+const char *
+vs_rpi_slots_dir(void);
+
 void
 vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size);
 

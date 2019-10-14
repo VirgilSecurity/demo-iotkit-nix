@@ -68,6 +68,7 @@
 
 static const char *_tl_dir = "trust_list";
 static const char *_firmware_dir = "firmware";
+static const char *_slots_dir = "slots";
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
@@ -78,10 +79,10 @@ static bool _is_descriptor_ready = false;
 
 
 // Implementation variables
-static vs_hsm_impl_t *hsm_impl = NULL;
-static vs_netif_t *netif_impl = NULL;
-static vs_storage_op_ctx_t tl_storage_impl;
-static vs_storage_op_ctx_t fw_storage_impl;
+// static vs_hsm_impl_t *hsm_impl = NULL;
+// static vs_netif_t *netif_impl = NULL;
+// static vs_storage_op_ctx_t tl_storage_impl;
+// static vs_storage_op_ctx_t fw_storage_impl;
 
 /******************************************************************************/
 void
@@ -379,82 +380,82 @@ vs_rpi_start(const char *devices_dir,
              const uint32_t device_roles,
              bool is_initializer) {
 
-    vs_status_e ret_code;
-
-    // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {0};
-    vs_device_type_t device_type = {0};
-    vs_device_serial_t serial = {0};
-
-    // Check input variables
-    assert(devices_dir);
-    assert(app_file);
-    assert(manufacture_id_str);
-    assert(device_type_str);
-
-    // Initialize Logger module
-    vs_logger_init(VS_LOGLEV_DEBUG);
-
-    // Print title
-    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
-
-    // Prepare local storage
-    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
-
+    //    vs_status_e ret_code;
     //
-    // ---------- Prepare device parameters ----------
+    //    // Device parameters
+    //    vs_device_manufacture_id_t manufacture_id = {0};
+    //    vs_device_type_t device_type = {0};
+    //    vs_device_serial_t serial = {0};
     //
-    vs_rpi_get_serial(serial, forced_mac_addr);
-    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
-
-
+    //    // Check input variables
+    //    assert(devices_dir);
+    //    assert(app_file);
+    //    assert(manufacture_id_str);
+    //    assert(device_type_str);
     //
-    // ---------- Create implementations ----------
+    //    // Initialize Logger module
+    //    vs_logger_init(VS_LOGLEV_DEBUG);
     //
-
-    // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
-
-    // TrustList storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
-                 "Cannot create TrustList storage");
-
-    // HSM
-    hsm_impl = vs_softhsm_impl();
-
-    // Firmware storage
-    if (!is_initializer) {
-        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
-                     "Cannot create Firmware storage");
-    }
-
-
+    //    // Print title
+    //    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
     //
-    // ---------- Initialize Virgil SDK modules ----------
+    //    // Prepare local storage
+    //    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
     //
-
-    // TrustList module
-    ret_code = vs_tl_init(&tl_storage_impl);
-    if (!is_initializer) {
-        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
-    }
-
-    // SDMP module
-    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
-                 "Unable to initialize SDMP module");
-
+    //    //
+    //    // ---------- Prepare device parameters ----------
+    //    //
+    //    vs_rpi_get_serial(serial, forced_mac_addr);
+    //    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    //    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
     //
-    // ---------- Register SDMP services ----------
     //
-
-    //  INFO service
-    if (!is_initializer) {
-        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-                     "Cannot register SDMP:INFO service");
-    }
-
-terminate:
+    //    //
+    //    // ---------- Create implementations ----------
+    //    //
+    //
+    //    // Network interface
+    //    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    //
+    //    // TrustList storage
+    //    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
+    //                 "Cannot create TrustList storage");
+    //
+    //    // HSM
+    //    hsm_impl = vs_softhsm_impl();
+    //
+    //    // Firmware storage
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
+    //                     "Cannot create Firmware storage");
+    //    }
+    //
+    //
+    //    //
+    //    // ---------- Initialize Virgil SDK modules ----------
+    //    //
+    //
+    //    // TrustList module
+    //    ret_code = vs_tl_init(&tl_storage_impl);
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
+    //    }
+    //
+    //    // SDMP module
+    //    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+    //                 "Unable to initialize SDMP module");
+    //
+    //    //
+    //    // ---------- Register SDMP services ----------
+    //    //
+    //
+    //    //  INFO service
+    //    if (!is_initializer) {
+    //        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
+    //                     "Cannot register SDMP:INFO service");
+    //    }
+    //
+    // terminate:
 
     return VS_CODE_OK;
 }
@@ -512,6 +513,12 @@ vs_rpi_trustlist_dir(void) {
 const char *
 vs_rpi_firmware_dir(void) {
     return _firmware_dir;
+}
+
+/******************************************************************************/
+const char *
+vs_rpi_slots_dir(void) {
+    return _slots_dir;
 }
 
 /******************************************************************************/

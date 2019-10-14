@@ -40,14 +40,17 @@
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
+#include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <hal/rpi-global-hal.h>
 #include <trust_list-config.h>
 
 #include "helpers/input-params.h"
 
 // Implementation variables
+static vs_hsm_impl_t *hsm_impl = NULL;
 static vs_netif_t *netif_impl = NULL;
 static vs_storage_op_ctx_t tl_storage_impl;
+static vs_storage_op_ctx_t slots_storage_impl;
 
 /******************************************************************************/
 vs_status_e
@@ -106,13 +109,22 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, vs_rpi_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
                  "Cannot create TrustList storage");
 
+    // Slots storage
+    STATUS_CHECK(vs_rpi_create_storage_impl(&slots_storage_impl, vs_rpi_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Soft HSM
+    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
     //
 
+    // Provision module
+    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
+
     // TrustList module
-    vs_tl_init(&tl_storage_impl);
+    vs_tl_init(&tl_storage_impl, hsm_impl);
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
@@ -123,7 +135,7 @@ main(int argc, char *argv[]) {
     //
 
     //  PRVS service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_server()), "Cannot register PRVS service");
+    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_server(hsm_impl)), "Cannot register PRVS service");
 
 
     //
