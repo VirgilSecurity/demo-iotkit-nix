@@ -90,8 +90,6 @@ target_link_libraries(rpi-common
 		converters
 		secbox
 		trust_list
-		#firmware
-		#vs-module-high-level
 		vs-default-soft-hsm
 		${CMAKE_THREAD_LIBS_INIT}
 

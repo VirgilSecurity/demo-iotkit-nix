@@ -39,8 +39,6 @@
 
 #include <pwd.h>
 #include <unistd.h>
-#include <dirent.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
 #include <stdlib-config.h>
@@ -49,9 +47,6 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
 #include <hal/storage/rpi-file-cache.h>
-#include <virgil/iot/storage_hal/storage_hal.h>
-
-#include "hal/storage/rpi-file-io.h"
 
 static char _base_dir[FILENAME_MAX] = {0};
 
@@ -384,10 +379,6 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
     return true;
 }
 
-#undef UNIX_CALL
-#undef CHECK_SNPRINTF
-
-
 /******************************************************************************/
 bool
 vs_hal_files_set_dir(const char *base_dir) {
@@ -402,4 +393,5 @@ vs_hal_files_set_dir(const char *base_dir) {
     }
     return true;
 }
+
 /******************************************************************************/

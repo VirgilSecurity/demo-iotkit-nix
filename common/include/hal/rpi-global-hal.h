@@ -39,6 +39,7 @@
 #include <arpa/inet.h>
 
 #include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
 //#include <virgil/iot/firmware/firmware.h>
 
 extern char *self_path;

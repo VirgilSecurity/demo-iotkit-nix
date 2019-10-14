@@ -49,12 +49,10 @@ target_sources(thing
 
         # Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/thing.h
-		${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-tg.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
 		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-tg.c
         )
 
 #
@@ -100,6 +98,7 @@ target_link_libraries(thing
 		firmware
 		trust_list
 		virgil-iot-status-code
+		sdmp-thing
 
 		enable_sanitizers
         enable_pedantic_mode
