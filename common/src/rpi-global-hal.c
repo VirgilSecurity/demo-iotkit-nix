@@ -43,11 +43,11 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/info/info-server.h>
+//#include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/firmware/firmware.h>
+//#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
@@ -74,8 +74,8 @@ static const char *_slots_dir = "slots";
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
-static vs_device_manufacture_id_t _manufacture_id;
-static vs_device_type_t _device_type;
+// static vs_device_manufacture_id_t _manufacture_id;
+// static vs_device_type_t _device_type;
 
 
 // Implementation variables
@@ -468,66 +468,67 @@ vs_rpi_restart(void) {
     pthread_mutex_unlock(&_sleep_lock);
 }
 
-static void
-_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
-    desc->chunk_size = ntohs(desc->chunk_size);
-    desc->app_size = ntohl(desc->app_size);
-    desc->firmware_length = ntohl(desc->firmware_length);
-    desc->info.version.timestamp = ntohl(desc->info.version.timestamp);
-}
+// static void
+//_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
+//    desc->chunk_size = ntohs(desc->chunk_size);
+//    desc->app_size = ntohl(desc->app_size);
+//    desc->firmware_length = ntohl(desc->firmware_length);
+//    desc->info.version.timestamp = ntohl(desc->info.version.timestamp);
+//}
 
 /******************************************************************************/
 vs_status_e
 vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
-    FILE *fp = NULL;
+    //    FILE *fp = NULL;
     vs_status_e res = VS_CODE_ERR_FILE_READ;
-    ssize_t length;
-
-    assert(footer);
-    assert(self_path);
-
-    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
-    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
-
-    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
-
-    fp = fopen(self_path, "rb");
-
-    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
-
-    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno, strerror(errno));
-
-    length = ftell(fp);
-    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
-    CHECK(length > footer_sz, "Wrong self file format");
-
-    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
-          "Unable to seek file %s. errno = %d (%s)",
-          self_path,
-          errno,
-          strerror(errno));
-
-    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
-          "Unable to read file %s. errno = %d (%s)",
-          self_path,
-          errno,
-          strerror(errno));
-    _ntoh_fw_desdcriptor(&own_footer->descriptor);
-
-    // Simple validation of own descriptor
-    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
-        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
-        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
-        VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
-        exit(-1);
-    }
-
-    res = VS_CODE_OK;
-
-terminate:
-    if (fp) {
-        fclose(fp);
-    }
+    //    ssize_t length;
+    //
+    //    assert(footer);
+    //    assert(self_path);
+    //
+    //    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
+    //    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
+    //
+    //    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
+    //
+    //    fp = fopen(self_path, "rb");
+    //
+    //    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+    //
+    //    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno,
+    //    strerror(errno));
+    //
+    //    length = ftell(fp);
+    //    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
+    //    CHECK(length > footer_sz, "Wrong self file format");
+    //
+    //    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
+    //          "Unable to seek file %s. errno = %d (%s)",
+    //          self_path,
+    //          errno,
+    //          strerror(errno));
+    //
+    //    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
+    //          "Unable to read file %s. errno = %d (%s)",
+    //          self_path,
+    //          errno,
+    //          strerror(errno));
+    //    _ntoh_fw_desdcriptor(&own_footer->descriptor);
+    //
+    //    // Simple validation of own descriptor
+    //    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
+    //        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
+    //        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id,
+    //        sizeof(vs_device_manufacture_id_t))) { VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
+    //        exit(-1);
+    //    }
+    //
+    //    res = VS_CODE_OK;
+    //
+    // terminate:
+    //    if (fp) {
+    //        fclose(fp);
+    //    }
 
     return res;
 }

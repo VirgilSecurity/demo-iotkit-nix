@@ -79,6 +79,7 @@ function(initializer_executable _is_gateway _manufacture _model)
             PRIVATE
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
             rpi-common
+            sdmp-initializer
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
             $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>

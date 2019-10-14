@@ -76,6 +76,7 @@ target_sources(rpi-common
 target_include_directories(rpi-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
+		${VIRGIL_IOT_DIRECTORY}/protocols/sdmp/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 		)
@@ -89,8 +90,8 @@ target_link_libraries(rpi-common
 		converters
 		secbox
 		trust_list
-		firmware
-		vs-module-high-level
+		#firmware
+		#vs-module-high-level
 		vs-default-soft-hsm
 		${CMAKE_THREAD_LIBS_INIT}
 
