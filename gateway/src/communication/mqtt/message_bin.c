@@ -129,7 +129,7 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
 
 /*************************************************************************/
 static void
-_process_topic(const char *topic, const uint8_t *p_data, const uint16_t length) {
+_process_topic(const char *topic, uint16_t topic_sz, const uint8_t *p_data, uint16_t length) {
     char *ptr = strstr(topic, VS_FW_TOPIC_MASK);
     if (ptr != NULL && topic == ptr) {
         _firmware_topic_process(p_data, length);
