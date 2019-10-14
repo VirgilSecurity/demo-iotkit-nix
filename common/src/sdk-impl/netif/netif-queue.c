@@ -38,7 +38,7 @@
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
 #include "helpers/msg-queue.h"
 
 #define VS_NETIF_QUEUE_SZ (100)

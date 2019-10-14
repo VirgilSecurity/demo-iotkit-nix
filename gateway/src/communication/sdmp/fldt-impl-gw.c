@@ -33,7 +33,7 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <assert.h>
-#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <fldt-impl-gw.h>
 #include <virgil/iot/firmware/firmware.h>

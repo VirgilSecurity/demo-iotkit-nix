@@ -37,12 +37,12 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
 #include <virgil/iot/vs-curl-http/curl-http.h>
 #include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <trust_list-config.h>
 #include <update-config.h>

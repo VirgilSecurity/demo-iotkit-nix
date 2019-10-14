@@ -45,8 +45,8 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/protocols/sdmp/fldt_private.h>
-#include <virgil/iot/protocols/sdmp/fldt_server.h>
+#include <virgil/iot/protocols/sdmp/fldt/fldt-private.h>
+#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
 
 static gtwy_t _gtwy = {.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE,
                        .firmware_mutex = PTHREAD_MUTEX_INITIALIZER,

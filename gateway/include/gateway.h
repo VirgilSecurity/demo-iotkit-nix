@@ -40,7 +40,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <helpers/event-group-bits.h>
 #include <global-hal.h>

@@ -36,7 +36,7 @@
 #define RPI_SDMP_FLDT_IMPLEMENTATION_H
 
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/protocols/sdmp/sdmp_structs.h>
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
 
 vs_status_e
 vs_fldt_gateway_init(const vs_mac_addr_t *mac_addr);
