@@ -44,15 +44,6 @@ vs_hal_files_set_dir(const char *base_dir);
 ssize_t
 vs_rpi_get_file_len(const char *folder, const char *file_name);
 
-// bool
-// vs_rpi_get_keystorage_base_dir(char *dir);
-
-const char *
-vs_rpi_get_slots_dir(void);
-
-const char *
-vs_rpi_get_secbox_dir(void);
-
 bool
 vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
 

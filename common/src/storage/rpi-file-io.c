@@ -54,9 +54,6 @@
 #include "hal/storage/rpi-file-io.h"
 
 static char _base_dir[FILENAME_MAX] = {0};
-static const char *slots_dir = "slots";
-static const char *secbox_dir = "secbox";
-static bool initialized = false;
 
 #define VS_IO_BUF_SZ (2048 * 1024)
 static char file_io_buffer[VS_IO_BUF_SZ];
@@ -127,32 +124,7 @@ terminate:
 
 /******************************************************************************/
 static bool
-_init_fio(void) {
-    VS_LOG_DEBUG("Base directory for slots : %s", _base_dir);
-
-    if (!vs_rpi_create_subdir(slots_dir)) {
-        goto terminate;
-    }
-
-    if (!vs_rpi_create_subdir(secbox_dir)) {
-        goto terminate;
-    }
-
-    initialized = true;
-
-terminate:
-
-    return initialized;
-}
-
-/******************************************************************************/
-static bool
 _check_fio_and_path(const char *folder, const char *file_name, char file_path[FILENAME_MAX]) {
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
-        return false;
-    }
-
     if (VS_IOT_SNPRINTF(file_path, FILENAME_MAX, "%s/%s", _base_dir, folder) < 0) {
         return false;
     }
@@ -177,11 +149,6 @@ vs_rpi_get_file_len(const char *folder, const char *file_name) {
 
     NOT_ZERO(folder);
     NOT_ZERO(file_name);
-
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
-        return 0;
-    }
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return 0;
@@ -227,11 +194,6 @@ vs_rpi_sync_file(const char *folder, const char *file_name) {
     NOT_ZERO(folder);
     NOT_ZERO(file_name);
 
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
-        return false;
-    }
-
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
     }
@@ -257,11 +219,6 @@ vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offse
     NOT_ZERO(file_name);
     NOT_ZERO(data);
     NOT_ZERO(data_sz);
-
-    if (!initialized && !_init_fio()) {
-        VS_LOG_ERROR("Unable to initialize file I/O operations");
-        return false;
-    }
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
@@ -430,17 +387,6 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
 #undef UNIX_CALL
 #undef CHECK_SNPRINTF
 
-/********************************************************************************/
-const char *
-vs_rpi_get_slots_dir() {
-    return slots_dir;
-}
-
-/********************************************************************************/
-const char *
-vs_rpi_get_secbox_dir() {
-    return secbox_dir;
-}
 
 /******************************************************************************/
 bool
