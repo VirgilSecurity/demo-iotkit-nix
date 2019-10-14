@@ -41,13 +41,11 @@
 
 /******************************************************************************/
 vs_status_e
-vs_firmware_get_own_firmware_descriptor_hal(void *descriptor, size_t buf_sz) {
-    assert(descriptor);
-    CHECK_NOT_ZERO_RET(descriptor, -1);
-    CHECK_RET(buf_sz == sizeof(vs_firmware_descriptor_t), VS_CODE_ERR_INCORRECT_ARGUMENT, "Buffer too small");
+vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
+    assert(footer);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
-    return vs_load_own_firmware_descriptor(
-            GW_MANUFACTURE_ID, GW_DEVICE_MODEL, &get_gateway_ctx()->fw_update_ctx, descriptor);
+    return vs_load_own_footer(footer, footer_sz);
 }
 
 /******************************************************************************/

@@ -119,6 +119,34 @@ target_link_libraries(gateway
         )
 
 #
+# Create a signed firmware image
+#
+if (NOT GO_DISABLE)
+	if (NOT GW_APP_FILE_SIZE)
+		set(GW_APP_FILE_SIZE "1000000" CACHE STRING "Full gateway application file size")
+	endif ()
+
+	if (NOT GW_APP_CHUNK_SIZE)
+		set(GW_APP_CHUNK_SIZE "64000" CACHE STRING "Gateway application chunk size")
+	endif ()
+
+	include(signFirmware)
+
+	sign_firmware(gateway-signed
+			${VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH}
+			${CMAKE_BINARY_DIR}/gateway/gateway
+			${GW_APP_FILE_SIZE}
+			${APP_VERSION}
+			${GATEWAY_MANUFACTURE}
+			${GATEWAY_MODEL}
+			${GW_APP_CHUNK_SIZE}
+			APPL)
+
+	add_dependencies(gateway-signed virgil-firmware-signer gateway)
+
+endif ()
+
+#
 # Format code
 #
 if(COMMAND add_clangformat)

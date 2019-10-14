@@ -49,6 +49,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secbox/secbox.h>
+#include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
 #include <trust_list-config.h>
 #include <update-config.h>
@@ -73,9 +74,8 @@ static const char *_slots_dir = "slots";
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
-// TODO: Need to use real descriptor, which can be obtain from footer of self image
-static vs_firmware_descriptor_t _descriptor;
-static bool _is_descriptor_ready = false;
+static vs_device_manufacture_id_t _manufacture_id;
+static vs_device_type_t _device_type;
 
 
 // Implementation variables
@@ -301,6 +301,7 @@ vs_status_e
 vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac) {
     static char base_dir[FILENAME_MAX] = {0};
 
+
     CHECK_NOT_ZERO_RET(devices_dir && devices_dir[0], VS_CODE_ERR_INCORRECT_ARGUMENT);
 
     if (VS_IOT_SNPRINTF(base_dir,
@@ -467,40 +468,68 @@ vs_rpi_restart(void) {
     pthread_mutex_unlock(&_sleep_lock);
 }
 
+static void
+_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
+    desc->chunk_size = ntohs(desc->chunk_size);
+    desc->app_size = ntohl(desc->app_size);
+    desc->firmware_length = ntohl(desc->firmware_length);
+    desc->info.version.timestamp = ntohl(desc->info.version.timestamp);
+}
+
 /******************************************************************************/
 vs_status_e
-vs_load_own_firmware_descriptor(const char *manufacture_id_str,
-                                const char *device_type_str,
-                                vs_storage_op_ctx_t *op_ctx,
-                                vs_firmware_descriptor_t *descriptor) {
+vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
+    FILE *fp = NULL;
+    vs_status_e res = VS_CODE_ERR_FILE_READ;
+    ssize_t length;
 
-    assert(descriptor);
-    CHECK_NOT_ZERO_RET(descriptor, -1);
+    assert(footer);
+    assert(self_path);
 
-    if (!_is_descriptor_ready) {
-        vs_firmware_descriptor_t desc;
-        vs_device_manufacture_id_t manufacture_id;
-        vs_device_type_t device_type;
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
 
-        memset(&desc, 0, sizeof(vs_firmware_descriptor_t));
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
 
-        vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-        vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+    fp = fopen(self_path, "rb");
 
-        if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(op_ctx, manufacture_id, device_type, &desc)) {
-            VS_LOG_WARNING("Unable to obtain Firmware's descriptor. Use default");
-            memset(&_descriptor, 0, sizeof(vs_firmware_descriptor_t));
-            memcpy(_descriptor.info.manufacture_id, manufacture_id, VS_DEVICE_MANUFACTURE_ID_SIZE);
-            memcpy(_descriptor.info.device_type, device_type, VS_DEVICE_TYPE_SIZE);
-        } else {
-            memcpy(&_descriptor, &desc, sizeof(vs_firmware_descriptor_t));
-        }
-        _is_descriptor_ready = true;
+    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+
+    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno, strerror(errno));
+
+    length = ftell(fp);
+    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
+    CHECK(length > footer_sz, "Wrong self file format");
+
+    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
+          "Unable to seek file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+
+    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
+          "Unable to read file %s. errno = %d (%s)",
+          self_path,
+          errno,
+          strerror(errno));
+    _ntoh_fw_desdcriptor(&own_footer->descriptor);
+
+    // Simple validation of own descriptor
+    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
+        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
+        VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
+        exit(-1);
     }
 
-    memcpy(descriptor, &_descriptor, sizeof(vs_firmware_descriptor_t));
+    res = VS_CODE_OK;
 
-    return VS_CODE_OK;
+terminate:
+    if (fp) {
+        fclose(fp);
+    }
+
+    return res;
 }
 
 /******************************************************************************/
