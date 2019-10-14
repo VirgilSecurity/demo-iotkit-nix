@@ -110,11 +110,11 @@ target_link_libraries(thing
 #
 if (NOT GO_DISABLE)
 	if (NOT THING_APP_FILE_SIZE)
-		set(THING_APP_FILE_SIZE "1000000" CACHE STRING "Full thing application file size")
+		set(THING_APP_FILE_SIZE "1048576" CACHE STRING "Full thing application file size")
 	endif ()
 
 	if (NOT THING_APP_CHUNK_SIZE)
-		set(THING_APP_CHUNK_SIZE "64000" CACHE STRING "Thing application chunk size")
+		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
 	endif ()
 
 	include(signFirmware)

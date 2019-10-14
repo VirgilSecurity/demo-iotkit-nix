@@ -78,7 +78,7 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_fldt_gateway_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
 
     // Init cloud library
-    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_https_impl()), -2, "Unable to initialize FLDT");
+    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_https_impl()), -3, "Unable to initialize cloud");
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
 

@@ -137,7 +137,7 @@ _assert_handler_fn(const char *message, const char *file, int line) {
 vs_status_e
 vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
     assert(footer);
-    CHECK_NOT_ZERO_RET(footer, -1);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     memset(footer, 0, footer_sz);
 

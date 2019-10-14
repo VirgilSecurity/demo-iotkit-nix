@@ -122,11 +122,11 @@ target_link_libraries(gateway
 #
 if (NOT GO_DISABLE)
 	if (NOT GW_APP_FILE_SIZE)
-		set(GW_APP_FILE_SIZE "1000000" CACHE STRING "Full gateway application file size")
+		set(GW_APP_FILE_SIZE "1048576" CACHE STRING "Full gateway application file size")
 	endif ()
 
 	if (NOT GW_APP_CHUNK_SIZE)
-		set(GW_APP_CHUNK_SIZE "64000" CACHE STRING "Gateway application chunk size")
+		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
 	endif ()
 
 	include(signFirmware)

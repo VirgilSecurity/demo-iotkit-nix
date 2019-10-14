@@ -408,6 +408,7 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
 
     assert(footer);
     assert(self_path);
+    assert(footer_sz);
 
     CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
     CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
