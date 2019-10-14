@@ -108,7 +108,7 @@ target_link_libraries(gateway
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		aws-mqtt
-		vs-default-curl-https
+		vs-default-curl-http
 		cloud
 		update
 		virgil-iot-status-code
