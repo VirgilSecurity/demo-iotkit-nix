@@ -41,103 +41,21 @@
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/firmware/firmware.h>
+#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 #include <cloud-config.h>
 #include "helpers/msg-queue.h"
-
-#define NUM_TOKENS 300
 
 #define MB_QUEUE_SZ 10
 
 static vs_msg_queue_ctx_t *upd_event_queue = NULL;
 static pthread_t _mb_thread;
-// static const uint16_t _mb_thread_stack = 20 * 1024;
 
 static vs_cloud_mb_mqtt_ctx_t _mb_mqtt_context;
 
-static iot_message_handler_t _mb_mqtt_handler;
-
 extern const uint8_t msg_bin_root_ca_crt[];
 
-/*************************************************************************/
-static void
-_group_callback(AWS_IoT_Client *client,
-                char *topic,
-                uint16_t topic_sz,
-                IoT_Publish_Message_Params *params,
-                void *pData) {
-    uint8_t *p = (uint8_t *)params->payload;
-    p[params->payloadLen] = 0;
-    VS_LOG_DEBUG("[MB] Message from topic %s", topic);
-    VS_LOG_DEBUG("[MB] _group_callback params->payloadLen=%d", (int)params->payloadLen);
-    if (params->payloadLen > UINT16_MAX) {
-        VS_LOG_ERROR("[MB] Topic message is too big");
-        return;
-    }
-    message_bin_process_command(topic, p, (uint16_t)params->payloadLen);
-}
-
-///*************************************************************************/
-static vs_status_e
-_init_mqtt(const char *host, uint16_t port, const char *device_cert, const char *priv_key, const char *ca_cert) {
-
-    return (SUCCESS == iot_init(&_mb_mqtt_handler, host, port, true, device_cert, priv_key, ca_cert))
-                   ? VS_CODE_OK
-                   : VS_CODE_ERR_CLOUD;
-}
-
-/*************************************************************************/
-static vs_status_e
-_connect_and_subscribe_to_topics(const char *client_id,
-                                 const char *login,
-                                 const char *password,
-                                 const vs_cloud_mb_topics_list_t *topic_list) {
-    return (SUCCESS == iot_connect_and_subscribe_multiple_topics(
-                               &_mb_mqtt_handler, client_id, topic_list, login, password, QOS1, _group_callback, NULL))
-                   ? VS_CODE_OK
-                   : VS_CODE_ERR_CLOUD;
-}
-
-/*************************************************************************/
-static vs_status_e
-_mqtt_process() {
-    return (SUCCESS == aws_iot_mqtt_yield(&_mb_mqtt_handler.client, 500)) ? VS_CODE_OK : VS_CODE_ERR_CLOUD;
-}
-
-/*************************************************************************/
-static void *
-_mb_mqtt_task(void *pvParameters) {
-    VS_LOG_DEBUG("message bin thread started");
-    vs_cloud_mb_init_ctx(&_mb_mqtt_context);
-
-    while (true) {
-        if (VS_CODE_OK == vs_cloud_mb_process(&_mb_mqtt_context,
-                                              (const char *)msg_bin_root_ca_crt,
-                                              _init_mqtt,
-                                              _connect_and_subscribe_to_topics,
-                                              _mqtt_process)) {
-            vs_impl_msleep(500);
-        } else {
-            vs_impl_msleep(5000);
-        }
-    }
-    return NULL;
-}
-
-/*************************************************************************/
-pthread_t *
-start_message_bin_thread() {
-    static bool is_threads_started = 0;
-    if (!is_threads_started) {
-
-        upd_event_queue = vs_msg_queue_init(MB_QUEUE_SZ, 1, 1);
-
-        is_threads_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
-        if (!is_threads_started) {
-            return NULL;
-        }
-    }
-    return &_mb_thread;
-}
+#define VS_FW_TOPIC_MASK "fw/"
+#define VS_TL_TOPIC_MASK "tl/"
 
 /*************************************************************************/
 static void
@@ -209,12 +127,9 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
     free(tl_url);
 }
 
-#define VS_FW_TOPIC_MASK "fw/"
-#define VS_TL_TOPIC_MASK "tl/"
-
 /*************************************************************************/
-void
-message_bin_process_command(const char *topic, const uint8_t *p_data, const uint16_t length) {
+static void
+_process_topic(const char *topic, const uint8_t *p_data, const uint16_t length) {
     char *ptr = strstr(topic, VS_FW_TOPIC_MASK);
     if (ptr != NULL && topic == ptr) {
         _firmware_topic_process(p_data, length);
@@ -226,6 +141,38 @@ message_bin_process_command(const char *topic, const uint8_t *p_data, const uint
         _tl_topic_process(p_data, length);
         return;
     }
+}
+
+/*************************************************************************/
+static void *
+_mb_mqtt_task(void *pvParameters) {
+    VS_LOG_DEBUG("message bin thread started");
+    vs_cloud_mb_init_ctx(&_mb_mqtt_context, vs_aws_message_bin_impl());
+
+    while (true) {
+        if (VS_CODE_OK == vs_cloud_mb_process(&_mb_mqtt_context, _process_topic, (const char *)msg_bin_root_ca_crt)) {
+            vs_impl_msleep(500);
+        } else {
+            vs_impl_msleep(5000);
+        }
+    }
+    return NULL;
+}
+
+/*************************************************************************/
+pthread_t *
+start_message_bin_thread() {
+    static bool is_threads_started = 0;
+    if (!is_threads_started) {
+
+        upd_event_queue = vs_msg_queue_init(MB_QUEUE_SZ, 1, 1);
+
+        is_threads_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
+        if (!is_threads_started) {
+            return NULL;
+        }
+    }
+    return &_mb_thread;
 }
 
 /*************************************************************************/

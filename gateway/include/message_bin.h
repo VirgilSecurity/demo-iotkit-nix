@@ -44,7 +44,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include "iot_mqtt.h"
+#include "virgil/iot/cloud/cloud.h"
 
 #define MSG_BIN_UPD_TYPE_FW 0
 #define MSG_BIN_UPD_TYPE_TL 1

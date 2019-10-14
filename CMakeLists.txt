@@ -145,14 +145,8 @@ include(cmake/helpers.cmake)
 #   Virgil IoT SDK
 #
 set(VIRGIL_IOT_MCU_BUILD OFF CACHE BOOL "Turn off MCU build" FORCE)
-set(VIRGIL_IOT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ext/virgil-iot-sdk CACHE STRING "Path to the Virgil IoT SDK")
-set(VIRGIL_IOT_CONFIG_DIRECTORY ${VIRGIL_IOT_DIRECTORY}/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
-add_subdirectory(${VIRGIL_IOT_DIRECTORY})
-
-#
-#   aws-sdk
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ext/aws-sdk)
+set(VIRGIL_IOT_CONFIG_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)
 
 #
 #   Common code library
