@@ -43,11 +43,11 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     #	Prepare _targetname
     #
-    if (${_is_gateway})
+    if(${_is_gateway})
         set(_targetname "gateway-initializer")
-    else ()
+    else()
         set(_targetname "thing-initializer")
-    endif ()
+    endif()
 
     #
     #	Initializer target
@@ -69,7 +69,7 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     target_include_directories(${_targetname}
             PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_LIST_DIR}/include
             )
 
     #
@@ -99,9 +99,9 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     # Format code
     #
-    if (COMMAND add_clangformat)
+    if(COMMAND add_clangformat)
         add_clangformat(${_targetname})
-    endif ()
+    endif()
 endfunction()
 
 #
