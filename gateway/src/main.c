@@ -88,7 +88,7 @@ main(int argc, char *argv[]) {
     vs_rpi_create_data_array(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     // Init cloud library
-    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl()), -3, "Unable to initialize cloud");
+    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl(), hsm_impl), -3, "Unable to initialize cloud");
 
     //
     // ---------- Create implementations ----------
@@ -128,6 +128,9 @@ main(int argc, char *argv[]) {
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
                  "Unable to initialize SDMP module");
+
+    // Cloud module
+    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl(), hsm_impl), -3, "Unable to initialize Cloud module");
 
     //
     // ---------- Register SDMP services ----------
