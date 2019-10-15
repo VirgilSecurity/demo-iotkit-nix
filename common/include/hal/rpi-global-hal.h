@@ -42,8 +42,6 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 //#include <virgil/iot/firmware/firmware.h>
 
-extern char *self_path;
-
 int
 vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
 
@@ -82,12 +80,13 @@ vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size);
 void
 vs_rpi_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
 
+void
+vs_rpi_set_app_metainfo(const char *app_file,
+                        const vs_device_manufacture_id_t manufacture_id_str,
+                        const vs_device_type_t device_type_str);
 
 void
-vs_rpi_print_title(const char *devices_dir,
-                   const char *app_file,
-                   const char *manufacture_id_str,
-                   const char *device_type_str);
+vs_rpi_print_title(const char *devices_dir);
 
 vs_status_e
 vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac);
