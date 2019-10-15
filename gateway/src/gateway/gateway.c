@@ -36,8 +36,8 @@
 #include "message_bin.h"
 #include "upd_http_retrieval_thread.h"
 #include "event-flags.h"
-#include "hal/storage/rpi-storage-hal.h"
-#include "hal/rpi-global-hal.h"
+#include "sdk-impl/storage/storage-nix-impl.h"
+#include "helpers/app-helpers.h"
 
 #include <global-hal.h>
 #include <virgil/iot/logger/logger.h>
@@ -132,7 +132,7 @@ _restart_app() {
     vs_event_group_destroy(&_gtwy.incoming_data_events);
     vs_event_group_destroy(&_gtwy.message_bin_events);
 
-    vs_rpi_restart();
+    vs_app_restart();
     pthread_exit(0);
 }
 

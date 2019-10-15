@@ -39,8 +39,8 @@
 
 #include <global-hal.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <hal/storage/rpi-file-cache.h>
-#include <hal/storage/rpi-storage-hal.h>
+#include <helpers/file-cache.h>
+#include <sdk-impl/storage/storage-nix-impl.h>
 
 
 #define VS_FIO_PROFILE_WRITE 0

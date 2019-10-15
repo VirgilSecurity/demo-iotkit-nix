@@ -32,12 +32,18 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_INPUT_PARAMS_H
-#define IOT_RPI_INPUT_PARAMS_H
+#include <virgil/iot/logger/logger.h>
 
-#include <virgil/iot/protocols/sdmp.h>
+/******************************************************************************/
+bool
+vs_logger_output_hal(const char *buffer) {
+    if (!buffer) {
+        return false;
+    }
 
-vs_status_e
-vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr);
+    int res = printf("%s", buffer) != 0;
+    fflush(stdout);
+    return res != 0;
+}
 
-#endif // IOT_RPI_INPUT_PARAMS_H
+/******************************************************************************/

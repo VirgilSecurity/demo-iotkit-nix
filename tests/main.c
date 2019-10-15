@@ -46,10 +46,10 @@
 #include <update-config.h>
 #include <trust_list-config.h>
 
-#include "hal/storage/rpi-file-io.h"
-#include "hal/storage/rpi-storage-hal.h"
+#include "helpers/file-io.h"
+#include "sdk-impl/storage/storage-nix-impl.h"
 #include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-file-cache.h"
+#include "helpers/file-cache.h"
 
 /******************************************************************************/
 static int

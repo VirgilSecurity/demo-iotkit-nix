@@ -32,30 +32,5 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_HAL_H
-#define IOT_RPI_HAL_H
+#include "helpers/app-helpers.h"
 
-#include <stdint.h>
-#include <arpa/inet.h>
-
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/storage_hal/storage_hal.h>
-//#include <virgil/iot/firmware/firmware.h>
-
-extern char *self_path;
-
-int
-vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
-
-
-vs_status_e
-vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
-
-//-----------------------------------
-
-
-vs_netif_t *
-vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr);
-
-
-#endif // IOT_RPI_HAL_H

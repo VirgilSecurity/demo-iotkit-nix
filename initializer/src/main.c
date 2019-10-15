@@ -42,7 +42,8 @@
 #include <hal/rpi-global-hal.h>
 #include <trust_list-config.h>
 
-#include "helpers/input-params.h"
+#include "helpers/app-helpers.h"
+#include "helpers/app-storage.h"
 
 /******************************************************************************/
 int
@@ -76,18 +77,18 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Get input parameters
-    STATUS_CHECK(vs_process_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+    STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Print title
-    vs_rpi_print_title(title, argv[0], MANUFACTURE_ID, DEVICE_MODEL);
+    vs_app_print_title(title, argv[0], MANUFACTURE_ID, DEVICE_MODEL);
 
     // Prepare local storage
-    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
+    STATUS_CHECK(vs_app_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
 
     // Prepare device parameters
-    vs_rpi_get_serial(serial, forced_mac_addr);
-    vs_rpi_create_data_array(manufacture_id, MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_rpi_create_data_array(device_type, DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
 
     //
@@ -98,11 +99,11 @@ main(int argc, char *argv[]) {
     netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, vs_rpi_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
                  "Cannot create TrustList storage");
 
     // Slots storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&slots_storage_impl, vs_rpi_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM
@@ -133,7 +134,7 @@ main(int argc, char *argv[]) {
     //
 
     // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
+    vs_app_sleep_until_stop();
 
 
     //

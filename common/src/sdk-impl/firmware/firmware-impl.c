@@ -58,3 +58,5 @@ vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 
     return res;
 }
+
+/******************************************************************************/

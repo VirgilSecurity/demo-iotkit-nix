@@ -32,30 +32,30 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_HAL_H
-#define IOT_RPI_HAL_H
-
-#include <stdint.h>
-#include <arpa/inet.h>
+#ifndef IOT_RPI_APP_HELPERS_H
+#define IOT_RPI_APP_HELPERS_H
 
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/storage_hal/storage_hal.h>
-//#include <virgil/iot/firmware/firmware.h>
-
-extern char *self_path;
-
-int
-vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
-
 
 vs_status_e
-vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
+vs_app_commandline_params(int argc, char **argv, vs_mac_addr_t *forced_mac_addr);
 
-//-----------------------------------
+void
+vs_app_print_title(const char *devices_dir,
+                   const char *app_file,
+                   const char *manufacture_id_str,
+                   const char *device_type_str);
 
+void
+vs_app_sleep_until_stop(void);
 
-vs_netif_t *
-vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr);
+void
+vs_app_restart(void);
 
+void
+vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size);
 
-#endif // IOT_RPI_HAL_H
+void
+vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
+
+#endif // IOT_RPI_APP_HELPERS_H

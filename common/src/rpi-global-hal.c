@@ -47,11 +47,11 @@
 #include <virgil/iot/macros/macros.h>
 #include <stdlib-config.h>
 #include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-storage-hal.h"
+#include "sdk-impl/storage/storage-nix-impl.h"
 
 #include "sdk-impl/netif/netif-queue.h"
-#include "sdk-impl/netif/rpi-udp-broadcast.h"
-#include "hal/storage/rpi-file-io.h"
+#include "sdk-impl/netif/netif-udp-broadcast.h"
+#include "helpers/file-io.h"
 
 #define NEW_APP_EXTEN ".new"
 #define BACKUP_APP_EXTEN ".old"
@@ -60,13 +60,6 @@
 #define CMD_STR_MV_TEMPLATE "mv %s %s"
 #define CMD_STR_START_TEMPLATE "%s %s"
 
-static const char *_tl_dir = "trust_list";
-static const char *_firmware_dir = "firmware";
-static const char *_slots_dir = "slots";
-
-static pthread_mutex_t _sleep_lock;
-static bool _need_restart = false;
-
 /******************************************************************************/
 void
 vs_impl_msleep(size_t msec) {
@@ -74,46 +67,9 @@ vs_impl_msleep(size_t msec) {
 }
 
 /******************************************************************************/
-bool
-vs_logger_output_hal(const char *buffer) {
-    if (!buffer) {
-        return false;
-    }
-
-    int res = printf("%s", buffer) != 0;
-    fflush(stdout);
-    return res != 0;
-}
-
-/******************************************************************************/
-void
-vs_rpi_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
-    // TODO: Need to use real serial
-    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
-    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
-}
-
-/******************************************************************************/
 void
 vs_impl_device_serial(vs_device_serial_t serial_number) {
     memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
-}
-
-/******************************************************************************/
-void
-vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size) {
-    size_t pos;
-    size_t len;
-
-    assert(src && *src);
-    assert(elem_buf_size);
-
-    memset(dst, 0, elem_buf_size);
-
-    len = strlen(src);
-    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
-        *dst = *src;
-    }
 }
 
 /******************************************************************************/
@@ -154,9 +110,9 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
 
-    if (!_need_restart) {
-        return 0;
-    }
+    //    if (!_need_restart) {
+    //        return 0;
+    //    }
 
     if (NULL == self_path) {
         return -1;
@@ -244,60 +200,6 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
 }
 
 /******************************************************************************/
-static void
-_wait_signal_process(int sig, siginfo_t *si, void *context) {
-    pthread_mutex_unlock(&_sleep_lock);
-}
-
-/******************************************************************************/
-void
-vs_rpi_hal_sleep_until_stop(void) {
-    struct sigaction sigaction_ctx;
-
-    memset(&sigaction_ctx, 0, sizeof(sigaction_ctx));
-
-    // Catch Signals to terminate application correctly
-    sigaction_ctx.sa_flags = SA_SIGINFO;
-    sigaction_ctx.sa_sigaction = _wait_signal_process;
-    sigaction(SIGINT, &sigaction_ctx, NULL);
-    sigaction(SIGTERM, &sigaction_ctx, NULL);
-
-    if (0 != pthread_mutex_init(&_sleep_lock, NULL)) {
-        VS_LOG_ERROR("Mutex init failed");
-        return;
-    }
-
-    pthread_mutex_lock(&_sleep_lock);
-    pthread_mutex_lock(&_sleep_lock);
-
-    pthread_mutex_destroy(&_sleep_lock);
-}
-
-/******************************************************************************/
-vs_status_e
-vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac) {
-    static char base_dir[FILENAME_MAX] = {0};
-
-
-    CHECK_NOT_ZERO_RET(devices_dir && devices_dir[0], VS_CODE_ERR_INCORRECT_ARGUMENT);
-
-    if (VS_IOT_SNPRINTF(base_dir,
-                        FILENAME_MAX,
-                        "%s/%x:%x:%x:%x:%x:%x",
-                        devices_dir,
-                        device_mac.bytes[0],
-                        device_mac.bytes[1],
-                        device_mac.bytes[2],
-                        device_mac.bytes[3],
-                        device_mac.bytes[4],
-                        device_mac.bytes[5]) <= 0) {
-        return VS_CODE_ERR_TOO_SMALL_BUFFER;
-    }
-
-    return vs_hal_files_set_dir(base_dir) ? VS_CODE_OK : VS_CODE_ERR_FILE;
-}
-
-/******************************************************************************/
 vs_netif_t *
 vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
     vs_netif_t *netif = NULL;
@@ -310,49 +212,6 @@ vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
     queued_netif = vs_netif_queued(netif);
 
     return queued_netif;
-}
-
-/******************************************************************************/
-vs_status_e
-vs_rpi_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max) {
-
-    CHECK_NOT_ZERO_RET(storage_impl, VS_CODE_ERR_INCORRECT_ARGUMENT);
-    CHECK_NOT_ZERO_RET(base_dir, VS_CODE_ERR_INCORRECT_ARGUMENT);
-
-    memset(storage_impl, 0, sizeof(*storage_impl));
-
-    // Prepare TL storage
-    storage_impl->impl_func = vs_rpi_storage_impl_func();
-    storage_impl->impl_data = vs_rpi_storage_impl_data_init(base_dir);
-    storage_impl->file_sz_limit = file_size_max;
-
-    /*
-    // TODO: Dirty hack until correct reading own descriptor won't be implemented
-    vs_firmware_descriptor_t desc;
-    vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_storage_impl, &desc);
- */
-
-    return VS_CODE_OK;
-}
-
-/******************************************************************************/
-void
-vs_rpi_print_title(const char *devices_dir,
-                   const char *app_file,
-                   const char *manufacture_id_str,
-                   const char *device_type_str) {
-    VS_LOG_INFO("\n\n");
-    VS_LOG_INFO("--------------------------------------------");
-    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
-    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
-    VS_LOG_INFO("--------------------------------------------\n");
-}
-
-/******************************************************************************/
-void
-vs_rpi_restart(void) {
-    _need_restart = true;
-    pthread_mutex_unlock(&_sleep_lock);
 }
 
 // static void
@@ -427,24 +286,6 @@ vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
     CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     return vs_load_own_footer(footer, footer_sz);
-}
-
-/******************************************************************************/
-const char *
-vs_rpi_trustlist_dir(void) {
-    return _tl_dir;
-}
-
-/******************************************************************************/
-const char *
-vs_rpi_firmware_dir(void) {
-    return _firmware_dir;
-}
-
-/******************************************************************************/
-const char *
-vs_rpi_slots_dir(void) {
-    return _slots_dir;
 }
 
 /******************************************************************************/

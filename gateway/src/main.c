@@ -45,9 +45,10 @@
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "gateway.h"
-#include "helpers/input-params.h"
+#include "helpers/app-helpers.h"
 #include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-file-cache.h"
+#include "helpers/file-cache.h"
+#include "helpers/app-storage.h"
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
@@ -74,20 +75,20 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Get input parameters
-    STATUS_CHECK(vs_process_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+    STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Print title
-    vs_rpi_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
+    vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
 
     // Prepare local storage
-    STATUS_CHECK(vs_rpi_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
+    STATUS_CHECK(vs_app_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
     // Enable cached file IO
     vs_file_cache_enable(true);
 
     // Prepare device parameters
-    vs_rpi_get_serial(serial, forced_mac_addr);
-    vs_rpi_create_data_array(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_rpi_create_data_array(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     //
     // ---------- Create implementations ----------
@@ -97,15 +98,15 @@ main(int argc, char *argv[]) {
     netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, vs_rpi_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
                  "Cannot create TrustList storage");
 
     // Slots storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&slots_storage_impl, vs_rpi_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, vs_rpi_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM
@@ -158,7 +159,7 @@ main(int argc, char *argv[]) {
     start_gateway_threads();
 
     // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
+    vs_app_sleep_until_stop();
 
 
     //

@@ -32,7 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <hal/storage/rpi-file-cache.h>
+#include <helpers/file-cache.h>
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>

@@ -36,7 +36,7 @@
 #define IOT_RPI_STORAGE_HAL_H
 
 #include <virgil/iot/storage_hal/storage_hal.h>
-#include "rpi-file-io.h"
+#include "helpers/file-io.h"
 #include <virgil/iot/status_code/status_code.h>
 
 vs_storage_impl_data_ctx_t

@@ -34,7 +34,13 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "helpers/input-params.h"
+#include <errno.h>
+#include <signal.h>
+#include <pthread.h>
+#include "helpers/app-helpers.h"
+
+static pthread_mutex_t _sleep_lock;
+static bool _need_restart = false;
 
 /******************************************************************************/
 static char *
@@ -75,7 +81,7 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 
 /******************************************************************************/
 vs_status_e
-vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr) {
+vs_app_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr) {
     static const char *MAC_SHORT = "-m";
     static const char *MAC_FULL = "--mac";
     char *mac_str;
@@ -99,6 +105,81 @@ vs_process_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_
     }
 
     return VS_CODE_OK;
+}
+
+/******************************************************************************/
+void
+vs_app_print_title(const char *devices_dir,
+                   const char *app_file,
+                   const char *manufacture_id_str,
+                   const char *device_type_str) {
+    VS_LOG_INFO("\n\n");
+    VS_LOG_INFO("--------------------------------------------");
+    VS_LOG_INFO("%s app at %s", devices_dir, app_file);
+    VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
+    VS_LOG_INFO("--------------------------------------------\n");
+}
+
+/******************************************************************************/
+static void
+_wait_signal_process(int sig, siginfo_t *si, void *context) {
+    pthread_mutex_unlock(&_sleep_lock);
+}
+
+/******************************************************************************/
+void
+vs_app_sleep_until_stop(void) {
+    struct sigaction sigaction_ctx;
+
+    memset(&sigaction_ctx, 0, sizeof(sigaction_ctx));
+
+    // Catch Signals to terminate application correctly
+    sigaction_ctx.sa_flags = SA_SIGINFO;
+    sigaction_ctx.sa_sigaction = _wait_signal_process;
+    sigaction(SIGINT, &sigaction_ctx, NULL);
+    sigaction(SIGTERM, &sigaction_ctx, NULL);
+
+    if (0 != pthread_mutex_init(&_sleep_lock, NULL)) {
+        VS_LOG_ERROR("Mutex init failed");
+        return;
+    }
+
+    pthread_mutex_lock(&_sleep_lock);
+    pthread_mutex_lock(&_sleep_lock);
+
+    pthread_mutex_destroy(&_sleep_lock);
+}
+
+/******************************************************************************/
+void
+vs_app_restart(void) {
+    _need_restart = true;
+    pthread_mutex_unlock(&_sleep_lock);
+}
+
+/******************************************************************************/
+void
+vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size) {
+    size_t pos;
+    size_t len;
+
+    assert(src && *src);
+    assert(elem_buf_size);
+
+    memset(dst, 0, elem_buf_size);
+
+    len = strlen(src);
+    for (pos = 0; pos < len && pos < elem_buf_size; ++pos, ++src, ++dst) {
+        *dst = *src;
+    }
+}
+
+/******************************************************************************/
+void
+vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
+    // TODO: Need to use real serial
+    VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
+    VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
 }
 
 /******************************************************************************/
