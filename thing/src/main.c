@@ -129,7 +129,7 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&fw_storage_impl, hsm_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // Firmware module
     STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),

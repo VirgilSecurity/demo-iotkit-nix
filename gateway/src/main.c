@@ -51,6 +51,24 @@
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
+static vs_status_e
+_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
+    switch (file_type->type) {
+    case VS_UPDATE_FIRMWARE:
+        *update_ctx = vs_firmware_update_ctx();
+        break;
+    case VS_UPDATE_TRUST_LIST:
+        *update_ctx = vs_tl_update_ctx();
+        break;
+    default:
+        VS_LOG_ERROR("Unsupported file type : %d", file_type->type);
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
+    }
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
@@ -140,11 +158,11 @@ main(int argc, char *argv[]) {
 
     //  INFO server service
     sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
 
-    //  FLDT client service
-    sdmp_fldt_server = vs_sdmp_fldt_server();
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT client service");
+    //  FLDT server service
+    sdmp_fldt_server = vs_sdmp_fldt_server(&forced_mac_addr, _add_filetype);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT server service");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
                  "Unable to add firmware file type");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),

@@ -54,6 +54,7 @@
 #include "hal/storage/rpi-file-io.h"
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/cloud/cloud.h>
+#include <update-config.h>
 
 #define NEW_APP_EXTEN ".new"
 #define BACKUP_APP_EXTEN ".old"
