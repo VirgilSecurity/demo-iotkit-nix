@@ -48,6 +48,7 @@
 #include "helpers/input-params.h"
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-file-cache.h"
+#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
 int
@@ -126,7 +127,8 @@ main(int argc, char *argv[]) {
                  "Unable to initialize SDMP module");
 
     // Cloud module
-    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), hsm_impl), "Unable to initialize Cloud module");
+    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
+                 "Unable to initialize Cloud module");
 
     //
     // ---------- Register SDMP services ----------
