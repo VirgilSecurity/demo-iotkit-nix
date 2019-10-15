@@ -40,6 +40,7 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 # Clang format
 include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
 
 #------------------------------------------------------------------------------
 #   Settings
@@ -58,29 +59,16 @@ option(USE_UBSAN "On/Off Undefined behavior sanitizer." OFF)
 option(USE_TSAN "On/Off Thread sanitizer." OFF)
 
 #
-# Target options
-#
-function(create_text_option _name _maxlen _default_val _descr)
-    if ((NOT DEFINED ${_name}) OR (${_name} STREQUAL ""))
-        message("* Use default ${_name}=\"${_default_val}\"")
-        set(${_name} "${_default_val}" CACHE STRING "${_descr}")
-    else()
-        string(LENGTH ${${_name}} LEN)
-        if (${LEN} GREATER ${_maxlen})
-            message(FATAL_ERROR "${_name} parameter must be less than ${_maxlen} symbols")
-        else()
-            message("* ${_name}=\"${${_name}}\"")
-        endif ()
-    endif()
-endfunction()
-
 # Manufacture and model options
+#
 create_text_option(GATEWAY_MANUFACTURE "16" "VRGL" "Gateway manufacture code")
 create_text_option(GATEWAY_MODEL "4" "Cf01" "Gateway model code")
 create_text_option(THING_MANUFACTURE "16" "VIRGIL" "Thing manufacture code")
 create_text_option(THING_MODEL "4" "MCU1" "Thing model code")
 
+#
 # Project version options
+#
 create_text_option(APP_MAJOR "3" "0" "Application major version")
 create_text_option(APP_MINOR "3" "0" "Application minor version")
 create_text_option(APP_PATCH "3" "0" "Application patch version")
@@ -88,7 +76,9 @@ create_text_option(APP_DEV_MILESTONE "1" "0" "Application milestone version")
 create_text_option(APP_DEV_BUILD "3" "0" "Application build version")
 set(APP_VERSION "${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}.${APP_DEV_MILESTONE}.${APP_DEV_BUILD}")
 
+#
 # Path to config file for a firmware signer
+#
 if(NOT VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH AND NOT GO_DISABLE)
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json" "[{\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-auth1.key\", \"key_type\": 1, \"ec_type\": 3}, {\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-firmware1.key\", \"key_type\": 3, \"ec_type\": 3}]")
     set(VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json")
@@ -100,40 +90,33 @@ option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
 #
 #   Check setting compatibility
 #
-if (BIGENDIAN_64_BIT_BUILD)
+if(BIGENDIAN_64_BIT_BUILD)
     set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips64.toolchain.cmake")
-endif ()
+endif()
 
-if (BIGENDIAN_32_BIT_BUILD)
+if(BIGENDIAN_32_BIT_BUILD)
     set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
     set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips32.toolchain.cmake")
-endif ()
+endif()
 
 #------------------------------------------------------------------------------
 #   Golang
 #------------------------------------------------------------------------------
-if (NOT GO_DISABLE)
-    include(cmake/golang.cmake)
-    include(cmake/flags.cmake)
+if(NOT GO_DISABLE)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/golang.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/flags.cmake)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
-endif ()
+endif()
 
 #------------------------------------------------------------------------------
 #   Setup project
 #------------------------------------------------------------------------------
-if (GO_DISABLE)
+if(GO_DISABLE)
     project(iot-rpi VERSION 0.1.0 LANGUAGES C)
-else ()
+else()
     project(iot-rpi VERSION 0.1.0 LANGUAGES C Go)
-endif ()
-
-# Helpers
-include(cmake/helpers.cmake)
-
-# ---------------------------------------------------------------------------
-#   Folders with targets
-# ---------------------------------------------------------------------------
+endif()
 
 #
 #   Virgil IoT SDK
