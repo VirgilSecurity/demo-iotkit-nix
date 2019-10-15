@@ -116,14 +116,14 @@ target_link_libraries(gateway
 #
 # Create a signed firmware image
 #
-if (NOT GO_DISABLE)
-	if (NOT GW_APP_FILE_SIZE)
+if(NOT GO_DISABLE)
+	if(NOT GW_APP_FILE_SIZE)
 		set(GW_APP_FILE_SIZE "1048576" CACHE STRING "Full gateway application file size")
-	endif ()
+	endif()
 
-	if (NOT GW_APP_CHUNK_SIZE)
+	if(NOT GW_APP_CHUNK_SIZE)
 		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
-	endif ()
+	endif()
 
 	include(signFirmware)
 
@@ -138,8 +138,7 @@ if (NOT GO_DISABLE)
 			APPL)
 
 	add_dependencies(gateway-signed virgil-firmware-signer gateway)
-
-endif ()
+endif()
 
 #
 # Format code

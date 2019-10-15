@@ -48,7 +48,7 @@ target_sources(thing
         PRIVATE
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        )
+		)
 
 #
 #	Definitions
@@ -91,7 +91,6 @@ target_link_libraries(thing
 
 		update
 		firmware
-		trust_list
 		virgil-iot-status-code
 		sdmp-thing
 
@@ -102,14 +101,14 @@ target_link_libraries(thing
 #
 # Create a signed firmware image
 #
-if (NOT GO_DISABLE)
-	if (NOT THING_APP_FILE_SIZE)
+if(NOT GO_DISABLE)
+	if(NOT THING_APP_FILE_SIZE)
 		set(THING_APP_FILE_SIZE "1048576" CACHE STRING "Full thing application file size")
-	endif ()
+	endif()
 
-	if (NOT THING_APP_CHUNK_SIZE)
+	if(NOT THING_APP_CHUNK_SIZE)
 		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
-	endif ()
+	endif()
 
 	include(signFirmware)
 
@@ -125,7 +124,7 @@ if (NOT GO_DISABLE)
 
 	add_dependencies(thing-signed virgil-firmware-signer thing)
 
-endif ()
+endif()
 
 #
 # Format code

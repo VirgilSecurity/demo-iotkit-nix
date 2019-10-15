@@ -48,20 +48,22 @@
 #include "helpers/input-params.h"
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-file-cache.h"
-
-// Implementation variables
-static vs_hsm_impl_t *hsm_impl = NULL;
-static vs_netif_t *netif_impl = NULL;
-static vs_storage_op_ctx_t tl_storage_impl;
-static vs_storage_op_ctx_t slots_storage_impl;
-static vs_storage_op_ctx_t fw_storage_impl;
+#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    vs_status_e ret_code;
+    const vs_sdmp_service_t *sdmp_info_server;
+    const vs_sdmp_service_t *sdmp_fldt_server;
     int res = -1;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
     vs_device_manufacture_id_t manufacture_id = {GW_MANUFACTURE_ID};
@@ -118,35 +120,35 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
-
-    // TrustList module
-    vs_tl_init(&tl_storage_impl, hsm_impl);
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // Firmware module
-    vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type);
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+                 "Unable to initialize Firmware module");
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
                  "Unable to initialize SDMP module");
 
     // Cloud module
-    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl(), hsm_impl), -3, "Unable to initialize Cloud module");
+    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
+                 "Unable to initialize Cloud module");
 
     //
     // ---------- Register SDMP services ----------
     //
 
     //  INFO server service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-                     "Cannot register FLDT client service");
+    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
 
     //  FLDT client service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_fldt_server()), "Cannot register FLDT client service");
-    STATUS_CHECK_RET(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
-                     "Unable to add firmware file type");
-    STATUS_CHECK_RET(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
-                     "Unable to add firmware file type");
+    sdmp_fldt_server = vs_sdmp_fldt_server();
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT client service");
+    STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
+                 "Unable to add firmware file type");
+    STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
+                 "Unable to add firmware file type");
 
 
     //
@@ -167,6 +169,8 @@ main(int argc, char *argv[]) {
     // ---------- Terminate application ----------
     //
 
+terminate:
+
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
@@ -175,8 +179,6 @@ main(int argc, char *argv[]) {
     vs_sdmp_deinit();
 
     res = vs_rpi_hal_update((const char *)GW_MANUFACTURE_ID, (const char *)GW_DEVICE_MODEL, argc, argv);
-
-terminate:
 
     // Clean File cache
     vs_file_cache_clean();

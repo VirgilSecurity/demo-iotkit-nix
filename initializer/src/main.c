@@ -32,8 +32,6 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
-
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
@@ -46,17 +44,17 @@
 
 #include "helpers/input-params.h"
 
-// Implementation variables
-static vs_hsm_impl_t *hsm_impl = NULL;
-static vs_netif_t *netif_impl = NULL;
-static vs_storage_op_ctx_t tl_storage_impl;
-static vs_storage_op_ctx_t slots_storage_impl;
-
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    vs_status_e ret_code;
+    const vs_sdmp_service_t *sdmp_prvs_server;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
 
     // Device parameters
     vs_device_manufacture_id_t manufacture_id = {0};
@@ -115,10 +113,7 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
-
-    // TrustList module
-    vs_tl_init(&tl_storage_impl, hsm_impl);
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
@@ -129,7 +124,8 @@ main(int argc, char *argv[]) {
     //
 
     //  PRVS service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_server(hsm_impl)), "Cannot register PRVS service");
+    sdmp_prvs_server = vs_sdmp_prvs_server(hsm_impl);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_prvs_server), "Cannot register PRVS service");
 
 
     //
@@ -143,15 +139,14 @@ main(int argc, char *argv[]) {
     //
     // ---------- Terminate application ----------
     //
+terminate:
 
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
 
-    // Deinitialize Virgil SDK modules
+    // Deinit Virgil SDK modules
     vs_sdmp_deinit();
-
-terminate:
 
     return VS_CODE_OK;
 }

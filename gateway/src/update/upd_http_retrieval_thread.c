@@ -38,14 +38,11 @@
 #include <helpers/event-group-bits.h>
 #include "event-flags.h"
 
-#include <virgil/iot/macros/macros.h>
 #include <virgil/iot/logger/logger.h>
 #include "helpers/msg-queue.h"
 
 static pthread_t upd_retrieval_thread;
 static vs_msg_queue_ctx_t *_event_queue;
-
-// static const uint16_t upd_retrieval_stack = 10 * 1024;
 
 static bool is_retrieval_started;
 
@@ -198,3 +195,5 @@ vs_upd_http_retrieval_get_request(vs_update_file_type_t **request) {
     }
     return false;
 }
+
+/*************************************************************************/

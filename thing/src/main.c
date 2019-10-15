@@ -51,13 +51,6 @@
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #endif
 
-// Implementation variables
-static vs_hsm_impl_t *hsm_impl = NULL;
-static vs_netif_t *netif_impl = NULL;
-static vs_storage_op_ctx_t tl_storage_impl;
-static vs_storage_op_ctx_t slots_storage_impl;
-static vs_storage_op_ctx_t fw_storage_impl;
-
 static void
 _on_file_updated(vs_update_file_type_t *file_type,
                  const vs_file_version_t *prev_file_ver,
@@ -70,8 +63,16 @@ _on_file_updated(vs_update_file_type_t *file_type,
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    vs_status_e ret_code;
+    const vs_sdmp_service_t *sdmp_info_server;
+    const vs_sdmp_service_t *sdmp_fldt_client;
     int res = -1;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
     vs_device_manufacture_id_t manufacture_id = {THING_MANUFACTURE_ID};
@@ -128,13 +129,11 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
-
-    // TrustList module
-    vs_tl_init(&tl_storage_impl, hsm_impl);
+    STATUS_CHECK(vs_provision_init(&fw_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // Firmware module
-    vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type);
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+                 "Unable to initialize Firmware module");
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
@@ -145,16 +144,16 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-                     "Cannot register FLDT client service");
+    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
 
     //  FLDT client service
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_fldt_client(_on_file_updated)),
-                     "Cannot register FLDT client service");
-    STATUS_CHECK_RET(vs_fldt_client_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx()),
-                     "Unable to add firmware file type");
-    STATUS_CHECK_RET(vs_fldt_client_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx()),
-                     "Unable to add firmware file type");
+    sdmp_fldt_client = vs_sdmp_fldt_client(_on_file_updated);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_client), "Cannot register FLDT client service");
+    STATUS_CHECK(vs_fldt_client_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx()),
+                 "Unable to add firmware file type");
+    STATUS_CHECK(vs_fldt_client_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx()),
+                 "Unable to add firmware file type");
 
 
     //
@@ -175,6 +174,8 @@ main(int argc, char *argv[]) {
     // ---------- Terminate application ----------
     //
 
+terminate:
+
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
@@ -182,8 +183,6 @@ main(int argc, char *argv[]) {
     vs_sdmp_deinit();
 
     res = vs_rpi_hal_update((const char *)THING_MANUFACTURE_ID, (const char *)THING_DEVICE_MODEL, argc, argv);
-
-terminate:
 
     return res;
 }
