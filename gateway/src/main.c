@@ -109,7 +109,7 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, vs_rpi_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+    STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, vs_rpi_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM

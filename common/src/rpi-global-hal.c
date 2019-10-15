@@ -126,31 +126,26 @@ vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size) {
 static void
 _delete_bad_firmware(const char *manufacture_id_str, const char *device_type_str) {
 
-    //    vs_device_manufacture_id_t manufacture_id;
-    //    vs_device_type_t device_type;
-    //    vs_storage_op_ctx_t op_ctx;
-    //    vs_firmware_descriptor_t desc;
-    //
-    //    assert(manufacture_id_str);
-    //    assert(device_type_str);
-    //
-    //    op_ctx.impl_func = vs_rpi_storage_impl_func();
-    //    assert(op_ctx.impl_func.deinit);
-    //    op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    //
-    //    op_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
-    //
-    //    _create_field(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    //    _create_field(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
-    //
-    //    if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(&op_ctx, manufacture_id, device_type, &desc)) {
-    //        VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
-    //    } else {
-    //        vs_firmware_delete_firmware(&op_ctx, &desc);
-    //    }
-    //
-    //    op_ctx.impl_func.deinit(op_ctx.impl_data);
-    //    VS_LOG_INFO("Bad firmware has been deleted");
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
+    vs_firmware_descriptor_t desc;
+
+    assert(manufacture_id_str);
+    assert(device_type_str);
+
+    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
+
+    if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(manufacture_id, device_type, &desc)) {
+        VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
+    } else {
+        if (VS_CODE_OK != vs_firmware_delete_firmware(&desc)) {
+            VS_LOG_WARNING("Unable to delete bad firmware image");
+            return;
+        }
+    }
+
+    VS_LOG_INFO("Bad firmware has been deleted");
 }
 
 /******************************************************************************/
@@ -331,12 +326,6 @@ vs_rpi_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_d
     storage_impl->impl_func = vs_rpi_storage_impl_func();
     storage_impl->impl_data = vs_rpi_storage_impl_data_init(base_dir);
     storage_impl->file_sz_limit = file_size_max;
-
-    /*
-    // TODO: Dirty hack until correct reading own descriptor won't be implemented
-    vs_firmware_descriptor_t desc;
-    vs_load_own_firmware_descriptor(manufacture_id_str, device_type_str, fw_storage_impl, &desc);
- */
 
     return VS_CODE_OK;
 }
