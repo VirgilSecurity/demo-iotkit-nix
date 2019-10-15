@@ -87,9 +87,6 @@ main(int argc, char *argv[]) {
     vs_rpi_create_data_array(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
     vs_rpi_create_data_array(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
-    // Init cloud library
-    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl(), hsm_impl), -3, "Unable to initialize cloud");
-
     //
     // ---------- Create implementations ----------
     //

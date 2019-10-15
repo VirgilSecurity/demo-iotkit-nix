@@ -123,9 +123,6 @@ _restart_app() {
     }
     VS_LOG_INFO("upd_http_retrieval_thread thread canceled");
 
-    // Destroy sdmp services
-    vs_fldt_destroy_server();
-
     /* Cleanup a mutexes */
     pthread_mutex_destroy(&_gtwy.firmware_mutex);
     pthread_mutex_destroy(&_gtwy.tl_mutex);

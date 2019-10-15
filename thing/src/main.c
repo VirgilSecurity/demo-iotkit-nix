@@ -179,9 +179,6 @@ main(int argc, char *argv[]) {
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
-    // TODO: Move to vs_sdmp_deinit
-    vs_fldt_destroy_client();
-
     res = vs_rpi_hal_update((const char *)THING_MANUFACTURE_ID, (const char *)THING_DEVICE_MODEL, argc, argv);
 
 terminate:
