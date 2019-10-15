@@ -46,8 +46,6 @@
 #include <global-hal.h>
 
 typedef struct gtwy_s {
-    vs_storage_op_ctx_t fw_update_ctx;
-
     vs_event_group_bits_t shared_events;
     vs_event_group_bits_t message_bin_events;
     vs_event_group_bits_t incoming_data_events;

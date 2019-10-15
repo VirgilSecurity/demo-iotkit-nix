@@ -36,27 +36,23 @@
 #include "message_bin.h"
 #include "upd_http_retrieval_thread.h"
 #include "event-flags.h"
-#include "fldt-impl-gw.h"
 #include "hal/storage/rpi-storage-hal.h"
 #include "hal/rpi-global-hal.h"
 
 #include <global-hal.h>
-#include <update-config.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/protocols/sdmp/fldt/fldt-private.h>
 #include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
+#include <virgil/iot/trust_list/trust_list.h>
 
-static gtwy_t _gtwy = {.fw_update_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE,
-                       .firmware_mutex = PTHREAD_MUTEX_INITIALIZER,
-                       .tl_mutex = PTHREAD_MUTEX_INITIALIZER};
+static gtwy_t _gtwy = {.firmware_mutex = PTHREAD_MUTEX_INITIALIZER, .tl_mutex = PTHREAD_MUTEX_INITIALIZER};
 
 
 static bool is_threads_started = false;
 static pthread_t gateway_starter_thread;
 
-#define MAIN_THREAD_SLEEP_S 2
+#define MAIN_THREAD_SLEEP_S (2)
 
 #if SIMULATOR
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
@@ -68,18 +64,15 @@ static pthread_t *upd_http_retrieval_thread;
 /******************************************************************************/
 gtwy_t *
 init_gateway_ctx(vs_mac_addr_t *mac_addr) {
-    //    vs_rpi_storage_impl_func(&_gtwy.fw_update_ctx.impl_func);
-    //    _gtwy.fw_update_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
-    //
-    //    if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
-    //        exit(-1);
-    //    }
-    //    if (0 != vs_event_group_init(&_gtwy.message_bin_events)) {
-    //        exit(-1);
-    //    }
-    //    if (0 != vs_event_group_init(&_gtwy.shared_events)) {
-    //        exit(-1);
-    //    }
+    if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
+        exit(-1);
+    }
+    if (0 != vs_event_group_init(&_gtwy.message_bin_events)) {
+        exit(-1);
+    }
+    if (0 != vs_event_group_init(&_gtwy.shared_events)) {
+        exit(-1);
+    }
 
     return &_gtwy;
 }
@@ -168,14 +161,12 @@ _gateway_task(void *pvParameters) {
 
             switch (queued_file->type) {
             case VS_UPDATE_FIRMWARE:
-                if (_is_self_firmware_image((vs_file_info_t *)&queued_file->add_info)) { //-V641 (PVS_IGNORE)
-                    request = (vs_file_info_t *)&queued_file->add_info;                  //-V641 (PVS_IGNORE)
+                request = &queued_file->info;
+                if (_is_self_firmware_image(request)) {
                     if (0 == pthread_mutex_lock(&_gtwy.firmware_mutex)) {
-                        if (VS_CODE_OK == vs_firmware_load_firmware_descriptor(&_gtwy.fw_update_ctx,
-                                                                               request->manufacture_id,
-                                                                               request->device_type,
-                                                                               &desc) &&
-                            VS_CODE_OK == vs_firmware_install_firmware(&_gtwy.fw_update_ctx, &desc)) {
+                        if (VS_CODE_OK == vs_firmware_load_firmware_descriptor(
+                                                  request->manufacture_id, request->device_type, &desc) &&
+                            VS_CODE_OK == vs_firmware_install_firmware(&desc)) {
                             (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
 
                             _restart_app();
@@ -186,7 +177,7 @@ _gateway_task(void *pvParameters) {
 
                 VS_LOG_DEBUG("Send info about new Firmware over SDMP");
 
-                if (vs_fldt_update_server_file_type(queued_file, &_fw_update_ctx, true)) {
+                if (vs_fldt_server_add_file_type(queued_file, vs_firmware_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new firmware");
                     // TODO :how to process???
                 }
@@ -195,7 +186,7 @@ _gateway_task(void *pvParameters) {
             case VS_UPDATE_TRUST_LIST:
                 VS_LOG_DEBUG("Send info about new Trust List over SDMP");
 
-                if (vs_fldt_update_server_file_type(queued_file, &_tl_update_ctx, true)) {
+                if (vs_fldt_server_add_file_type(queued_file, vs_tl_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new Trust List");
                     // TODO :how to process???
                 }
@@ -221,7 +212,6 @@ _gateway_task(void *pvParameters) {
 /******************************************************************************/
 void
 start_gateway_threads(void) {
-    //        void *res;
     if (!is_threads_started) {
         is_threads_started = true;
 
@@ -232,3 +222,5 @@ start_gateway_threads(void) {
         }
     }
 }
+
+/******************************************************************************/

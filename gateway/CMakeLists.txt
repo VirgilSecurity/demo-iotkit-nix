@@ -51,7 +51,6 @@ target_sources(gateway
 		${CMAKE_CURRENT_LIST_DIR}/include/event-flags.h
         ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
         ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-gw.h
         ${CMAKE_CURRENT_LIST_DIR}/include/test_update_thread.h
         ${CMAKE_CURRENT_LIST_DIR}/include/upd_http_retrieval_thread.h
 
@@ -59,10 +58,8 @@ target_sources(gateway
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-gw.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
         )
 
 #
