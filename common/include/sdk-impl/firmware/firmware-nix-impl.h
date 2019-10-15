@@ -32,5 +32,14 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include "helpers/app-helpers.h"
+#ifndef IOT_RPI_FIRMWARE_HAL_H
+#define IOT_RPI_FIRMWARE_HAL_H
 
+#include <virgil/iot/storage_hal/storage_hal.h>
+#include "helpers/file-io.h"
+#include <virgil/iot/status_code/status_code.h>
+
+int
+vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
+
+#endif // IOT_RPI_FIRMWARE_HAL_H

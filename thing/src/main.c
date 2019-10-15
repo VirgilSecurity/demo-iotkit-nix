@@ -43,7 +43,6 @@
 #include <trust_list-config.h>
 #include <update-config.h>
 
-#include "hal/rpi-global-hal.h"
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 #include "helpers/file-cache.h"
@@ -87,7 +86,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Set self path
-    vs_rpi_set_app_metainfo(argv[0], manufacture_id, device_type);
+    vs_app_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
     vs_app_print_title("Thing", argv[0], THING_MANUFACTURE_ID, THING_DEVICE_MODEL);
@@ -108,7 +107,7 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),

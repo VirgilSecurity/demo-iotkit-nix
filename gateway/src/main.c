@@ -32,6 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
@@ -40,15 +41,14 @@
 #include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "gateway.h"
 #include "helpers/app-helpers.h"
-#include "hal/rpi-global-hal.h"
 #include "helpers/file-cache.h"
 #include "helpers/app-storage.h"
+#include "sdk-impl/firmware/firmware-nix-impl.h"
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
@@ -96,7 +96,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Set self path
-    vs_rpi_set_app_metainfo(argv[0], manufacture_id, device_type);
+    vs_app_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
     vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
@@ -117,7 +117,7 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -203,6 +203,18 @@ terminate:
     vs_file_cache_clean();
 
     return res;
+}
+
+/******************************************************************************/
+void
+vs_impl_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
+
+/******************************************************************************/
+void
+vs_impl_device_serial(vs_device_serial_t serial_number) {
+    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/

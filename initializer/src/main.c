@@ -39,7 +39,6 @@
 #include <virgil/iot/protocols/sdmp/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
-#include <hal/rpi-global-hal.h>
 #include <trust_list-config.h>
 
 #include "helpers/app-helpers.h"
@@ -96,7 +95,7 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),

@@ -58,4 +58,12 @@ vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size);
 void
 vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
 
+void
+vs_app_set_info(const char *app_file,
+                const vs_device_manufacture_id_t manufacture_id_str,
+                const vs_device_type_t device_type_str);
+
+vs_netif_t *
+vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr);
+
 #endif // IOT_RPI_APP_HELPERS_H
