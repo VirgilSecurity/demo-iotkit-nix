@@ -46,7 +46,7 @@ add_executable(rpi-tests)
 #
 target_sources(rpi-tests
 		PRIVATE
-		main.c
+		${CMAKE_CURRENT_LIST_DIR}/main.c
 		)
 
 #
@@ -68,6 +68,6 @@ target_link_libraries(rpi-tests
 #
 # Format code
 #
-if (COMMAND add_clangformat)
+if(COMMAND add_clangformat)
 	add_clangformat(rpi-tests)
-endif ()
+endif()

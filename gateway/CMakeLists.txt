@@ -138,8 +138,7 @@ if(NOT GO_DISABLE)
 			APPL)
 
 	add_dependencies(gateway-signed virgil-firmware-signer gateway)
-
-endif ()
+endif()
 
 #
 # Format code
