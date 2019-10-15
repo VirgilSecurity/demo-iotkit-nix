@@ -52,6 +52,9 @@
 #include "sdk-impl/netif/netif-queue.h"
 #include "sdk-impl/netif/netif-udp-broadcast.h"
 #include "helpers/file-io.h"
+#include <virgil/iot/firmware/firmware.h>
+#include <virgil/iot/cloud/cloud.h>
+#include <update-config.h>
 
 #define NEW_APP_EXTEN ".new"
 #define BACKUP_APP_EXTEN ".old"
@@ -60,6 +63,9 @@
 #define CMD_STR_MV_TEMPLATE "mv %s %s"
 #define CMD_STR_START_TEMPLATE "%s %s"
 
+static const char *_self_path;
+static vs_device_manufacture_id_t _manufacture_id;
+static vs_device_type_t _device_type;
 /******************************************************************************/
 void
 vs_impl_msleep(size_t msec) {
@@ -114,7 +120,7 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
     //        return 0;
     //    }
 
-    if (NULL == self_path) {
+    if (NULL == _self_path) {
         return -1;
     }
 
@@ -122,8 +128,8 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
 
     VS_LOG_INFO("Try to update app");
 
-    strncpy(new_app, self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
-    strncpy(old_app, self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
+    strncpy(new_app, _self_path, sizeof(new_app) - sizeof(NEW_APP_EXTEN));
+    strncpy(old_app, _self_path, sizeof(new_app) - sizeof(BACKUP_APP_EXTEN));
 
     strcat(old_app, BACKUP_APP_EXTEN);
     strcat(new_app, NEW_APP_EXTEN);
@@ -144,13 +150,13 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
     }
 
     // Create backup of current app
-    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, self_path, old_app);
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_CPY_TEMPLATE, _self_path, old_app);
     if (-1 == system(cmd_str)) {
         VS_LOG_ERROR("Error backup current app. errno = %d (%s)", errno, strerror(errno));
 
         // restart self
         VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, _self_path, copy_args);
         if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
             VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
             return -1;
@@ -158,13 +164,13 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
     }
 
     // Update current app to new
-    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, self_path);
-    if (-1 == system(cmd_str) || -1 == chmod(self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
+    VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, new_app, _self_path);
+    if (-1 == system(cmd_str) || -1 == chmod(_self_path, S_IXUSR | S_IWUSR | S_IRUSR)) {
         VS_LOG_ERROR("Error update app. errno = %d (%s)", errno, strerror(errno));
 
         // restart self
         VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, _self_path, copy_args);
         if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
             VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
             return -1;
@@ -172,7 +178,7 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
     }
 
     // Start new app
-    if (-1 == execv(self_path, argv)) {
+    if (-1 == execv(_self_path, argv)) {
         VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
 
         // remove the bad stored firmware image
@@ -180,7 +186,7 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
 
         // restore current app
         VS_LOG_INFO("Restore current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, self_path);
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_MV_TEMPLATE, old_app, _self_path);
         if (-1 == system(cmd_str)) {
             VS_LOG_ERROR("Error restore current app. errno = %d (%s)", errno, strerror(errno));
             return -1;
@@ -188,7 +194,7 @@ vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, i
 
         // restart self
         VS_LOG_INFO("Restart current app");
-        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, self_path, copy_args);
+        VS_IOT_SNPRINTF(cmd_str, sizeof(cmd_str), CMD_STR_START_TEMPLATE, _self_path, copy_args);
         if (-1 == execl("/bin/bash", "/bin/bash", "-c", cmd_str, NULL)) {
             VS_LOG_ERROR("Error restart current app. errno = %d (%s)", errno, strerror(errno));
             return -1;
@@ -214,6 +220,17 @@ vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
     return queued_netif;
 }
 
+/******************************************************************************/
+void
+vs_rpi_set_app_metainfo(const char *app_file,
+                        const vs_device_manufacture_id_t manufacture_id_str,
+                        const vs_device_type_t device_type_str) {
+    _self_path = app_file;
+    memcpy(_manufacture_id, manufacture_id_str, sizeof(_manufacture_id));
+    memcpy(_device_type, device_type_str, sizeof(_device_type));
+}
+
+/******************************************************************************/
 // static void
 //_ntoh_fw_desdcriptor(vs_firmware_descriptor_t *desc) {
 //    desc->chunk_size = ntohs(desc->chunk_size);
@@ -225,56 +242,56 @@ vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
 /******************************************************************************/
 vs_status_e
 vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
-    //    FILE *fp = NULL;
+    FILE *fp = NULL;
     vs_status_e res = VS_CODE_ERR_FILE_READ;
-    //    ssize_t length;
-    //
-    //    assert(footer);
-    //    assert(self_path);
-    //
-    //    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
-    //    CHECK_NOT_ZERO_RET(self_path, VS_CODE_ERR_FILE_READ);
-    //
-    //    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
-    //
-    //    fp = fopen(self_path, "rb");
-    //
-    //    CHECK(fp, "Unable to open file %s. errno = %d (%s)", self_path, errno, strerror(errno));
-    //
-    //    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", self_path, errno,
-    //    strerror(errno));
-    //
-    //    length = ftell(fp);
-    //    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", self_path, errno, strerror(errno));
-    //    CHECK(length > footer_sz, "Wrong self file format");
-    //
-    //    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
-    //          "Unable to seek file %s. errno = %d (%s)",
-    //          self_path,
-    //          errno,
-    //          strerror(errno));
-    //
-    //    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
-    //          "Unable to read file %s. errno = %d (%s)",
-    //          self_path,
-    //          errno,
-    //          strerror(errno));
-    //    _ntoh_fw_desdcriptor(&own_footer->descriptor);
-    //
-    //    // Simple validation of own descriptor
-    //    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
-    //        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
-    //        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id,
-    //        sizeof(vs_device_manufacture_id_t))) { VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
-    //        exit(-1);
-    //    }
-    //
-    //    res = VS_CODE_OK;
-    //
-    // terminate:
-    //    if (fp) {
-    //        fclose(fp);
-    //    }
+    ssize_t length;
+
+    assert(footer);
+    assert(_self_path);
+
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(_self_path, VS_CODE_ERR_FILE_READ);
+
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
+
+    fp = fopen(_self_path, "rb");
+
+    CHECK(fp, "Unable to open file %s. errno = %d (%s)", _self_path, errno, strerror(errno));
+
+    CHECK(0 == fseek(fp, 0, SEEK_END), "Unable to seek file %s. errno = %d (%s)", _self_path, errno, strerror(errno));
+
+    length = ftell(fp);
+    CHECK(length > 0, "Unable to get file length %s. errno = %d (%s)", _self_path, errno, strerror(errno));
+    CHECK(length > footer_sz, "Wrong self file format");
+
+    CHECK(0 == fseek(fp, length - footer_sz, SEEK_SET),
+          "Unable to seek file %s. errno = %d (%s)",
+          _self_path,
+          errno,
+          strerror(errno));
+
+    CHECK(1 == fread((void *)footer, footer_sz, 1, fp),
+          "Unable to read file %s. errno = %d (%s)",
+          _self_path,
+          errno,
+          strerror(errno));
+
+    vs_cloud_ntoh_fw_descriptor(&own_footer->descriptor);
+
+    // Simple validation of own descriptor
+    if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
+        0 != memcmp(own_footer->descriptor.info.device_type, _device_type, sizeof(vs_device_type_t)) ||
+        0 != memcmp(own_footer->descriptor.info.manufacture_id, _manufacture_id, sizeof(vs_device_manufacture_id_t))) {
+        VS_LOG_ERROR("Bad own descriptor!!!! Application aborted");
+        exit(-1);
+    }
+
+    res = VS_CODE_OK;
+
+terminate:
+    if (fp) {
+        fclose(fp);
+    }
 
     return res;
 }

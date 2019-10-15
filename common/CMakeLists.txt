@@ -94,6 +94,7 @@ target_link_libraries(rpi-common
 		secbox
 		provision
 		vs-default-soft-hsm
+		cloud
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE

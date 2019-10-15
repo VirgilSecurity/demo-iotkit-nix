@@ -39,6 +39,7 @@
 #include "event-flags.h"
 
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/trust_list/trust_list.h>
 #include "helpers/msg-queue.h"
 
 static pthread_t upd_retrieval_thread;
@@ -70,7 +71,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
-                fw_info = malloc(sizeof(*fw_info));
+                fw_info = calloc(1, sizeof(*fw_info));
                 if (!fw_info) {
                     VS_LOG_ERROR("Can't allocate memory");
                     exit(-1);
@@ -105,6 +106,10 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 static void
 _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_update_file_type_t *tl_info = NULL;
+    vs_tl_element_info_t elem = {.id = VS_TL_ELEMENT_TLH};
+    vs_tl_header_t tl_header;
+    uint16_t tl_header_sz = sizeof(tl_header);
+    uint16_t tl_ver;
 
     if (0 == pthread_mutex_lock(&gtwy->tl_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
@@ -112,11 +117,19 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         if (VS_CODE_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
-            tl_info = malloc(sizeof(*tl_info));
+            tl_info = calloc(1, sizeof(*tl_info));
             if (!tl_info) {
                 VS_LOG_ERROR("[MB] Failed memory allocation!!!");
                 goto terminate;
             }
+
+            CHECK(VS_CODE_OK == vs_tl_load_part(&elem, (uint8_t *)&tl_header, tl_header_sz, &tl_header_sz) &&
+                          tl_header_sz == sizeof(tl_header),
+                  "Unable to load Trust List header");
+            tl_ver = ntohs(tl_header.version);
+            // TODO : check Trust List version mapping to the vs_file_version_t structure
+            tl_info->info.version.major = tl_ver >> 8;
+            tl_info->info.version.minor = tl_ver & 0xFF;
             tl_info->type = VS_UPDATE_TRUST_LIST;
 
             if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {

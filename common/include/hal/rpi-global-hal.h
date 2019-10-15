@@ -42,8 +42,6 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 //#include <virgil/iot/firmware/firmware.h>
 
-extern char *self_path;
-
 int
 vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
 
@@ -53,6 +51,10 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
 
 //-----------------------------------
 
+void
+vs_rpi_set_app_metainfo(const char *app_file,
+                        const vs_device_manufacture_id_t manufacture_id_str,
+                        const vs_device_type_t device_type_str);
 
 vs_netif_t *
 vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr);

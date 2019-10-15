@@ -52,6 +52,24 @@
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
+static vs_status_e
+_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
+    switch (file_type->type) {
+    case VS_UPDATE_FIRMWARE:
+        *update_ctx = vs_firmware_update_ctx();
+        break;
+    case VS_UPDATE_TRUST_LIST:
+        *update_ctx = vs_tl_update_ctx();
+        break;
+    default:
+        VS_LOG_ERROR("Unsupported file type : %d", file_type->type);
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
+    }
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
@@ -67,8 +85,8 @@ main(int argc, char *argv[]) {
     vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {0};
-    vs_device_type_t device_type = {0};
+    vs_device_manufacture_id_t manufacture_id = {GW_MANUFACTURE_ID};
+    vs_device_type_t device_type = {GW_DEVICE_MODEL};
     vs_device_serial_t serial = {0};
 
     // Initialize Logger module
@@ -77,11 +95,15 @@ main(int argc, char *argv[]) {
     // Get input parameters
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
+    // Set self path
+    vs_rpi_set_app_metainfo(argv[0], manufacture_id, device_type);
+
     // Print title
     vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
 
     // Prepare local storage
     STATUS_CHECK(vs_app_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
+
     // Enable cached file IO
     vs_file_cache_enable(true);
 
@@ -137,11 +159,11 @@ main(int argc, char *argv[]) {
 
     //  INFO server service
     sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
 
-    //  FLDT client service
-    sdmp_fldt_server = vs_sdmp_fldt_server();
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT client service");
+    //  FLDT server service
+    sdmp_fldt_server = vs_sdmp_fldt_server(&forced_mac_addr, _add_filetype);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT server service");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
                  "Unable to add firmware file type");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
