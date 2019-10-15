@@ -44,6 +44,7 @@
 #include "fldt-impl-gw.h"
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-file-cache.h"
+#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 
 /******************************************************************************/
 int
@@ -78,7 +79,10 @@ main(int argc, char *argv[]) {
     CHECK_RET(!vs_fldt_gateway_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
 
     // Init cloud library
-    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl()), -3, "Unable to initialize cloud");
+    CHECK_RET(VS_CODE_OK == vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl()),
+              -3,
+              "Unable to initialize cloud");
+
     // Init gateway object
     init_gateway_ctx(&forced_mac_addr);
 

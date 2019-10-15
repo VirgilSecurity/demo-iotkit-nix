@@ -41,7 +41,6 @@
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
 #include <cloud-config.h>
 #include "helpers/msg-queue.h"
 
@@ -49,8 +48,6 @@
 
 static vs_msg_queue_ctx_t *upd_event_queue = NULL;
 static pthread_t _mb_thread;
-
-static vs_cloud_mb_mqtt_ctx_t _mb_mqtt_context;
 
 extern const uint8_t msg_bin_root_ca_crt[];
 
@@ -147,10 +144,9 @@ _process_topic(const char *topic, uint16_t topic_sz, const uint8_t *p_data, uint
 static void *
 _mb_mqtt_task(void *pvParameters) {
     VS_LOG_DEBUG("message bin thread started");
-    vs_cloud_mb_init_ctx(&_mb_mqtt_context, vs_aws_message_bin_impl());
 
     while (true) {
-        if (VS_CODE_OK == vs_cloud_mb_process(&_mb_mqtt_context, _process_topic, (const char *)msg_bin_root_ca_crt)) {
+        if (VS_CODE_OK == vs_cloud_message_bin_process(_process_topic, (const char *)msg_bin_root_ca_crt)) {
             vs_impl_msleep(500);
         } else {
             vs_impl_msleep(5000);
