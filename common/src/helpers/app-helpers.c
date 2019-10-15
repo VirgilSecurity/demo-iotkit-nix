@@ -42,10 +42,6 @@
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
-static const char *_self_path;
-static vs_device_manufacture_id_t _manufacture_id;
-static vs_device_type_t _device_type;
-
 /******************************************************************************/
 static char *
 _get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
@@ -184,16 +180,6 @@ vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
     // TODO: Need to use real serial
     VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
     VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
-}
-
-/******************************************************************************/
-void
-vs_app_set_info(const char *app_file,
-                const vs_device_manufacture_id_t manufacture_id_str,
-                const vs_device_type_t device_type_str) {
-    _self_path = app_file;
-    memcpy(_manufacture_id, manufacture_id_str, sizeof(_manufacture_id));
-    memcpy(_device_type, device_type_str, sizeof(_device_type));
 }
 
 /******************************************************************************/

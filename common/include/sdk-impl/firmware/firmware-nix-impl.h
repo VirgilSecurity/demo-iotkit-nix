@@ -40,6 +40,11 @@
 #include <virgil/iot/status_code/status_code.h>
 
 int
-vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
+vs_firmware_nix_update(int argc, char **argv);
+
+void
+vs_firmware_nix_set_info(const char *app_file,
+                         const vs_device_manufacture_id_t manufacture_id_str,
+                         const vs_device_type_t device_type_str);
 
 #endif // IOT_RPI_FIRMWARE_HAL_H

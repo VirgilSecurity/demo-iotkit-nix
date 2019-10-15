@@ -96,7 +96,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Set self path
-    vs_app_set_info(argv[0], manufacture_id, device_type);
+    vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
     vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
@@ -197,7 +197,7 @@ terminate:
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
-    res = vs_rpi_hal_update((const char *)GW_MANUFACTURE_ID, (const char *)GW_DEVICE_MODEL, argc, argv);
+    res = vs_firmware_nix_update(argc, argv);
 
     // Clean File cache
     vs_file_cache_clean();
