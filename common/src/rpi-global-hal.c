@@ -43,16 +43,9 @@
 #include <pthread.h>
 
 #include <virgil/iot/protocols/sdmp.h>
-//#include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/trust_list/trust_list.h>
-//#include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/hsm/hsm_helpers.h>
 #include <stdlib-config.h>
-#include <trust_list-config.h>
-#include <update-config.h>
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-storage-hal.h"
 
@@ -73,22 +66,6 @@ static const char *_slots_dir = "slots";
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
-
-// static vs_device_manufacture_id_t _manufacture_id;
-// static vs_device_type_t _device_type;
-
-
-// Implementation variables
-// static vs_hsm_impl_t *hsm_impl = NULL;
-// static vs_netif_t *netif_impl = NULL;
-// static vs_storage_op_ctx_t tl_storage_impl;
-// static vs_storage_op_ctx_t fw_storage_impl;
-
-/******************************************************************************/
-void
-vs_iot_assert(int exp) {
-    assert(exp);
-}
 
 /******************************************************************************/
 void
@@ -369,96 +346,6 @@ vs_rpi_print_title(const char *devices_dir,
     VS_LOG_INFO("%s app at %s", devices_dir, app_file);
     VS_LOG_INFO("Manufacture ID = \"%s\" , Device type = \"%s\"", manufacture_id_str, device_type_str);
     VS_LOG_INFO("--------------------------------------------\n");
-}
-
-/******************************************************************************/
-vs_status_e
-vs_rpi_start(const char *devices_dir,
-             const char *app_file,
-             vs_mac_addr_t forced_mac_addr,
-             const char *manufacture_id_str,
-             const char *device_type_str,
-             const uint32_t device_roles,
-             bool is_initializer) {
-
-    //    vs_status_e ret_code;
-    //
-    //    // Device parameters
-    //    vs_device_manufacture_id_t manufacture_id = {0};
-    //    vs_device_type_t device_type = {0};
-    //    vs_device_serial_t serial = {0};
-    //
-    //    // Check input variables
-    //    assert(devices_dir);
-    //    assert(app_file);
-    //    assert(manufacture_id_str);
-    //    assert(device_type_str);
-    //
-    //    // Initialize Logger module
-    //    vs_logger_init(VS_LOGLEV_DEBUG);
-    //
-    //    // Print title
-    //    vs_rpi_print_title(devices_dir, app_file, manufacture_id_str, device_type_str);
-    //
-    //    // Prepare local storage
-    //    STATUS_CHECK(vs_rpi_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
-    //
-    //    //
-    //    // ---------- Prepare device parameters ----------
-    //    //
-    //    vs_rpi_get_serial(serial, forced_mac_addr);
-    //    vs_rpi_create_data_array(manufacture_id, manufacture_id_str, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    //    vs_rpi_create_data_array(device_type, device_type_str, VS_DEVICE_TYPE_SIZE);
-    //
-    //
-    //    //
-    //    // ---------- Create implementations ----------
-    //    //
-    //
-    //    // Network interface
-    //    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
-    //
-    //    // TrustList storage
-    //    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, _tl_dir, VS_TL_STORAGE_MAX_PART_SIZE),
-    //                 "Cannot create TrustList storage");
-    //
-    //    // HSM
-    //    hsm_impl = vs_softhsm_impl();
-    //
-    //    // Firmware storage
-    //    if (!is_initializer) {
-    //        STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, _firmware_dir, VS_MAX_FIRMWARE_UPDATE_SIZE),
-    //                     "Cannot create Firmware storage");
-    //    }
-    //
-    //
-    //    //
-    //    // ---------- Initialize Virgil SDK modules ----------
-    //    //
-    //
-    //    // TrustList module
-    //    ret_code = vs_tl_init(&tl_storage_impl);
-    //    if (!is_initializer) {
-    //        STATUS_CHECK(ret_code, "Unable to initialize Trust List module");
-    //    }
-    //
-    //    // SDMP module
-    //    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
-    //                 "Unable to initialize SDMP module");
-    //
-    //    //
-    //    // ---------- Register SDMP services ----------
-    //    //
-    //
-    //    //  INFO service
-    //    if (!is_initializer) {
-    //        STATUS_CHECK(vs_sdmp_register_service(vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl)),
-    //                     "Cannot register SDMP:INFO service");
-    //    }
-    //
-    // terminate:
-
-    return VS_CODE_OK;
 }
 
 /******************************************************************************/
