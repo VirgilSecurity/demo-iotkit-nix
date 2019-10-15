@@ -102,12 +102,12 @@ option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
 #
 if (BIGENDIAN_64_BIT_BUILD)
     set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips64.toolchain.cmake")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips64.toolchain.cmake")
 endif ()
 
 if (BIGENDIAN_32_BIT_BUILD)
     set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mips32.toolchain.cmake")
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips32.toolchain.cmake")
 endif ()
 
 #------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ endif ()
 if (NOT GO_DISABLE)
     include(cmake/golang.cmake)
     include(cmake/flags.cmake)
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 endif ()
 
 #------------------------------------------------------------------------------
@@ -145,24 +145,24 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)
 #
 #   Common code library
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/common)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/common)
 
 #
 #   Initalizers for Gateway and Thing
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/initializer)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/initializer)
 
 #
 #   Gateway application
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/gateway)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gateway)
 
 #
 #   Thing application
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thing)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thing)
 
 #
 #   Unit tests
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests)
