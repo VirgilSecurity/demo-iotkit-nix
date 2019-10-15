@@ -74,8 +74,8 @@ main(int argc, char *argv[]) {
     int res = -1;
 
     // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {0};
-    vs_device_type_t device_type = {0};
+    vs_device_manufacture_id_t manufacture_id = {THING_MANUFACTURE_ID};
+    vs_device_type_t device_type = {THING_DEVICE_MODEL};
     vs_device_serial_t serial = {0};
 
     // Initialize Logger module
@@ -84,8 +84,11 @@ main(int argc, char *argv[]) {
     // Get input parameters
     STATUS_CHECK(vs_process_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
+    // Set self path
+    vs_rpi_set_app_metainfo(argv[0], manufacture_id, device_type);
+
     // Print title
-    vs_rpi_print_title("Thing", argv[0], THING_MANUFACTURE_ID, THING_DEVICE_MODEL);
+    vs_rpi_print_title("Thing");
 
     // Prepare local storage
     STATUS_CHECK(vs_rpi_prepare_storage("thing", forced_mac_addr), "Cannot prepare storage");
