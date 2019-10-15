@@ -51,12 +51,9 @@ static pthread_t _mb_thread;
 
 extern const uint8_t msg_bin_root_ca_crt[];
 
-#define VS_FW_TOPIC_MASK "fw/"
-#define VS_TL_TOPIC_MASK "tl/"
-
 /*************************************************************************/
 static void
-_firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
+_firmware_topic_process(const uint8_t *data, uint16_t length) {
     int res;
     gtwy_t *gtwy = get_gateway_ctx();
     upd_request_t *fw_url = (upd_request_t *)malloc(sizeof(upd_request_t));
@@ -69,7 +66,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
     fw_url->upd_type = MSG_BIN_UPD_TYPE_FW;
 
     if (0 == pthread_mutex_lock(&gtwy->firmware_mutex)) {
-        res = vs_cloud_parse_firmware_manifest((char *)p_data, (int)length, fw_url->upd_file_url);
+        res = vs_cloud_parse_firmware_manifest((char *)data, (int)length, fw_url->upd_file_url);
         pthread_mutex_unlock(&gtwy->firmware_mutex);
 
         if (VS_CODE_OK == res) {
@@ -93,7 +90,7 @@ _firmware_topic_process(const uint8_t *p_data, const uint16_t length) {
 
 /*************************************************************************/
 static void
-_tl_topic_process(const uint8_t *p_data, const uint16_t length) {
+_tl_topic_process(const uint8_t *data, uint16_t length) {
     int res;
     gtwy_t *gtwy = get_gateway_ctx();
     upd_request_t *tl_url = (upd_request_t *)malloc(sizeof(upd_request_t));
@@ -105,7 +102,7 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
 
     tl_url->upd_type = MSG_BIN_UPD_TYPE_TL;
 
-    res = vs_cloud_parse_tl_mainfest((char *)p_data, (int)length, tl_url->upd_file_url);
+    res = vs_cloud_parse_tl_mainfest((char *)data, (int)length, tl_url->upd_file_url);
 
     if (VS_CODE_OK == res) {
 
@@ -125,28 +122,12 @@ _tl_topic_process(const uint8_t *p_data, const uint16_t length) {
 }
 
 /*************************************************************************/
-static void
-_process_topic(const char *topic, uint16_t topic_sz, const uint8_t *p_data, uint16_t length) {
-    char *ptr = strstr(topic, VS_FW_TOPIC_MASK);
-    if (ptr != NULL && topic == ptr) {
-        _firmware_topic_process(p_data, length);
-        return;
-    }
-
-    ptr = strstr(topic, VS_TL_TOPIC_MASK);
-    if (ptr != NULL && topic == ptr) {
-        _tl_topic_process(p_data, length);
-        return;
-    }
-}
-
-/*************************************************************************/
 static void *
 _mb_mqtt_task(void *pvParameters) {
     VS_LOG_DEBUG("message bin thread started");
 
     while (true) {
-        if (VS_CODE_OK == vs_cloud_message_bin_process(_process_topic, (const char *)msg_bin_root_ca_crt)) {
+        if (VS_CODE_OK == vs_cloud_message_bin_process((const char *)msg_bin_root_ca_crt)) {
             vs_impl_msleep(500);
         } else {
             vs_impl_msleep(5000);
@@ -156,9 +137,21 @@ _mb_mqtt_task(void *pvParameters) {
 }
 
 /*************************************************************************/
+vs_status_e
+vs_message_bin_register_handlers(void) {
+    vs_status_e ret_code;
+    STATUS_CHECK_RET(vs_cloud_message_bin_register_default_handler(VS_CLOUD_MB_TOPIC_TL, _tl_topic_process),
+                     "Error register handler for TL topic");
+    STATUS_CHECK_RET(vs_cloud_message_bin_register_default_handler(VS_CLOUD_MB_TOPIC_FW, _firmware_topic_process),
+                     "Error register handler for FW topic");
+    return VS_CODE_OK;
+}
+
+/*************************************************************************/
 pthread_t *
 start_message_bin_thread() {
     static bool is_threads_started = 0;
+
     if (!is_threads_started) {
 
         upd_event_queue = vs_msg_queue_init(MB_QUEUE_SZ, 1, 1);

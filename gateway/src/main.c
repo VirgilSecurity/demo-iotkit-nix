@@ -49,6 +49,7 @@
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-file-cache.h"
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
+#include <message_bin.h>
 
 /******************************************************************************/
 int
@@ -133,6 +134,9 @@ main(int argc, char *argv[]) {
     // Cloud module
     STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
                  "Unable to initialize Cloud module");
+
+    // Register message bin default handlers
+    STATUS_CHECK(vs_message_bin_register_handlers(), "Unable to register message bin handlers");
 
     //
     // ---------- Register SDMP services ----------
