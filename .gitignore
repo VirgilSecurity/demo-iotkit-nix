@@ -19,6 +19,7 @@ debug/
 
 .project
 .cproject
+.DS_Store
 
 *.pyc
 *.cbp
