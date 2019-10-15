@@ -91,7 +91,6 @@ target_link_libraries(thing
 
 		update
 		firmware
-		trust_list
 		virgil-iot-status-code
 		sdmp-thing
 

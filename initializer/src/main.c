@@ -115,10 +115,7 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
-
-    // TrustList module
-    vs_tl_init(&tl_storage_impl, hsm_impl);
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),

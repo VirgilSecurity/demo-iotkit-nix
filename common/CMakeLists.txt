@@ -89,7 +89,7 @@ target_link_libraries(rpi-common
 		PUBLIC
 		converters
 		secbox
-		trust_list
+		provision
 		vs-default-soft-hsm
 		${CMAKE_THREAD_LIBS_INIT}
 

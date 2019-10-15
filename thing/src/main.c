@@ -125,10 +125,7 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(hsm_impl), "Cannot initialize Provision module");
-
-    // TrustList module
-    vs_tl_init(&tl_storage_impl, hsm_impl);
+    STATUS_CHECK(vs_provision_init(&fw_storage_impl, hsm_impl), "Cannot initialize Provision module");
 
     // Firmware module
     vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type);
