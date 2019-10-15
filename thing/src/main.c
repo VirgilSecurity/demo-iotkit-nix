@@ -175,7 +175,6 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
-
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
