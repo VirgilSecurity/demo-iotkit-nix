@@ -126,9 +126,10 @@ if(NOT GO_DISABLE)
 
 endif()
 
-#
-# Format code
-#
 if(COMMAND add_clangformat)
 	add_clangformat(thing)
 endif()
+
+install(TARGETS thing
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)

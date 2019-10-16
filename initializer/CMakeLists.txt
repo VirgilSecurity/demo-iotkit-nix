@@ -102,6 +102,10 @@ function(initializer_executable _is_gateway _manufacture _model)
     if(COMMAND add_clangformat)
         add_clangformat(${_targetname})
     endif()
+
+    install(TARGETS ${_targetname}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
 endfunction()
 
 #
