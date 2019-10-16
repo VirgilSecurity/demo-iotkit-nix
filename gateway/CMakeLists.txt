@@ -57,7 +57,6 @@ target_sources(gateway
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
         )
@@ -99,15 +98,15 @@ target_link_libraries(gateway
         PRIVATE
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		vs-default-curl-http
 		vs-default-aws-message-bin
-		cloud
-		update
+		vs-module-cloud
+		vs-module-firmware
 		virgil-iot-status-code
-		sdmp-gateway
+		vs-module-sdmp-gateway
 
 		enable_sanitizers
         enable_pedantic_mode

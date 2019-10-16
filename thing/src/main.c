@@ -76,8 +76,8 @@ main(int argc, char *argv[]) {
     vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {THING_MANUFACTURE_ID};
-    vs_device_type_t device_type = {THING_DEVICE_MODEL};
+    vs_device_manufacture_id_t manufacture_id = {0};
+    vs_device_type_t device_type = {0};
     vs_device_serial_t serial = {0};
 
     // Initialize Logger module
@@ -189,7 +189,6 @@ terminate:
 }
 
 /******************************************************************************/
-
 static void
 _on_file_updated(vs_update_file_type_t *file_type,
                  const vs_file_version_t *prev_file_ver,

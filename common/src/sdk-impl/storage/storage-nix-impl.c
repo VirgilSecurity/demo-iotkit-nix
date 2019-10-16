@@ -32,16 +32,15 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdbool.h>
 #include <stdio.h>
+
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/logger/logger.h>
+#include <virgil/iot/status_code/status_code.h>
 
 #include <global-hal.h>
-#include <virgil/iot/status_code/status_code.h>
-#include <helpers/file-cache.h>
-#include <sdk-impl/storage/storage-nix-impl.h>
 
+#include "sdk-impl/storage/storage-nix-impl.h"
 
 #define VS_FIO_PROFILE_WRITE 0
 #define VS_FIO_PROFILE_GETLEN 0
@@ -108,7 +107,7 @@ vs_rpi_storage_impl_data_init(const char *relative_dir) {
     VS_IOT_STRCPY(ctx->dir, relative_dir);
 
     // Create path
-    vs_rpi_create_subdir(relative_dir);
+    vs_files_create_subdir(relative_dir);
 
     return ctx;
 }
@@ -160,7 +159,7 @@ vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_impl_data_ctx_t stor
     t = current_timestamp();
 #endif
 
-    if (vs_rpi_sync_file(ctx->dir, (char *)file)) {
+    if (vs_files_sync(ctx->dir, (char *)file)) {
         res = VS_CODE_OK;
     }
 #if VS_FIO_PROFILE_SYNC
@@ -201,7 +200,7 @@ vs_rpi_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
     t = current_timestamp();
 #endif
 
-    if (vs_rpi_write_file_data(ctx->dir, (char *)file, offset, data, data_sz)) {
+    if (vs_files_write(ctx->dir, (char *)file, offset, data, data_sz)) {
         res = VS_CODE_OK;
     }
 #if VS_FIO_PROFILE_WRITE
@@ -234,7 +233,7 @@ vs_rpi_storage_load_hal(const vs_storage_impl_data_ctx_t storage_ctx,
     _calls_counter++;
     t = current_timestamp();
 #endif
-    if (vs_rpi_read_file_data(ctx->dir, (char *)file, offset, out_data, data_sz, &read_sz) && read_sz == data_sz) {
+    if (vs_files_read(ctx->dir, (char *)file, offset, out_data, data_sz, &read_sz) && read_sz == data_sz) {
         res = VS_CODE_OK;
     }
 
@@ -266,7 +265,7 @@ vs_rpi_storage_file_size_hal(const vs_storage_impl_data_ctx_t storage_ctx, const
     _calls_counter++;
     t = current_timestamp();
 #endif
-    res = vs_rpi_get_file_len(ctx->dir, (char *)file);
+    res = vs_files_get_len(ctx->dir, (char *)file);
 #if VS_FIO_PROFILE_GETLEN
     dt = current_timestamp() - t;
     _processing_time += dt;
@@ -290,7 +289,7 @@ vs_rpi_storage_del_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_st
 
     _data_to_hex(id, sizeof(vs_storage_element_id_t), file, &len);
 
-    return vs_rpi_remove_file_data(ctx->dir, (char *)file) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
+    return vs_files_remove(ctx->dir, (char *)file) ? VS_CODE_OK : VS_CODE_ERR_FILE_DELETE;
 }
 
 /******************************************************************************/

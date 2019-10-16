@@ -32,36 +32,36 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_FILE_IO_HAL_H
-#define IOT_RPI_FILE_IO_HAL_H
+#ifndef VS_IOT_FILE_IO_HAL_H
+#define VS_IOT_FILE_IO_HAL_H
 
 #include <stdint.h>
 #include <stdio.h>
 
 bool
-vs_hal_files_set_dir(const char *base_dir);
+vs_files_set_dir(const char *base_dir);
 
 ssize_t
-vs_rpi_get_file_len(const char *folder, const char *file_name);
+vs_files_get_len(const char *folder, const char *file_name);
 
 bool
-vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
+vs_files_write(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
 
 bool
-vs_rpi_sync_file(const char *folder, const char *file_name);
+vs_files_sync(const char *folder, const char *file_name);
 
 bool
-vs_rpi_read_file_data(const char *folder,
-                      const char *file_name,
-                      uint32_t offset,
-                      uint8_t *data,
-                      size_t buf_sz,
-                      size_t *read_sz);
+vs_files_read(const char *folder,
+              const char *file_name,
+              uint32_t offset,
+              uint8_t *data,
+              size_t buf_sz,
+              size_t *read_sz);
 
 bool
-vs_rpi_remove_file_data(const char *folder, const char *file_name);
+vs_files_remove(const char *folder, const char *file_name);
 
 bool
-vs_rpi_create_subdir(const char *folder);
+vs_files_create_subdir(const char *folder);
 
-#endif // IOT_RPI_FILE_IO_HAL_H
+#endif // VS_IOT_FILE_IO_HAL_H

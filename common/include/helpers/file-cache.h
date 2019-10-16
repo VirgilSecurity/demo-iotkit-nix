@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_FILE_CACHE_H
-#define VS_FILE_CACHE_H
+#ifndef VS_IOT_FILE_CACHE_H
+#define VS_IOT_FILE_CACHE_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -71,4 +71,4 @@ vs_file_cache_close(const char *file_name);
 void
 vs_file_cache_clean(void);
 
-#endif // VS_FILE_CACHE_H
+#endif // VS_IOT_FILE_CACHE_H

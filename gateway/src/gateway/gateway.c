@@ -143,13 +143,15 @@ _gateway_task(void *pvParameters) {
     vs_update_file_type_t *queued_file;
     vs_file_info_t *request;
 
+    // Start Message Bin processing thread
     message_bin_thread = start_message_bin_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
 
+    // Start files receive thread
     upd_http_retrieval_thread = vs_start_upd_http_retrieval_thread();
     CHECK_NOT_ZERO_RET(upd_http_retrieval_thread, (void *)-1);
 
-
+    // Main cycle
     while (true) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);

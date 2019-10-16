@@ -161,7 +161,7 @@ main(int argc, char *argv[]) {
     // Enable cached file IO
     vs_file_cache_enable(true);
 
-    vs_hal_files_set_dir("test");
+    vs_files_set_dir("test");
     vs_hal_files_set_mac(mac);
     _remove_keystorage_dir();
 

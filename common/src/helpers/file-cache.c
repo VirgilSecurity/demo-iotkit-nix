@@ -32,13 +32,13 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <helpers/file-cache.h>
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <limits.h>
+
+#include "helpers/file-cache.h"
 
 #define VS_FILE_CACHE_SZ (10)
 #define VS_FILE_CACHE_MAX_FILE_SZ (2 * 1024 * 1024)
