@@ -32,6 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <arpa/inet.h>
 #include "threads/file-download-thread.h"
 #include "threads/message-bin-thread.h"
 #include "threads/main-thread.h"
