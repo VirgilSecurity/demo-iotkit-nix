@@ -37,9 +37,10 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(nix-common VERSION 0.1.0 LANGUAGES C)
 
 #
-#   Common code library
+#   Common code libraries
 #
 add_library(nix-common)
+add_library(nix-common-firmware)
 
 #
 #	Header/Source files
@@ -62,14 +63,18 @@ target_sources(nix-common
 		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/storage/storage-nix-impl.c
         ${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/logger/logger-impl.c
-		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/firmware/firmware-impl.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-io.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-cache.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-helpers.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-storage.c
+		)
 
+target_sources(nix-common-firmware
+		PRIVATE
+		#	Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/firmware/firmware-impl.c
 		)
 
 #
@@ -79,9 +84,15 @@ target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
-		${VIRGIL_IOT_DIRECTORY}/modules/firmware/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
+		)
+
+target_include_directories(nix-common-firmware
+		PUBLIC
+		${CMAKE_CURRENT_LIST_DIR}/include
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/firmware/include
 		)
 
 #
@@ -100,9 +111,20 @@ target_link_libraries(nix-common
 		enable_pedantic_mode
 		enable_sanitizers
 		)
+
+target_link_libraries(nix-common-firmware
+		PUBLIC
+		vs-module-firmware
+		${CMAKE_THREAD_LIBS_INIT}
+
+		PRIVATE
+		enable_pedantic_mode
+		enable_sanitizers
+		)
 #
 # Format code
 #
 if(COMMAND add_clangformat)
 	add_clangformat(nix-common)
+	add_clangformat(nix-common-firmware)
 endif()

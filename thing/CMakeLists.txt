@@ -87,6 +87,7 @@ target_link_libraries(thing
 
         $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
 		nix-common
+		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		vs-module-firmware
