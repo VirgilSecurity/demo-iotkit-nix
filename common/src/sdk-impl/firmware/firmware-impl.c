@@ -49,6 +49,7 @@
 #include <update-config.h>
 
 #include "sdk-impl/storage/storage-nix-impl.h"
+#include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 #include "helpers/file-io.h"
 
@@ -138,9 +139,9 @@ vs_firmware_nix_update(int argc, char **argv) {
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
 
-    //    if (!_need_restart) {
-    //        return 0;
-    //    }
+    if (!vs_app_is_need_restart()) {
+        return 0;
+    }
 
     if (NULL == _self_path) {
         return -1;
