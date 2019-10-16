@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef RPI_MESSAGE_QUEUE_H
-#define RPI_MESSAGE_QUEUE_H
+#ifndef VS_IOT_MESSAGE_QUEUE_H
+#define VS_IOT_MESSAGE_QUEUE_H
 
 #include <virgil/iot/status_code/status_code.h>
 
@@ -57,4 +57,4 @@ vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
 void
 vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
 
-#endif // RPI_MESSAGE_QUEUE_H
+#endif // VS_IOT_MESSAGE_QUEUE_H

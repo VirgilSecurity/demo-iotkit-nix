@@ -99,7 +99,7 @@ target_link_libraries(gateway
         PRIVATE
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		vs-default-curl-http

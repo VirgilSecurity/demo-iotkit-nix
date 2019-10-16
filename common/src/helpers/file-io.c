@@ -43,24 +43,15 @@
 
 #include <stdlib-config.h>
 #include <global-hal.h>
-#include <virgil/iot/hsm/hsm.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
+#include <virgil/iot/macros/macros.h>
 #include <helpers/file-cache.h>
 
 static char _base_dir[FILENAME_MAX] = {0};
 
 #define VS_IO_BUF_SZ (2048 * 1024)
 static char file_io_buffer[VS_IO_BUF_SZ];
-
-#define CHECK_SNPRINTF(BUF, FORMAT, ...)                                                                               \
-    do {                                                                                                               \
-        int snprintf_res;                                                                                              \
-        if ((snprintf_res = snprintf((BUF), sizeof(BUF), (FORMAT), ##__VA_ARGS__)) <= 0) {                             \
-            VS_LOG_ERROR("snprintf error result %d. errno = %d (%s)", snprintf_res, errno, strerror(errno));           \
-            goto terminate;                                                                                            \
-        }                                                                                                              \
-    } while (0)
 
 #define UNIX_CALL(OPERATION)                                                                                           \
     do {                                                                                                               \
@@ -103,7 +94,7 @@ _mkdir_recursive(const char *dir) {
 
 /******************************************************************************/
 bool
-vs_rpi_create_subdir(const char *folder) {
+vs_files_create_subdir(const char *folder) {
     static char tmp[FILENAME_MAX];
 
     CHECK_NOT_ZERO(folder && folder[0]);
@@ -136,7 +127,7 @@ _check_fio_and_path(const char *folder, const char *file_name, char file_path[FI
 
 /******************************************************************************/
 ssize_t
-vs_rpi_get_file_len(const char *folder, const char *file_name) {
+vs_files_get_len(const char *folder, const char *file_name) {
 
     ssize_t res = -1;
     char file_path[FILENAME_MAX];
@@ -182,7 +173,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_rpi_sync_file(const char *folder, const char *file_name) {
+vs_files_sync(const char *folder, const char *file_name) {
     bool res = true;
     char file_path[FILENAME_MAX];
 
@@ -203,7 +194,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_rpi_write_file_data(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz) {
+vs_files_write(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -292,12 +283,12 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_rpi_read_file_data(const char *folder,
-                      const char *file_name,
-                      uint32_t offset,
-                      uint8_t *data,
-                      size_t buf_sz,
-                      size_t *read_sz) {
+vs_files_read(const char *folder,
+              const char *file_name,
+              uint32_t offset,
+              uint8_t *data,
+              size_t buf_sz,
+              size_t *read_sz) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
     bool res = false;
@@ -360,7 +351,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_rpi_remove_file_data(const char *folder, const char *file_name) {
+vs_files_remove(const char *folder, const char *file_name) {
     char file_path[FILENAME_MAX];
 
     if (!folder || !file_name) {
@@ -381,7 +372,7 @@ vs_rpi_remove_file_data(const char *folder, const char *file_name) {
 
 /******************************************************************************/
 bool
-vs_hal_files_set_dir(const char *base_dir) {
+vs_files_set_dir(const char *base_dir) {
     struct passwd *pwd = NULL;
 
     assert(base_dir && base_dir[0]);

@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_APP_HELPERS_H
-#define IOT_RPI_APP_HELPERS_H
+#ifndef VS_IOT_APP_HELPERS_H
+#define VS_IOT_APP_HELPERS_H
 
 #include <virgil/iot/protocols/sdmp.h>
 
@@ -61,4 +61,7 @@ vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
 vs_netif_t *
 vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr);
 
-#endif // IOT_RPI_APP_HELPERS_H
+bool
+vs_app_is_need_restart(void);
+
+#endif // VS_IOT_APP_HELPERS_H

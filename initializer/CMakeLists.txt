@@ -78,7 +78,7 @@ function(initializer_executable _is_gateway _manufacture _model)
     target_link_libraries(${_targetname}
             PRIVATE
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-            rpi-common
+            nix-common
             sdmp-initializer
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 

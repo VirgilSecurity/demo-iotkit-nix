@@ -177,7 +177,6 @@ vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size) {
 /******************************************************************************/
 void
 vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
-    // TODO: Need to use real serial
     VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
     VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
 }
@@ -195,6 +194,12 @@ vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
     queued_netif = vs_netif_queued(netif);
 
     return queued_netif;
+}
+
+/******************************************************************************/
+bool
+vs_app_is_need_restart(void) {
+    return _need_restart;
 }
 
 /******************************************************************************/

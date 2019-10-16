@@ -56,7 +56,7 @@ target_link_libraries(rpi-tests
 		PRIVATE
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		virgil-iot-sdk-tests

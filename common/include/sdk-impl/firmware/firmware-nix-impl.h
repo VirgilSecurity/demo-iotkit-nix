@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_FIRMWARE_HAL_H
-#define IOT_RPI_FIRMWARE_HAL_H
+#ifndef VS_IOT_FIRMWARE_IMPL_H
+#define VS_IOT_FIRMWARE_IMPL_H
 
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include "helpers/file-io.h"
@@ -47,4 +47,4 @@ vs_firmware_nix_set_info(const char *app_file,
                          const vs_device_manufacture_id_t manufacture_id_str,
                          const vs_device_type_t device_type_str);
 
-#endif // IOT_RPI_FIRMWARE_HAL_H
+#endif // VS_IOT_FIRMWARE_IMPL_H

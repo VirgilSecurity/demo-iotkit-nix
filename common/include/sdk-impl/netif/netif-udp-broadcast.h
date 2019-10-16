@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_NETIF_UDP_BCAST_H
-#define VS_NETIF_UDP_BCAST_H
+#ifndef VS_IOT_NETIF_UDP_BCAST_IMPL_H
+#define VS_IOT_NETIF_UDP_BCAST_IMPL_H
 
 
 #include <virgil/iot/protocols/sdmp/sdmp-structs.h>
@@ -49,4 +49,4 @@ vs_hal_netif_udp_bcast(vs_mac_addr_t mac_addr);
 }
 #endif
 
-#endif // VS_NETIF_UDP_BCAST_H
+#endif // VS_IOT_NETIF_UDP_BCAST_IMPL_H

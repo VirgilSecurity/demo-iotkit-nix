@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_STORAGE_HAL_H
-#define IOT_RPI_STORAGE_HAL_H
+#ifndef VS_IOT_NIX_STORAGE_IMPL_H
+#define VS_IOT_NIX_STORAGE_IMPL_H
 
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include "helpers/file-io.h"
@@ -45,4 +45,4 @@ vs_rpi_storage_impl_data_init(const char *dir);
 vs_storage_impl_func_t
 vs_rpi_storage_impl_func(void);
 
-#endif // IOT_RPI_STORAGE_HAL_H
+#endif // VS_IOT_NIX_STORAGE_IMPL_H

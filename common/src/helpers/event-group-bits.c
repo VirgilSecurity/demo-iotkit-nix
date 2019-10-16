@@ -34,18 +34,17 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/time.h>
-#include <unistd.h>
-
-#include <helpers/event-group-bits.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
+
+#include "helpers/event-group-bits.h"
+
 /******************************************************************************/
-event_bits_t
+vs_event_bits_t
 vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
-                         event_bits_t bits_to_wait_for,
+                         vs_event_bits_t bits_to_wait_for,
                          bool is_clear_on_exit,
                          bool is_wait_for_all,
                          int32_t timeout) {
@@ -53,7 +52,7 @@ vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
     int res = 0;
     struct timeval now;
     struct timespec thread_sleep;
-    event_bits_t stat = 0;
+    vs_event_bits_t stat = 0;
 
     assert(ev_group);
     CHECK_NOT_ZERO_RET(ev_group, 0);
@@ -91,9 +90,9 @@ vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
 }
 
 /******************************************************************************/
-event_bits_t
-vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_clear) {
-    event_bits_t stat = 0;
+vs_event_bits_t
+vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, vs_event_bits_t bits_to_clear) {
+    vs_event_bits_t stat = 0;
     assert(ev_group);
     CHECK_NOT_ZERO_RET(ev_group, 0);
 
@@ -113,9 +112,9 @@ vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_
 }
 
 /******************************************************************************/
-event_bits_t
-vs_event_group_set_bits(vs_event_group_bits_t *ev_group, event_bits_t bits_to_set) {
-    event_bits_t stat = 0;
+vs_event_bits_t
+vs_event_group_set_bits(vs_event_group_bits_t *ev_group, vs_event_bits_t bits_to_set) {
+    vs_event_bits_t stat = 0;
     assert(ev_group);
     CHECK_NOT_ZERO_RET(ev_group, 0);
 
@@ -168,3 +167,5 @@ vs_event_group_destroy(vs_event_group_bits_t *ev_group) {
     pthread_mutex_destroy(&ev_group->mtx);
     return 0;
 }
+
+/******************************************************************************/

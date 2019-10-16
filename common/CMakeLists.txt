@@ -34,17 +34,17 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi-common VERSION 0.1.0 LANGUAGES C)
+project(nix-common VERSION 0.1.0 LANGUAGES C)
 
 #
 #   RaspberryPi common code library
 #
-add_library(rpi-common)
+add_library(nix-common)
 
 #
 #	Header/Source files
 #
-target_sources(rpi-common
+target_sources(nix-common
 		PRIVATE
 
 		#	Headers
@@ -75,7 +75,7 @@ target_sources(rpi-common
 #
 #   Include directories
 #
-target_include_directories(rpi-common
+target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${VIRGIL_IOT_DIRECTORY}/protocols/sdmp/include
@@ -87,7 +87,7 @@ target_include_directories(rpi-common
 #	Link libraries
 #
 find_package (Threads)
-target_link_libraries(rpi-common
+target_link_libraries(nix-common
 		PUBLIC
 		converters
 		secbox
@@ -104,5 +104,5 @@ target_link_libraries(rpi-common
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi-common)
+	add_clangformat(nix-common)
 endif()

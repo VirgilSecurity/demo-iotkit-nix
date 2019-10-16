@@ -32,8 +32,8 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_APP_STORAGE_H
-#define IOT_RPI_APP_STORAGE_H
+#ifndef VS_IOT_APP_STORAGE_H
+#define VS_IOT_APP_STORAGE_H
 
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/protocols/sdmp/sdmp-structs.h>
@@ -57,4 +57,4 @@ vs_app_slots_dir(void);
 const char *
 vs_app_secbox_dir(void);
 
-#endif // IOT_RPI_APP_STORAGE_H
+#endif // VS_IOT_APP_STORAGE_H
