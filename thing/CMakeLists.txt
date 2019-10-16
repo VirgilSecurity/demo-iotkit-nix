@@ -89,9 +89,9 @@ target_link_libraries(thing
 		nix-common
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		firmware
+		vs-module-firmware
 		virgil-iot-status-code
-		sdmp-thing
+		vs-module-sdmp-thing
 
 		enable_sanitizers
         enable_pedantic_mode

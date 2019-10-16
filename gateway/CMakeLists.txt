@@ -104,10 +104,10 @@ target_link_libraries(gateway
 
 		vs-default-curl-http
 		vs-default-aws-message-bin
-		cloud
-		update
+		vs-module-cloud
+		vs-module-firmware
 		virgil-iot-status-code
-		sdmp-gateway
+		vs-module-sdmp-gateway
 
 		enable_sanitizers
         enable_pedantic_mode

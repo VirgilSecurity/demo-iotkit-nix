@@ -90,10 +90,10 @@ find_package (Threads)
 target_link_libraries(nix-common
 		PUBLIC
 		converters
-		secbox
-		provision
+		vs-module-secbox
+		vs-module-provision
 		vs-default-soft-hsm
-		cloud
+		vs-module-cloud
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
