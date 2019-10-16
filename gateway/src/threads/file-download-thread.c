@@ -52,7 +52,7 @@ static bool is_retrieval_started;
 /*************************************************************************/
 static void
 _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
-    vs_cloud_firmware_header_t header;
+    vs_firmware_header_t header;
     vs_update_file_type_t *fw_info = NULL;
     int res;
 

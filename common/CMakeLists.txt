@@ -37,7 +37,7 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project(nix-common VERSION 0.1.0 LANGUAGES C)
 
 #
-#   RaspberryPi common code library
+#   Common code library
 #
 add_library(nix-common)
 
@@ -79,6 +79,7 @@ target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
 		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/firmware/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 		)
@@ -93,7 +94,6 @@ target_link_libraries(nix-common
 		vs-module-secbox
 		vs-module-provision
 		vs-default-soft-hsm
-		vs-module-cloud
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
