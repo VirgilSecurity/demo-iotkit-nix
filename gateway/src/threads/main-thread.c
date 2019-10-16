@@ -32,9 +32,9 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include "gateway.h"
-#include "message_bin.h"
-#include "upd_http_retrieval_thread.h"
+#include "threads/main-thread.h"
+#include "threads/message-bin-thread.h"
+#include "threads/file-download-thread.h"
 #include "event-flags.h"
 #include "sdk-impl/storage/storage-nix-impl.h"
 #include "helpers/app-helpers.h"
@@ -63,7 +63,7 @@ static pthread_t *upd_http_retrieval_thread;
 
 /******************************************************************************/
 gtwy_t *
-init_gateway_ctx(vs_mac_addr_t *mac_addr) {
+vs_gateway_ctx_init(vs_mac_addr_t *mac_addr) {
     if (0 != vs_event_group_init(&_gtwy.incoming_data_events)) {
         exit(-1);
     }
@@ -79,7 +79,7 @@ init_gateway_ctx(vs_mac_addr_t *mac_addr) {
 
 /******************************************************************************/
 gtwy_t *
-get_gateway_ctx(void) {
+vs_gateway_ctx(void) {
     return &_gtwy;
 }
 
@@ -144,11 +144,11 @@ _gateway_task(void *pvParameters) {
     vs_file_info_t *request;
 
     // Start Message Bin processing thread
-    message_bin_thread = start_message_bin_thread();
+    message_bin_thread = vs_message_bin_start_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);
 
     // Start files receive thread
-    upd_http_retrieval_thread = vs_start_upd_http_retrieval_thread();
+    upd_http_retrieval_thread = vs_file_download_start_thread();
     CHECK_NOT_ZERO_RET(upd_http_retrieval_thread, (void *)-1);
 
     // Main cycle
@@ -156,7 +156,7 @@ _gateway_task(void *pvParameters) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
         vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
 
-        while (vs_upd_http_retrieval_get_request(&queued_file)) {
+        while (vs_file_download_get_request(&queued_file)) {
 
             switch (queued_file->type) {
             case VS_UPDATE_FIRMWARE:
@@ -210,7 +210,7 @@ _gateway_task(void *pvParameters) {
 
 /******************************************************************************/
 void
-start_gateway_threads(void) {
+vs_main_start_threads(void) {
     if (!is_threads_started) {
         is_threads_started = true;
 

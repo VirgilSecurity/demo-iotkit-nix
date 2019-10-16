@@ -35,8 +35,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "message_bin.h"
-#include "gateway.h"
+#include "threads/message-bin-thread.h"
+#include "threads/main-thread.h"
 #include "event-flags.h"
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
@@ -52,7 +52,7 @@ static pthread_t _mb_thread;
 /*************************************************************************/
 static void
 _firmware_topic_process(const uint8_t *url, uint16_t length) {
-    gtwy_t *gtwy = get_gateway_ctx();
+    gtwy_t *gtwy = vs_gateway_ctx();
 
     upd_request_t *fw_url = (upd_request_t *)malloc(sizeof(upd_request_t));
     assert(NULL != fw_url);
@@ -78,7 +78,7 @@ _firmware_topic_process(const uint8_t *url, uint16_t length) {
 /*************************************************************************/
 static void
 _tl_topic_process(const uint8_t *url, uint16_t length) {
-    gtwy_t *gtwy = get_gateway_ctx();
+    gtwy_t *gtwy = vs_gateway_ctx();
     upd_request_t *tl_url = (upd_request_t *)malloc(sizeof(upd_request_t));
     assert(NULL != tl_url);
     if (NULL == tl_url) {
@@ -128,7 +128,7 @@ vs_message_bin_register_handlers(void) {
 
 /*************************************************************************/
 pthread_t *
-start_message_bin_thread() {
+vs_message_bin_start_thread() {
     static bool is_threads_started = 0;
 
     if (!is_threads_started) {
@@ -145,7 +145,7 @@ start_message_bin_thread() {
 
 /*************************************************************************/
 bool
-message_bin_get_request(upd_request_t **request) {
+vs_message_bin_get_request(upd_request_t **request) {
     const uint8_t *data;
     size_t _sz;
     *request = NULL;
