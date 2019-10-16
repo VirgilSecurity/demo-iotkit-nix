@@ -144,3 +144,7 @@ endif()
 if(COMMAND add_clangformat)
 	add_clangformat(gateway)
 endif()
+
+install(TARGETS gateway
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
