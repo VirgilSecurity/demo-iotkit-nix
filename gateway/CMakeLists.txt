@@ -57,7 +57,6 @@ target_sources(gateway
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
         ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
         ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
         ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
         )
