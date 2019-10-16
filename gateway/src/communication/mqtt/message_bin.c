@@ -49,8 +49,6 @@
 static vs_msg_queue_ctx_t *upd_event_queue = NULL;
 static pthread_t _mb_thread;
 
-extern const uint8_t msg_bin_root_ca_crt[];
-
 /*************************************************************************/
 static void
 _firmware_topic_process(const uint8_t *url, uint16_t length) {
@@ -108,7 +106,7 @@ _mb_mqtt_task(void *params) {
     VS_LOG_DEBUG("message bin thread started");
 
     while (true) {
-        if (VS_CODE_OK == vs_cloud_message_bin_process((const char *)msg_bin_root_ca_crt)) {
+        if (VS_CODE_OK == vs_cloud_message_bin_process()) {
             vs_impl_msleep(500);
         } else {
             vs_impl_msleep(5000);
