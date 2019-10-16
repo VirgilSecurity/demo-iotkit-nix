@@ -43,6 +43,7 @@
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
+#include <update-config.h>
 
 #include <stdlib-config.h>
 #include <update-config.h>

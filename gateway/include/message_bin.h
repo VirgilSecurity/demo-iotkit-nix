@@ -56,11 +56,11 @@ typedef struct __attribute__((__packed__)) {
 
 pthread_t *
 start_message_bin_thread();
-void
-message_bin_process_command(const char *topic, const uint8_t *p_data, const uint16_t length);
+
+vs_status_e
+vs_message_bin_register_handlers(void);
+
 bool
 message_bin_get_request(upd_request_t **request);
-bool
-msg_bin_get_credentials();
 
 #endif // GATEWAY_MESSAGE_BIN_H

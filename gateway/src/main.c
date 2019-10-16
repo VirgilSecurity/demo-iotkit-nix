@@ -50,6 +50,7 @@
 #include "helpers/app-storage.h"
 #include "sdk-impl/firmware/firmware-nix-impl.h"
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
+#include <message_bin.h>
 
 /******************************************************************************/
 static vs_status_e
@@ -128,7 +129,7 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM
@@ -152,6 +153,9 @@ main(int argc, char *argv[]) {
     // Cloud module
     STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
                  "Unable to initialize Cloud module");
+
+    // Register message bin default handlers
+    STATUS_CHECK(vs_message_bin_register_handlers(), "Unable to register message bin handlers");
 
     //
     // ---------- Register SDMP services ----------
