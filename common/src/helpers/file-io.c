@@ -46,7 +46,7 @@
 #include <virgil/iot/hsm/hsm.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/logger/helpers.h>
-#include <hal/storage/rpi-file-cache.h>
+#include <helpers/file-cache.h>
 
 static char _base_dir[FILENAME_MAX] = {0};
 

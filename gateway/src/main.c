@@ -32,6 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
@@ -40,15 +41,33 @@
 #include <virgil/iot/protocols/sdmp/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "gateway.h"
-#include "helpers/input-params.h"
-#include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-file-cache.h"
+#include "helpers/app-helpers.h"
+#include "helpers/file-cache.h"
+#include "helpers/app-storage.h"
+#include "sdk-impl/firmware/firmware-nix-impl.h"
 #include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
+
+/******************************************************************************/
+static vs_status_e
+_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
+    switch (file_type->type) {
+    case VS_UPDATE_FIRMWARE:
+        *update_ctx = vs_firmware_update_ctx();
+        break;
+    case VS_UPDATE_TRUST_LIST:
+        *update_ctx = vs_tl_update_ctx();
+        break;
+    default:
+        VS_LOG_ERROR("Unsupported file type : %d", file_type->type);
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
+    }
+
+    return VS_CODE_OK;
+}
 
 /******************************************************************************/
 int
@@ -66,46 +85,50 @@ main(int argc, char *argv[]) {
     vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {0};
-    vs_device_type_t device_type = {0};
+    vs_device_manufacture_id_t manufacture_id = {GW_MANUFACTURE_ID};
+    vs_device_type_t device_type = {GW_DEVICE_MODEL};
     vs_device_serial_t serial = {0};
 
     // Initialize Logger module
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Get input parameters
-    STATUS_CHECK(vs_process_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+    STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+
+    // Set self path
+    vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
-    vs_rpi_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
+    vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
 
     // Prepare local storage
-    STATUS_CHECK(vs_rpi_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
+    STATUS_CHECK(vs_app_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
+
     // Enable cached file IO
     vs_file_cache_enable(true);
 
     // Prepare device parameters
-    vs_rpi_get_serial(serial, forced_mac_addr);
-    vs_rpi_create_data_array(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_rpi_create_data_array(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     //
     // ---------- Create implementations ----------
     //
 
     // Network interface
-    netif_impl = vs_rpi_create_netif_impl(forced_mac_addr);
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&tl_storage_impl, vs_rpi_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
                  "Cannot create TrustList storage");
 
     // Slots storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&slots_storage_impl, vs_rpi_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(vs_rpi_create_storage_impl(&fw_storage_impl, vs_rpi_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM
@@ -136,11 +159,11 @@ main(int argc, char *argv[]) {
 
     //  INFO server service
     sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
 
-    //  FLDT client service
-    sdmp_fldt_server = vs_sdmp_fldt_server();
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT client service");
+    //  FLDT server service
+    sdmp_fldt_server = vs_sdmp_fldt_server(&forced_mac_addr, _add_filetype);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT server service");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
                  "Unable to add firmware file type");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
@@ -158,7 +181,7 @@ main(int argc, char *argv[]) {
     start_gateway_threads();
 
     // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
+    vs_app_sleep_until_stop();
 
 
     //
@@ -174,12 +197,24 @@ terminate:
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
-    res = vs_rpi_hal_update((const char *)GW_MANUFACTURE_ID, (const char *)GW_DEVICE_MODEL, argc, argv);
+    res = vs_firmware_nix_update(argc, argv);
 
     // Clean File cache
     vs_file_cache_clean();
 
     return res;
+}
+
+/******************************************************************************/
+void
+vs_impl_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
+
+/******************************************************************************/
+void
+vs_impl_device_serial(vs_device_serial_t serial_number) {
+    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/

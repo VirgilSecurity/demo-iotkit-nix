@@ -32,71 +32,29 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef IOT_RPI_HAL_H
-#define IOT_RPI_HAL_H
+#ifndef IOT_RPI_APP_STORAGE_H
+#define IOT_RPI_APP_STORAGE_H
 
-#include <stdint.h>
-#include <arpa/inet.h>
-
-#include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/status_code/status_code.h>
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
-//#include <virgil/iot/firmware/firmware.h>
-
-extern char *self_path;
-
-int
-vs_rpi_hal_update(const char *manufacture_id_str, const char *device_type_str, int argc, char *argv[]);
-
-void
-vs_rpi_hal_sleep_until_stop(void);
 
 vs_status_e
-vs_rpi_start(const char *devices_dir,
-             const char *app_file,
-             vs_mac_addr_t forced_mac_addr,
-             const char *manufacture_id,
-             const char *device_type,
-             const uint32_t device_roles,
-             bool is_initializer);
-
-void
-vs_rpi_restart(void);
+vs_app_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac);
 
 vs_status_e
-vs_load_own_footer(uint8_t *footer, uint16_t footer_sz);
-
-//-----------------------------------
+vs_app_storage_init_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max);
 
 const char *
-vs_rpi_trustlist_dir(void);
+vs_app_trustlist_dir(void);
 
 const char *
-vs_rpi_firmware_dir(void);
+vs_app_firmware_dir(void);
 
 const char *
-vs_rpi_slots_dir(void);
+vs_app_slots_dir(void);
 
-void
-vs_rpi_create_data_array(uint8_t *dst, const char *src, size_t elem_buf_size);
+const char *
+vs_app_secbox_dir(void);
 
-void
-vs_rpi_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
-
-
-void
-vs_rpi_print_title(const char *devices_dir,
-                   const char *app_file,
-                   const char *manufacture_id_str,
-                   const char *device_type_str);
-
-vs_status_e
-vs_rpi_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac);
-
-vs_netif_t *
-vs_rpi_create_netif_impl(vs_mac_addr_t forced_mac_addr);
-
-vs_status_e
-vs_rpi_create_storage_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max);
-
-
-#endif // IOT_RPI_HAL_H
+#endif // IOT_RPI_APP_STORAGE_H

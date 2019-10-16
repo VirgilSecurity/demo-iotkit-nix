@@ -49,25 +49,27 @@ target_sources(rpi-common
 
 		#	Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/rpi-udp-broadcast.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-udp-broadcast.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/event-group-bits.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/msg-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/helpers/input-params.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-cache.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/app-helpers.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/app-storage.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-cache.h
 
 		#	Sources
 		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/rpi-udp-broadcast.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-cache.c
-		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-udp-broadcast.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/storage/storage-nix-impl.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/logger/logger-impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/firmware/firmware-impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-io.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-cache.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/input-params.c
-		${CMAKE_CURRENT_LIST_DIR}/src/update/update-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-helpers.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-storage.c
+
 		)
 
 #
@@ -91,6 +93,7 @@ target_link_libraries(rpi-common
 		secbox
 		provision
 		vs-default-soft-hsm
+		cloud
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
