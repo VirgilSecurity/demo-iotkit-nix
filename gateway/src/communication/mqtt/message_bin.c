@@ -185,3 +185,5 @@ message_bin_get_request(upd_request_t **request) {
 
     return false;
 }
+
+/*************************************************************************/
