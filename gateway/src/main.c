@@ -49,7 +49,7 @@
 #include "helpers/file-cache.h"
 #include "helpers/app-storage.h"
 #include "sdk-impl/firmware/firmware-nix-impl.h"
-#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
+#include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
 #include <message_bin.h>
 
 /******************************************************************************/
