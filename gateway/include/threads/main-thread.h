@@ -55,10 +55,12 @@ typedef struct gtwy_s {
 } gtwy_t;
 
 gtwy_t *
-init_gateway_ctx(vs_mac_addr_t *mac_addr);
+vs_gateway_ctx_init(vs_mac_addr_t *mac_addr);
+
 gtwy_t *
-get_gateway_ctx(void);
+vs_gateway_ctx(void);
+
 void
-start_gateway_threads(void);
+vs_main_start_threads(void);
 
 #endif // GATEWAY_H

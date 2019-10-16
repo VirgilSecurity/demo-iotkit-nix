@@ -49,6 +49,7 @@
 #include <update-config.h>
 
 #include "sdk-impl/storage/storage-nix-impl.h"
+#include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 #include "helpers/file-io.h"
 
@@ -112,22 +113,17 @@ vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
 /******************************************************************************/
 static void
 _delete_bad_firmware(void) {
-    vs_storage_op_ctx_t op_ctx;
     vs_firmware_descriptor_t desc;
-
-    op_ctx.impl_func = vs_rpi_storage_impl_func();
-    assert(op_ctx.impl_func.deinit);
-    op_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-
-    op_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_app_firmware_dir());
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(_manufacture_id, _device_type, &desc)) {
         VS_LOG_WARNING("Unable to obtain Firmware's descriptor");
     } else {
-        vs_firmware_delete_firmware(&desc);
+        if (VS_CODE_OK != vs_firmware_delete_firmware(&desc)) {
+            VS_LOG_WARNING("Unable to delete bad firmware image");
+            return;
+        }
     }
 
-    op_ctx.impl_func.deinit(op_ctx.impl_data);
     VS_LOG_INFO("Bad firmware has been deleted");
 }
 
@@ -138,9 +134,9 @@ vs_firmware_nix_update(int argc, char **argv) {
     char new_app[FILENAME_MAX];
     char cmd_str[sizeof(new_app) + sizeof(old_app) + 1];
 
-    //    if (!_need_restart) {
-    //        return 0;
-    //    }
+    if (!vs_app_is_need_restart()) {
+        return 0;
+    }
 
     if (NULL == _self_path) {
         return -1;

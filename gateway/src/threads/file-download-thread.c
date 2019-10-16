@@ -32,9 +32,9 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include "upd_http_retrieval_thread.h"
-#include "message_bin.h"
-#include "gateway.h"
+#include "threads/file-download-thread.h"
+#include "threads/message-bin-thread.h"
+#include "threads/main-thread.h"
 #include <helpers/event-group-bits.h>
 #include "event-flags.h"
 
@@ -150,7 +150,7 @@ terminate:
 /*************************************************************************/
 static void *
 _upd_http_retrieval_task(void *pvParameters) {
-    gtwy_t *gtwy = get_gateway_ctx();
+    gtwy_t *gtwy = vs_gateway_ctx();
 
     // Wait for the sdmp stack and services to be up before looking for new firmware
     vs_event_group_wait_bits(&gtwy->shared_events, SDMP_INIT_FINITE_BIT, false, true, VS_EVENT_GROUP_WAIT_INFINITE);
@@ -165,7 +165,7 @@ _upd_http_retrieval_task(void *pvParameters) {
 
         VS_LOG_DEBUG("vs_upd_http_retrieval thread resume");
 
-        while (message_bin_get_request(&request)) {
+        while (vs_message_bin_get_request(&request)) {
             if (!request)
                 continue;
             if (MSG_BIN_UPD_TYPE_FW == request->upd_type) {
@@ -182,7 +182,7 @@ _upd_http_retrieval_task(void *pvParameters) {
 
 /*************************************************************************/
 pthread_t *
-vs_start_upd_http_retrieval_thread(void) {
+vs_file_download_start_thread(void) {
     if (!is_retrieval_started) {
 
         _event_queue = vs_msg_queue_init(FWDIST_QUEUE_SZ, 1, 1);
@@ -197,7 +197,7 @@ vs_start_upd_http_retrieval_thread(void) {
 
 /*************************************************************************/
 bool
-vs_upd_http_retrieval_get_request(vs_update_file_type_t **request) {
+vs_file_download_get_request(vs_update_file_type_t **request) {
     const uint8_t *data;
     size_t _sz;
     *request = NULL;

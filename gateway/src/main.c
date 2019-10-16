@@ -44,13 +44,13 @@
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <trust_list-config.h>
 #include <update-config.h>
-#include "gateway.h"
+#include "threads/main-thread.h"
 #include "helpers/app-helpers.h"
 #include "helpers/file-cache.h"
 #include "helpers/app-storage.h"
 #include "sdk-impl/firmware/firmware-nix-impl.h"
-#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
-#include <message_bin.h>
+#include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
+#include <threads/message-bin-thread.h>
 
 /******************************************************************************/
 static vs_status_e
@@ -179,10 +179,10 @@ main(int argc, char *argv[]) {
     //
 
     // Init gateway object
-    init_gateway_ctx(&forced_mac_addr);
+    vs_gateway_ctx_init(&forced_mac_addr);
 
     // Start app
-    start_gateway_threads();
+    vs_main_start_threads();
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();

@@ -17,9 +17,9 @@
 #include <virgil/iot/update/update.h>
 
 pthread_t *
-vs_start_upd_http_retrieval_thread(void);
+vs_file_download_start_thread(void);
 
 bool
-vs_upd_http_retrieval_get_request(vs_update_file_type_t **request);
+vs_file_download_get_request(vs_update_file_type_t **request);
 
 #endif // UPD_HTTP_RETRIEVAL_THREAD_H_

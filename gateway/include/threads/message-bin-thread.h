@@ -55,12 +55,12 @@ typedef struct __attribute__((__packed__)) {
 } upd_request_t;
 
 pthread_t *
-start_message_bin_thread();
+vs_message_bin_start_thread();
 
 vs_status_e
 vs_message_bin_register_handlers(void);
 
 bool
-message_bin_get_request(upd_request_t **request);
+vs_message_bin_get_request(upd_request_t **request);
 
 #endif // GATEWAY_MESSAGE_BIN_H
