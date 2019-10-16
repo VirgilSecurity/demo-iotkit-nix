@@ -48,7 +48,7 @@
 #include "helpers/input-params.h"
 #include "hal/rpi-global-hal.h"
 #include "hal/storage/rpi-file-cache.h"
-#include <virgil/iot/vs-aws-message-bin/vs-aws-message-bin.h>
+#include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
 #include <message_bin.h>
 
 /******************************************************************************/
