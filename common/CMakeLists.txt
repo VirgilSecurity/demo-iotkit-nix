@@ -78,7 +78,7 @@ target_sources(nix-common
 target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${VIRGIL_IOT_DIRECTORY}/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 		)
