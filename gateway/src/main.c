@@ -86,8 +86,8 @@ main(int argc, char *argv[]) {
     vs_storage_op_ctx_t fw_storage_impl;
 
     // Device parameters
-    vs_device_manufacture_id_t manufacture_id = {GW_MANUFACTURE_ID};
-    vs_device_type_t device_type = {GW_DEVICE_MODEL};
+    vs_device_manufacture_id_t manufacture_id = {0};
+    vs_device_type_t device_type = {0};
     vs_device_serial_t serial = {0};
 
     // Initialize Logger module
@@ -96,7 +96,12 @@ main(int argc, char *argv[]) {
     // Get input parameters
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
-    // Set self path
+    // Prepare device parameters
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+
+    // Set device info path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
@@ -107,11 +112,6 @@ main(int argc, char *argv[]) {
 
     // Enable cached file IO
     vs_file_cache_enable(true);
-
-    // Prepare device parameters
-    vs_app_get_serial(serial, forced_mac_addr);
-    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     //
     // ---------- Create implementations ----------

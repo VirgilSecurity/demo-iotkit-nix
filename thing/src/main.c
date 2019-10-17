@@ -86,7 +86,12 @@ main(int argc, char *argv[]) {
     // Get input parameters
     STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
-    // Set self path
+    // Prepare device parameters
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, THING_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, THING_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+
+    // Set device info path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
     // Print title
@@ -96,11 +101,6 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_prepare_storage("thing", forced_mac_addr), "Cannot prepare storage");
     // Enable cached file IO
     vs_file_cache_enable(true);
-
-    // Prepare device parameters
-    vs_app_get_serial(serial, forced_mac_addr);
-    vs_app_str_to_bytes(manufacture_id, THING_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_app_str_to_bytes(device_type, THING_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
 
     //
