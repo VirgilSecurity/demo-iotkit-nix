@@ -77,8 +77,8 @@ vs_app_storage_init_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir
     memset(storage_impl, 0, sizeof(*storage_impl));
 
     // Prepare TL storage
-    storage_impl->impl_func = vs_rpi_storage_impl_func();
-    storage_impl->impl_data = vs_rpi_storage_impl_data_init(base_dir);
+    storage_impl->impl_func = vs_nix_storage_impl_func();
+    storage_impl->impl_data = vs_nix_storage_impl_data_init(base_dir);
     storage_impl->file_sz_limit = file_size_max;
 
     return VS_CODE_OK;
