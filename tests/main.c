@@ -147,12 +147,12 @@ vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
 int
 main(int argc, char *argv[]) {
     int res = 0;
-    uint8_t mac[6];
+    //    uint8_t mac[6];
     //    self_path = argv[0];
     //    vs_storage_op_ctx_t secbox_ctx;
     //    vs_storage_op_ctx_t tl_ctx;
 
-    memset(mac, 0, sizeof(mac));
+    //    memset(mac, 0, sizeof(mac));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
