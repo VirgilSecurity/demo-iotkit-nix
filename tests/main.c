@@ -215,6 +215,18 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
 terminate:
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
+    // Deinit secbox
+    vs_secbox_deinit();
+
     return res;
 }
 
