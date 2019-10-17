@@ -165,8 +165,8 @@ main(int argc, char *argv[]) {
     //    _remove_keystorage_dir();
 
     // Prepare TL storage
-    //    vs_rpi_storage_impl_func(&tl_ctx.impl_func);
-    //    tl_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_trust_list_dir());
+    //    vs_nix_storage_impl_func(&tl_ctx.impl_func);
+    //    tl_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_trust_list_dir());
     //    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
     //    vs_tl_init(&tl_ctx);
 
@@ -174,16 +174,16 @@ main(int argc, char *argv[]) {
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
-    //    vs_rpi_storage_impl_func(&secbox_ctx.impl_func);
+    //    vs_nix_storage_impl_func(&secbox_ctx.impl_func);
     //    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    //    secbox_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_secbox_dir());
+    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_secbox_dir());
     //    if (NULL == secbox_ctx.impl_data) {
     //        res += 1;
     //    }
     //
     //    res += vs_secbox_test(&secbox_ctx);
     //
-    //    secbox_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
+    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_firmware_dir());
     //    if (NULL == secbox_ctx.impl_data) {
     //        res += 1;
     //    }
