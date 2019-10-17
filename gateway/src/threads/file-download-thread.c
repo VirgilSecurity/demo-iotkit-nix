@@ -128,9 +128,8 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                           tl_header_sz == sizeof(tl_header),
                   "Unable to load Trust List header");
             tl_ver = ntohs(tl_header.version);
-            // TODO : check Trust List version mapping to the vs_file_version_t structure
-            tl_info->info.version.major = tl_ver >> 8;
-            tl_info->info.version.minor = tl_ver & 0xFF;
+            // TODO: Fix it
+            tl_info->info.version.major = tl_ver;
             tl_info->type = VS_UPDATE_TRUST_LIST;
 
             if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {
