@@ -201,6 +201,9 @@ terminate:
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
+    // Deinit firmware
+    vs_firmware_deinit();
+
     // Deinit provision
     vs_provision_deinit();
 
