@@ -39,7 +39,10 @@
 #include <stdio.h>
 
 bool
-vs_files_set_dir(const char *base_dir);
+vs_files_set_base_dir(const char *base_dir);
+
+const char *
+vs_files_get_base_dir(void);
 
 ssize_t
 vs_files_get_len(const char *folder, const char *file_name);

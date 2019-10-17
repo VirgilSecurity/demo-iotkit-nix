@@ -152,3 +152,14 @@ terminate:
 }
 
 /******************************************************************************/
+vs_status_e
+vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
+    assert(footer);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
+
+    memset(footer, 0, footer_sz);
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
