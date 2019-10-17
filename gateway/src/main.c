@@ -225,15 +225,6 @@ vs_impl_msleep(size_t msec) {
 }
 
 /******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    assert(footer);
-    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
-
-    return vs_nix_load_own_footer(footer, footer_sz);
-}
-
-/******************************************************************************/
 void
 vs_impl_device_serial(vs_device_serial_t serial_number) {
     memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);

@@ -39,8 +39,6 @@
 #include "helpers/file-io.h"
 #include <virgil/iot/status_code/status_code.h>
 
-vs_status_e
-vs_nix_load_own_footer(uint8_t *footer, uint16_t footer_sz);
 int
 vs_firmware_nix_update(int argc, char **argv);
 
