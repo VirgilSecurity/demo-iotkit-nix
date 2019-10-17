@@ -41,7 +41,6 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <update-config.h>
 
@@ -260,7 +259,7 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
           errno,
           strerror(errno));
 
-    vs_cloud_ntoh_fw_descriptor(&own_footer->descriptor);
+    vs_firmware_ntoh_descriptor(&own_footer->descriptor);
 
     // Simple validation of own descriptor
     if (own_footer->signatures_count != VS_FW_SIGNATURES_QTY ||
