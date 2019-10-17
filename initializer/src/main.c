@@ -150,6 +150,9 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
     return VS_CODE_OK;
 }
 

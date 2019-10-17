@@ -207,6 +207,9 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
     res = vs_firmware_nix_update(argc, argv);
 
     // Clean File cache
