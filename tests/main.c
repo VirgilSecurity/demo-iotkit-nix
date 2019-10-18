@@ -206,11 +206,15 @@ main(int argc, char *argv[]) {
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
-    res = vs_tests_checks(hsm_impl); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
+    res = vs_crypto_test(hsm_impl);
 
     res += vs_secbox_test(hsm_impl);
 
     res += vs_firmware_test(hsm_impl);
+
+    res += vs_sdmp_tests();
+
+    res += vs_fldt_tests(hsm_impl);
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 
@@ -221,11 +225,11 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftHSM
-    vs_softhsm_deinit();
-
     // Deinit secbox
     vs_secbox_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
 
     return res;
 }
