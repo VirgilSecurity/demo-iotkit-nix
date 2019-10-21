@@ -183,6 +183,15 @@ terminate:
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
     res = vs_firmware_nix_update(argc, argv);
 
     return res;
@@ -218,7 +227,7 @@ _on_file_updated(vs_update_file_type_t *file_type,
             update_interface->describe_version(
                     update_interface->storage_context, file_type, new_file_ver, file_descr, sizeof(file_descr), false));
     VS_LOG_INFO("Previous %s : %s",
-                file_type,
+                file_type_descr,
                 update_interface->describe_version(update_interface->storage_context,
                                                    file_type,
                                                    prev_file_ver,

@@ -48,84 +48,83 @@
 
 #include "helpers/file-io.h"
 #include "sdk-impl/storage/storage-nix-impl.h"
-#include "hal/rpi-global-hal.h"
 #include "helpers/file-cache.h"
 
 /******************************************************************************/
-static int
-_recursive_delete(const char *dir) {
-    int ret = 0;
-    FTS *ftsp = NULL;
-    FTSENT *curr;
-
-    // Cast needed (in C) because fts_open() takes a "char * const *", instead
-    // of a "const char * const *", which is only allowed in C++. fts_open()
-    // does not modify the argument.
-    char *files[] = {(char *)dir, NULL};
-
-    // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
-    //                in multithreaded programs
-    // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
-    //                of the specified directory
-    // FTS_XDEV     - Don't cross filesystem boundaries
-    ftsp = fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
-    if (!ftsp) {
-        VS_LOG_ERROR("%s: fts_open failed", dir);
-        ret = -1;
-        goto finish;
-    }
-
-    while ((curr = fts_read(ftsp))) {
-        switch (curr->fts_info) {
-        case FTS_NS:
-        case FTS_DNR:
-        case FTS_ERR:
-            VS_LOG_TRACE("%s: fts_read error: %s", curr->fts_accpath, strerror(curr->fts_errno));
-            break;
-
-        case FTS_DC:
-        case FTS_DOT:
-        case FTS_NSOK:
-            // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
-            // passed to fts_open()
-            break;
-
-        case FTS_D:
-            // Do nothing. Need depth-first search, so directories are deleted
-            // in FTS_DP
-            break;
-
-        case FTS_DP:
-        case FTS_F:
-        case FTS_SL:
-        case FTS_SLNONE:
-        case FTS_DEFAULT:
-            if (remove(curr->fts_accpath) < 0) {
-                VS_LOG_ERROR("%s: Failed to remove", curr->fts_path);
-                ret = -1;
-            }
-            break;
-        }
-    }
-
-finish:
-    if (ftsp) {
-        fts_close(ftsp);
-    }
-
-    return ret;
-}
+// static int
+//_recursive_delete(const char *dir) {
+//    int ret = 0;
+//    FTS *ftsp = NULL;
+//    FTSENT *curr;
+//
+//    // Cast needed (in C) because fts_open() takes a "char * const *", instead
+//    // of a "const char * const *", which is only allowed in C++. fts_open()
+//    // does not modify the argument.
+//    char *files[] = {(char *)dir, NULL};
+//
+//    // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
+//    //                in multithreaded programs
+//    // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
+//    //                of the specified directory
+//    // FTS_XDEV     - Don't cross filesystem boundaries
+//    ftsp = fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
+//    if (!ftsp) {
+//        VS_LOG_ERROR("%s: fts_open failed", dir);
+//        ret = -1;
+//        goto finish;
+//    }
+//
+//    while ((curr = fts_read(ftsp))) {
+//        switch (curr->fts_info) {
+//        case FTS_NS:
+//        case FTS_DNR:
+//        case FTS_ERR:
+//            VS_LOG_TRACE("%s: fts_read error: %s", curr->fts_accpath, strerror(curr->fts_errno));
+//            break;
+//
+//        case FTS_DC:
+//        case FTS_DOT:
+//        case FTS_NSOK:
+//            // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
+//            // passed to fts_open()
+//            break;
+//
+//        case FTS_D:
+//            // Do nothing. Need depth-first search, so directories are deleted
+//            // in FTS_DP
+//            break;
+//
+//        case FTS_DP:
+//        case FTS_F:
+//        case FTS_SL:
+//        case FTS_SLNONE:
+//        case FTS_DEFAULT:
+//            if (remove(curr->fts_accpath) < 0) {
+//                VS_LOG_ERROR("%s: Failed to remove", curr->fts_path);
+//                ret = -1;
+//            }
+//            break;
+//        }
+//    }
+//
+// finish:
+//    if (ftsp) {
+//        fts_close(ftsp);
+//    }
+//
+//    return ret;
+//}
 
 /********************************************************************************/
-static void
-_remove_keystorage_dir() {
-    char folder[FILENAME_MAX];
-
-    if (!vs_rpi_get_keystorage_base_dir(folder)) {
-        return;
-    }
-    _recursive_delete(folder);
-}
+// static void
+//_remove_keystorage_dir() {
+//    char folder[FILENAME_MAX];
+//
+//    if (!vs_rpi_get_keystorage_base_dir(folder)) {
+//        return;
+//    }
+//    _recursive_delete(folder);
+//}
 
 /********************************************************************************/
 static void
@@ -148,12 +147,12 @@ vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
 int
 main(int argc, char *argv[]) {
     int res = 0;
-    uint8_t mac[6];
-    self_path = argv[0];
-    vs_storage_op_ctx_t secbox_ctx;
-    vs_storage_op_ctx_t tl_ctx;
+    //    uint8_t mac[6];
+    //    self_path = argv[0];
+    //    vs_storage_op_ctx_t secbox_ctx;
+    //    vs_storage_op_ctx_t tl_ctx;
 
-    memset(mac, 0, sizeof(mac));
+    //    memset(mac, 0, sizeof(mac));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
@@ -162,37 +161,37 @@ main(int argc, char *argv[]) {
     vs_file_cache_enable(true);
 
     vs_files_set_dir("test");
-    vs_hal_files_set_mac(mac);
-    _remove_keystorage_dir();
+    //    vs_hal_files_set_mac(mac);
+    //    _remove_keystorage_dir();
 
     // Prepare TL storage
-    vs_rpi_storage_impl_func(&tl_ctx.impl_func);
-    tl_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_trust_list_dir());
-    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    vs_tl_init(&tl_ctx);
+    //    vs_nix_storage_impl_func(&tl_ctx.impl_func);
+    //    tl_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_trust_list_dir());
+    //    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
+    //    vs_tl_init(&tl_ctx);
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
     res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
 
-    vs_rpi_storage_impl_func(&secbox_ctx.impl_func);
-    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    secbox_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_secbox_dir());
-    if (NULL == secbox_ctx.impl_data) {
-        res += 1;
-    }
-
-    res += vs_secbox_test(&secbox_ctx);
-
-    secbox_ctx.impl_data = vs_rpi_storage_impl_data_init(vs_rpi_get_firmware_dir());
-    if (NULL == secbox_ctx.impl_data) {
-        res += 1;
-    }
-
-    res += vs_firmware_test(&secbox_ctx);
-
+    //    vs_nix_storage_impl_func(&secbox_ctx.impl_func);
+    //    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
+    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_secbox_dir());
+    //    if (NULL == secbox_ctx.impl_data) {
+    //        res += 1;
+    //    }
+    //
+    //    res += vs_secbox_test(&secbox_ctx);
+    //
+    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_firmware_dir());
+    //    if (NULL == secbox_ctx.impl_data) {
+    //        res += 1;
+    //    }
+    //
+    //    res += vs_firmware_test(&secbox_ctx);
+    //
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
-    vs_tl_deinit(&tl_ctx);
+    //    vs_tl_deinit(&tl_ctx);
 
     return res;
 }

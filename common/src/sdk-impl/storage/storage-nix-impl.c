@@ -65,7 +65,7 @@ current_timestamp() {
 typedef struct {
     char *dir;
 
-} vs_rpi_storage_ctx_t;
+} vs_nix_storage_ctx_t;
 
 /******************************************************************************/
 static void
@@ -89,12 +89,12 @@ _data_to_hex(const uint8_t *_data, uint32_t _len, uint8_t *_out_data, uint32_t *
 
 /******************************************************************************/
 vs_storage_impl_data_ctx_t
-vs_rpi_storage_impl_data_init(const char *relative_dir) {
-    vs_rpi_storage_ctx_t *ctx = NULL;
+vs_nix_storage_impl_data_init(const char *relative_dir) {
+    vs_nix_storage_ctx_t *ctx = NULL;
 
     CHECK_NOT_ZERO_RET(relative_dir, NULL);
 
-    ctx = VS_IOT_CALLOC(1, sizeof(vs_rpi_storage_ctx_t));
+    ctx = VS_IOT_CALLOC(1, sizeof(vs_nix_storage_ctx_t));
     CHECK_NOT_ZERO_RET(ctx, NULL);
 
     ctx->dir = (char *)VS_IOT_CALLOC(1, strlen(relative_dir) + 1);
@@ -114,8 +114,8 @@ vs_rpi_storage_impl_data_init(const char *relative_dir) {
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_deinit_hal(vs_storage_impl_data_ctx_t storage_ctx) {
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+vs_nix_storage_deinit_hal(vs_storage_impl_data_ctx_t storage_ctx) {
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(ctx->dir, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -128,8 +128,8 @@ vs_rpi_storage_deinit_hal(vs_storage_impl_data_ctx_t storage_ctx) {
 
 /******************************************************************************/
 static vs_storage_file_t
-vs_rpi_storage_open_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+vs_nix_storage_open_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(id, NULL);
     CHECK_NOT_ZERO_RET(storage_ctx, NULL);
@@ -145,12 +145,12 @@ vs_rpi_storage_open_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_s
 }
 
 /******************************************************************************/
-vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_file_t file) {
+vs_status_e static vs_nix_storage_sync_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_file_t file) {
     vs_status_e res = VS_CODE_ERR_FILE;
 
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 
 #if VS_FIO_PROFILE_SYNC
     long long t;
@@ -172,7 +172,7 @@ vs_status_e static vs_rpi_storage_sync_hal(const vs_storage_impl_data_ctx_t stor
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_close_hal(const vs_storage_impl_data_ctx_t storage_ctx, vs_storage_file_t file) {
+vs_nix_storage_close_hal(const vs_storage_impl_data_ctx_t storage_ctx, vs_storage_file_t file) {
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_INCORRECT_PARAMETER);
 
     VS_IOT_FREE(file);
@@ -182,7 +182,7 @@ vs_rpi_storage_close_hal(const vs_storage_impl_data_ctx_t storage_ctx, vs_storag
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
+vs_nix_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         const uint8_t *data,
@@ -192,7 +192,7 @@ vs_rpi_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
     CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
     CHECK_NOT_ZERO_RET(file, VS_CODE_ERR_NULLPTR_ARGUMENT);
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 #if VS_FIO_PROFILE_WRITE
     long long t;
     long long dt;
@@ -213,14 +213,14 @@ vs_rpi_storage_save_hal(const vs_storage_impl_data_ctx_t storage_ctx,
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_load_hal(const vs_storage_impl_data_ctx_t storage_ctx,
+vs_nix_storage_load_hal(const vs_storage_impl_data_ctx_t storage_ctx,
                         const vs_storage_file_t file,
                         size_t offset,
                         uint8_t *out_data,
                         size_t data_sz) {
     size_t read_sz;
     vs_status_e res = VS_CODE_ERR_FILE_READ;
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(out_data, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -247,8 +247,8 @@ vs_rpi_storage_load_hal(const vs_storage_impl_data_ctx_t storage_ctx,
 
 /*******************************************************************************/
 static ssize_t
-vs_rpi_storage_file_size_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+vs_nix_storage_file_size_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
     ssize_t res;
     uint32_t len = sizeof(vs_storage_element_id_t) * 2 + 1;
     uint8_t file[len];
@@ -277,8 +277,8 @@ vs_rpi_storage_file_size_hal(const vs_storage_impl_data_ctx_t storage_ctx, const
 
 /******************************************************************************/
 static vs_status_e
-vs_rpi_storage_del_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
-    vs_rpi_storage_ctx_t *ctx = (vs_rpi_storage_ctx_t *)storage_ctx;
+vs_nix_storage_del_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_storage_element_id_t id) {
+    vs_nix_storage_ctx_t *ctx = (vs_nix_storage_ctx_t *)storage_ctx;
 
     CHECK_NOT_ZERO_RET(id, VS_CODE_ERR_INCORRECT_PARAMETER);
     CHECK_NOT_ZERO_RET(storage_ctx, VS_CODE_ERR_INCORRECT_PARAMETER);
@@ -294,19 +294,19 @@ vs_rpi_storage_del_hal(const vs_storage_impl_data_ctx_t storage_ctx, const vs_st
 
 /******************************************************************************/
 vs_storage_impl_func_t
-vs_rpi_storage_impl_func(void) {
+vs_nix_storage_impl_func(void) {
     vs_storage_impl_func_t impl;
 
     memset(&impl, 0, sizeof(impl));
 
-    impl.size = vs_rpi_storage_file_size_hal;
-    impl.deinit = vs_rpi_storage_deinit_hal;
-    impl.open = vs_rpi_storage_open_hal;
-    impl.sync = vs_rpi_storage_sync_hal;
-    impl.close = vs_rpi_storage_close_hal;
-    impl.save = vs_rpi_storage_save_hal;
-    impl.load = vs_rpi_storage_load_hal;
-    impl.del = vs_rpi_storage_del_hal;
+    impl.size = vs_nix_storage_file_size_hal;
+    impl.deinit = vs_nix_storage_deinit_hal;
+    impl.open = vs_nix_storage_open_hal;
+    impl.sync = vs_nix_storage_sync_hal;
+    impl.close = vs_nix_storage_close_hal;
+    impl.save = vs_nix_storage_save_hal;
+    impl.load = vs_nix_storage_load_hal;
+    impl.del = vs_nix_storage_del_hal;
 
     return impl;
 }

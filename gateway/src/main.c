@@ -201,6 +201,15 @@ terminate:
     // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
     res = vs_firmware_nix_update(argc, argv);
 
     // Clean File cache

@@ -40,9 +40,9 @@
 #include <virgil/iot/status_code/status_code.h>
 
 vs_storage_impl_data_ctx_t
-vs_rpi_storage_impl_data_init(const char *dir);
+vs_nix_storage_impl_data_init(const char *dir);
 
 vs_storage_impl_func_t
-vs_rpi_storage_impl_func(void);
+vs_nix_storage_impl_func(void);
 
 #endif // VS_IOT_NIX_STORAGE_IMPL_H

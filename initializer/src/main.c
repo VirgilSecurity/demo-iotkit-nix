@@ -144,9 +144,14 @@ terminate:
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
-
     // Deinit Virgil SDK modules
     vs_sdmp_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
 
     return VS_CODE_OK;
 }
