@@ -64,9 +64,6 @@ static const char *_self_path;
 static vs_device_manufacture_id_t _manufacture_id;
 static vs_device_type_t _device_type;
 
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) __attribute__((weak));
-
 /******************************************************************************/
 vs_status_e
 vs_firmware_install_prepare_space_hal(void) {
@@ -241,8 +238,7 @@ vs_firmware_nix_update(int argc, char **argv) {
 }
 
 /******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
+vs_status_e __attribute__((weak)) vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
     FILE *fp = NULL;
     vs_status_e res = VS_CODE_ERR_FILE_READ;
     ssize_t length;

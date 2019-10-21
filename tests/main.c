@@ -131,17 +131,6 @@ _assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
-/******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    assert(footer);
-    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
-
-    memset(footer, 0, footer_sz);
-
-    return VS_CODE_OK;
-}
-
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
@@ -162,8 +151,8 @@ main(int argc, char *argv[]) {
 
     // Prepare device parameters
     memset(&mac, 0, sizeof(mac));
-    memset(manufacture_id, 0, sizeof(manufacture_id));
-    memset(device_type, 0, sizeof(device_type));
+    vs_app_str_to_bytes(manufacture_id, TEST_MANUFACTURE_ID, sizeof(manufacture_id));
+    vs_app_str_to_bytes(device_type, TEST_DEVICE_TYPE, sizeof(device_type));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
@@ -232,10 +221,4 @@ terminate:
     vs_softhsm_deinit();
 
     return res;
-}
-
-/******************************************************************************/
-void
-vs_impl_device_serial(vs_device_serial_t serial_number) {
-    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
