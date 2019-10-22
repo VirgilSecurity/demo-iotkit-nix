@@ -49,6 +49,7 @@ int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     const vs_sdmp_service_t *sdmp_prvs_server;
+    vs_status_e ret_code;
 
     // Implementation variables
     vs_hsm_impl_t *hsm_impl = NULL;
@@ -113,7 +114,11 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+    ret_code = vs_provision_init(&tl_storage_impl, hsm_impl);
+    if (VS_CODE_OK != ret_code && VS_CODE_ERR_NOINIT != ret_code) {
+        VS_LOG_ERROR("Cannot initialize Provision module");
+        goto terminate;
+    }
 
     // SDMP module
     STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),

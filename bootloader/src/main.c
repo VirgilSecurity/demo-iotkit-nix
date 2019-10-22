@@ -156,9 +156,6 @@ vs_status_e
 vs_firmware_self_verify(void) {
 
     ssize_t file_sz;
-    uint8_t *pubkey;
-    int sign_len;
-    int key_len;
     uint8_t sign_rules = 0;
     uint16_t i;
     vs_hsm_sw_sha256_ctx hash_ctx;
@@ -221,6 +218,10 @@ vs_firmware_self_verify(void) {
     CHECK_RET(footer->signatures_count >= VS_FW_SIGNATURES_QTY, VS_CODE_ERR_FILE, "There are not enough signatures");
 
     for (i = 0; i < footer->signatures_count; ++i) {
+        uint8_t *pubkey;
+        int sign_len;
+        int key_len;
+
         CHECK_RET(sign->hash_type == VS_HASH_SHA_256, VS_CODE_ERR_UNSUPPORTED, "Unsupported hash size for sign FW");
 
         sign_len = vs_hsm_get_signature_len(sign->ec_type);
