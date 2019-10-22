@@ -44,8 +44,8 @@ static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
 
 /******************************************************************************/
-static char *
-_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
+char *
+vs_app_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname) {
     size_t pos;
 
     if (!(argv && shortname && *shortname && longname && *longname)) {
@@ -82,7 +82,7 @@ _read_mac_address(const char *arg, vs_mac_addr_t *mac) {
 
 /******************************************************************************/
 vs_status_e
-vs_app_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr) {
+vs_app_get_mac_from_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr) {
     static const char *MAC_SHORT = "-m";
     static const char *MAC_FULL = "--mac";
     char *mac_str;
@@ -92,7 +92,7 @@ vs_app_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
-    mac_str = _get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+    mac_str = vs_app_get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
 
     // Check input parameters
     if (!mac_str) {
@@ -110,23 +110,17 @@ vs_app_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr
 
 /******************************************************************************/
 vs_status_e
-vs_bootloader_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr, char **path) {
+vs_app_get_image_path_from_commandline_params(int argc, char *argv[], char **path) {
     static const char *PATH_TO_IMAGE_SHORT = "-i";
     static const char *PATH_TO_IMAGE_FULL = "--image";
     char *path_to_str;
-    vs_status_e ret_code;
 
-    STATUS_CHECK_RET(vs_app_commandline_params(argc, argv, forced_mac_addr),
-                     "%s/%s <path to image which need to start>",
-                     PATH_TO_IMAGE_SHORT,
-                     PATH_TO_IMAGE_FULL);
-
-    if (!path) {
+    if (!argv || !argc || !path) {
         VS_LOG_ERROR("Wrong input parameters.");
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
 
-    path_to_str = _get_commandline_arg(argc, argv, PATH_TO_IMAGE_SHORT, PATH_TO_IMAGE_FULL);
+    path_to_str = vs_app_get_commandline_arg(argc, argv, PATH_TO_IMAGE_SHORT, PATH_TO_IMAGE_FULL);
 
     // Check input parameters
     if (!path_to_str) {

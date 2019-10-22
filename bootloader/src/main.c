@@ -33,10 +33,10 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <errno.h>
+#include <unistd.h>
 
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
-#include "helpers/file-io.h"
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
@@ -45,6 +45,7 @@
 #include <virgil/iot/hsm/hsm.h>
 #include <virgil/iot/hsm/hsm_helpers.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
+
 #include <trust_list-config.h>
 #include <update-config.h>
 
@@ -255,9 +256,23 @@ vs_firmware_self_verify(void) {
 }
 
 /******************************************************************************/
+static void
+_start_app_image(int argc, char *argv[]) {
+    const char *MAC_SHORT = "-m";
+    const char *MAC_FULL = "--mac";
+    char *mac_str = vs_app_get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
+
+    VS_LOG_INFO("Start new app image ...");
+    if (-1 == execl(_path_to_image, MAC_SHORT, mac_str, NULL)) {
+        VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
+    }
+}
+
+/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
+    bool is_image_correct = false;
 
 
     // Implementation variables
@@ -268,7 +283,10 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Get input parameters
-    STATUS_CHECK(vs_bootloader_commandline_params(argc, argv, &forced_mac_addr, &_path_to_image),
+    STATUS_CHECK(vs_app_get_mac_from_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+
+    // Get input parameters
+    STATUS_CHECK(vs_app_get_image_path_from_commandline_params(argc, argv, &_path_to_image),
                  "Cannot read input parameters");
 #if GATEWAY
     const char *title = "Gateway bootloader";
@@ -308,7 +326,12 @@ main(int argc, char *argv[]) {
     // Provision module
     STATUS_CHECK(vs_provision_init(&tl_storage_impl, _hsm_impl), "Cannot initialize Provision module");
 
+    //
+    // ---------- Check firmware image ----------
+    //
+
     STATUS_CHECK(vs_firmware_self_verify(), "Verifying image fail");
+    is_image_correct = true;
 
 terminate:
 
@@ -318,6 +341,11 @@ terminate:
     // Deinit SoftHSM
     vs_softhsm_deinit();
 
+    if (is_image_correct) {
+        _start_app_image(argc, argv);
+    }
+
+
     VS_LOG_INFO("\n\n\n");
-    VS_LOG_INFO("Terminating application ...");
+    VS_LOG_INFO("Terminating bootloader ...");
 }
