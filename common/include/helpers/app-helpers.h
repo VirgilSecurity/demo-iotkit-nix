@@ -40,6 +40,9 @@
 vs_status_e
 vs_app_commandline_params(int argc, char **argv, vs_mac_addr_t *forced_mac_addr);
 
+vs_status_e
+vs_bootloader_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr, char **path);
+
 void
 vs_app_print_title(const char *devices_dir,
                    const char *app_file,

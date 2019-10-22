@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include "sdk-impl/netif/netif-udp-broadcast.h"
 #include "sdk-impl/netif/netif-queue.h"
+#include <virgil/iot/macros/macros.h>
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
@@ -103,6 +104,38 @@ vs_app_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr
         VS_LOG_ERROR("Incorrect forced MAC address \"%s\" was specified", mac_str);
         return VS_CODE_ERR_INCORRECT_ARGUMENT;
     }
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
+vs_status_e
+vs_bootloader_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr, char **path) {
+    static const char *PATH_TO_IMAGE_SHORT = "-i";
+    static const char *PATH_TO_IMAGE_FULL = "--image";
+    char *path_to_str;
+    vs_status_e ret_code;
+
+    STATUS_CHECK_RET(vs_app_commandline_params(argc, argv, forced_mac_addr),
+                     "%s/%s <path to image which need to start>",
+                     PATH_TO_IMAGE_SHORT,
+                     PATH_TO_IMAGE_FULL);
+
+    if (!path) {
+        VS_LOG_ERROR("Wrong input parameters.");
+        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+    }
+
+    path_to_str = _get_commandline_arg(argc, argv, PATH_TO_IMAGE_SHORT, PATH_TO_IMAGE_FULL);
+
+    // Check input parameters
+    if (!path_to_str) {
+        VS_LOG_ERROR("usage: %s/%s <path to image which need to start>", PATH_TO_IMAGE_SHORT, PATH_TO_IMAGE_FULL);
+        return VS_CODE_ERR_INCORRECT_ARGUMENT;
+    }
+
+    *path = path_to_str;
+
 
     return VS_CODE_OK;
 }
