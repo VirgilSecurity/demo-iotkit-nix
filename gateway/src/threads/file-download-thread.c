@@ -127,7 +127,11 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
             CHECK(VS_CODE_OK == vs_tl_load_part(&elem, (uint8_t *)&tl_header, tl_header_sz, &tl_header_sz) &&
                           tl_header_sz == sizeof(tl_header),
                   "Unable to load Trust List header");
+#if 0
             tl_ver = ntohs(tl_header.version);
+#else
+            tl_ver = 0;
+#endif
             // TODO: Fix it
             tl_info->info.version.major = tl_ver;
             tl_info->type = VS_UPDATE_TRUST_LIST;
