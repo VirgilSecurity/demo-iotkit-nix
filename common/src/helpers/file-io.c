@@ -44,7 +44,6 @@
 #include <stdlib-config.h>
 #include <global-hal.h>
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/logger/helpers.h>
 #include <virgil/iot/macros/macros.h>
 #include <helpers/file-cache.h>
 
@@ -133,8 +132,8 @@ vs_files_get_len(const char *folder, const char *file_name) {
     char file_path[FILENAME_MAX];
     FILE *fp = NULL;
 
-    NOT_ZERO(folder);
-    NOT_ZERO(file_name);
+    CHECK_NOT_ZERO(folder);
+    CHECK_NOT_ZERO(file_name);
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return 0;
@@ -177,8 +176,8 @@ vs_files_sync(const char *folder, const char *file_name) {
     bool res = true;
     char file_path[FILENAME_MAX];
 
-    NOT_ZERO(folder);
-    NOT_ZERO(file_name);
+    CHECK_NOT_ZERO(folder);
+    CHECK_NOT_ZERO(file_name);
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
@@ -201,10 +200,10 @@ vs_files_write(const char *folder, const char *file_name, uint32_t offset, const
     uint8_t *buf = NULL;
     uint32_t new_file_sz;
 
-    NOT_ZERO(folder);
-    NOT_ZERO(file_name);
-    NOT_ZERO(data);
-    NOT_ZERO(data_sz);
+    CHECK_NOT_ZERO(folder);
+    CHECK_NOT_ZERO(file_name);
+    CHECK_NOT_ZERO(data);
+    CHECK_NOT_ZERO(data_sz);
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         return false;
@@ -228,7 +227,7 @@ vs_files_write(const char *folder, const char *file_name, uint32_t offset, const
 
             new_file_sz = f_sz > offset + data_sz ? f_sz : offset + data_sz;
             buf = VS_IOT_MALLOC(new_file_sz);
-            NOT_ZERO(buf);
+            CHECK_NOT_ZERO(buf);
             VS_IOT_MEMSET(buf, 0xFF, new_file_sz);
 
             if (1 != fread((void *)buf, f_sz, 1, fp)) {
@@ -243,7 +242,7 @@ vs_files_write(const char *folder, const char *file_name, uint32_t offset, const
         } else {
             new_file_sz = offset + data_sz;
             buf = VS_IOT_CALLOC(offset + data_sz, 1);
-            NOT_ZERO(buf);
+            CHECK_NOT_ZERO(buf);
             VS_IOT_MEMSET(buf, 0xFF, offset);
             VS_IOT_MEMCPY(buf + offset, data, data_sz);
         }
@@ -294,10 +293,10 @@ vs_files_read(const char *folder,
     bool res = false;
     int64_t max_avail_sz;
 
-    NOT_ZERO(folder);
-    NOT_ZERO(file_name);
-    NOT_ZERO(data);
-    NOT_ZERO(read_sz);
+    CHECK_NOT_ZERO(folder);
+    CHECK_NOT_ZERO(file_name);
+    CHECK_NOT_ZERO(data);
+    CHECK_NOT_ZERO(read_sz);
 
     if (!_check_fio_and_path(folder, file_name, file_path)) {
         goto terminate;
