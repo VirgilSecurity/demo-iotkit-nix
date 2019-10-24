@@ -183,8 +183,9 @@ main(int argc, char *argv[]) {
     // Soft HSM
     hsm_impl = vs_softhsm_impl(&slots_storage_impl);
 
-    // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+    // Provision module.
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, hsm_impl),
+          "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
 
     // Firmware module
     STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
