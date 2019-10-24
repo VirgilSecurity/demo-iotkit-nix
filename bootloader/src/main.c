@@ -35,8 +35,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "helpers/app-helpers.h"
-#include "helpers/app-storage.h"
+#include <helpers/app-helpers.h>
+#include <helpers/app-storage.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
@@ -164,7 +164,7 @@ vs_firmware_self_verify(void) {
 
 
     // TODO: Need to support all hash types
-    uint8_t hash[32];
+    uint8_t hash[VS_HASH_SHA256_LEN];
 
     int footer_sz = vs_firmware_get_expected_footer_len();
     CHECK_RET(footer_sz > 0, VS_CODE_ERR_INCORRECT_ARGUMENT, "Can't get footer size");
@@ -179,7 +179,7 @@ vs_firmware_self_verify(void) {
 
     vs_firmware_footer_t *footer = (vs_firmware_footer_t *)footer_buf;
     vs_firmware_descriptor_t desc;
-    VS_IOT_MEMCPY(&desc, &footer->descriptor, sizeof(vs_firmware_descriptor_t));
+    memcpy(&desc, &footer->descriptor, sizeof(vs_firmware_descriptor_t));
     vs_firmware_ntoh_descriptor(&desc);
 
     CHECK_RET(footer_sz <= file_sz - desc.firmware_length, VS_CODE_ERR_FILE, "Incorrect footer size");
