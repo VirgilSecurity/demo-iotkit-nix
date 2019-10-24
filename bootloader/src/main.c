@@ -264,7 +264,7 @@ _start_app_image(int argc, char *argv[]) {
     char *mac_str = vs_app_get_commandline_arg(argc, argv, MAC_SHORT, MAC_FULL);
 
     VS_LOG_INFO("Start new app image ...");
-    if (-1 == execl(_path_to_image, MAC_SHORT, mac_str, NULL)) {
+    if (-1 == execl(_path_to_image, _path_to_image, MAC_SHORT, mac_str, NULL)) {
         VS_LOG_ERROR("Error start new app. errno = %d (%s)", errno, strerror(errno));
     }
 }
