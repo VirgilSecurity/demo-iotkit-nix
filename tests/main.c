@@ -43,88 +43,87 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
+#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
 
+#include "helpers/app-helpers.h"
+#include "helpers/app-storage.h"
 #include "helpers/file-io.h"
 #include "sdk-impl/storage/storage-nix-impl.h"
-#include "helpers/file-cache.h"
+#include "sdk-impl/firmware/firmware-nix-impl.h"
 
 /******************************************************************************/
-// static int
-//_recursive_delete(const char *dir) {
-//    int ret = 0;
-//    FTS *ftsp = NULL;
-//    FTSENT *curr;
-//
-//    // Cast needed (in C) because fts_open() takes a "char * const *", instead
-//    // of a "const char * const *", which is only allowed in C++. fts_open()
-//    // does not modify the argument.
-//    char *files[] = {(char *)dir, NULL};
-//
-//    // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
-//    //                in multithreaded programs
-//    // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
-//    //                of the specified directory
-//    // FTS_XDEV     - Don't cross filesystem boundaries
-//    ftsp = fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
-//    if (!ftsp) {
-//        VS_LOG_ERROR("%s: fts_open failed", dir);
-//        ret = -1;
-//        goto finish;
-//    }
-//
-//    while ((curr = fts_read(ftsp))) {
-//        switch (curr->fts_info) {
-//        case FTS_NS:
-//        case FTS_DNR:
-//        case FTS_ERR:
-//            VS_LOG_TRACE("%s: fts_read error: %s", curr->fts_accpath, strerror(curr->fts_errno));
-//            break;
-//
-//        case FTS_DC:
-//        case FTS_DOT:
-//        case FTS_NSOK:
-//            // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
-//            // passed to fts_open()
-//            break;
-//
-//        case FTS_D:
-//            // Do nothing. Need depth-first search, so directories are deleted
-//            // in FTS_DP
-//            break;
-//
-//        case FTS_DP:
-//        case FTS_F:
-//        case FTS_SL:
-//        case FTS_SLNONE:
-//        case FTS_DEFAULT:
-//            if (remove(curr->fts_accpath) < 0) {
-//                VS_LOG_ERROR("%s: Failed to remove", curr->fts_path);
-//                ret = -1;
-//            }
-//            break;
-//        }
-//    }
-//
-// finish:
-//    if (ftsp) {
-//        fts_close(ftsp);
-//    }
-//
-//    return ret;
-//}
+static int
+_recursive_delete(const char *dir) {
+    int ret = 0;
+    FTS *ftsp = NULL;
+    FTSENT *curr;
+
+    // Cast needed (in C) because fts_open() takes a "char * const *", instead
+    // of a "const char * const *", which is only allowed in C++. fts_open()
+    // does not modify the argument.
+    char *files[] = {(char *)dir, NULL};
+
+    // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
+    //                in multithreaded programs
+    // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
+    //                of the specified directory
+    // FTS_XDEV     - Don't cross filesystem boundaries
+    ftsp = fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
+    if (!ftsp) {
+        VS_LOG_ERROR("%s: fts_open failed", dir);
+        ret = -1;
+        goto finish;
+    }
+
+    while ((curr = fts_read(ftsp))) {
+        switch (curr->fts_info) {
+        case FTS_NS:
+        case FTS_DNR:
+        case FTS_ERR:
+            VS_LOG_TRACE("%s: fts_read error: %s", curr->fts_accpath, strerror(curr->fts_errno));
+            break;
+
+        case FTS_DC:
+        case FTS_DOT:
+        case FTS_NSOK:
+            // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
+            // passed to fts_open()
+            break;
+
+        case FTS_D:
+            // Do nothing. Need depth-first search, so directories are deleted
+            // in FTS_DP
+            break;
+
+        case FTS_DP:
+        case FTS_F:
+        case FTS_SL:
+        case FTS_SLNONE:
+        case FTS_DEFAULT:
+            if (remove(curr->fts_accpath) < 0) {
+                VS_LOG_ERROR("%s: Failed to remove", curr->fts_path);
+                ret = -1;
+            }
+            break;
+        }
+    }
+
+finish:
+    if (ftsp) {
+        fts_close(ftsp);
+    }
+
+    return ret;
+}
 
 /********************************************************************************/
-// static void
-//_remove_keystorage_dir() {
-//    char folder[FILENAME_MAX];
-//
-//    if (!vs_rpi_get_keystorage_base_dir(folder)) {
-//        return;
-//    }
-//    _recursive_delete(folder);
-//}
+static void
+_remove_keystorage_dir() {
+    _recursive_delete(vs_files_get_base_dir());
+}
 
 /********************************************************************************/
 static void
@@ -132,66 +131,92 @@ _assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
-/******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    assert(footer);
-    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
-
-    memset(footer, 0, footer_sz);
-
-    return VS_CODE_OK;
-}
-
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
-    int res = 0;
-    //    uint8_t mac[6];
-    //    self_path = argv[0];
-    //    vs_storage_op_ctx_t secbox_ctx;
-    //    vs_storage_op_ctx_t tl_ctx;
+    int res = -1;
+    vs_mac_addr_t mac;
 
-    //    memset(mac, 0, sizeof(mac));
+    // Device parameters
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
+    vs_storage_op_ctx_t secbox_storage_impl;
+
+
+    // Prepare device parameters
+    memset(&mac, 0, sizeof(mac));
+    vs_app_str_to_bytes(manufacture_id, TEST_MANUFACTURE_ID, sizeof(manufacture_id));
+    vs_app_str_to_bytes(device_type, TEST_DEVICE_TYPE, sizeof(device_type));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
 
-    // Enable cached file IO
-    vs_file_cache_enable(true);
+    // Set self path
+    vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
-    vs_files_set_dir("test");
-    //    vs_hal_files_set_mac(mac);
-    //    _remove_keystorage_dir();
+    // Prepare local storage
+    STATUS_CHECK(vs_app_prepare_storage("test", mac), "Cannot prepare storage");
+    _remove_keystorage_dir();
 
-    // Prepare TL storage
-    //    vs_nix_storage_impl_func(&tl_ctx.impl_func);
-    //    tl_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_trust_list_dir());
-    //    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    //    vs_tl_init(&tl_ctx);
+    // TrustList storage
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Slots storage
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+                 "Cannot create Slots storage");
+
+    // Firmware storage
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+                 "Cannot create Firmware storage");
+
+    // Secbox storage
+    STATUS_CHECK(vs_app_storage_init_impl(&secbox_storage_impl, vs_app_secbox_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+                 "Cannot create Secbox storage");
+
+    // Soft HSM
+    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+
+    // Provision module
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+
+    // Firmware module
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+                 "Unable to initialize Firmware module");
+
+    // Secbox module
+    STATUS_CHECK(vs_secbox_init(&secbox_storage_impl, hsm_impl), "Unable to initialize Secbox module");
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
-    res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
+    res = vs_crypto_test(hsm_impl);
 
-    //    vs_nix_storage_impl_func(&secbox_ctx.impl_func);
-    //    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_secbox_dir());
-    //    if (NULL == secbox_ctx.impl_data) {
-    //        res += 1;
-    //    }
-    //
-    //    res += vs_secbox_test(&secbox_ctx);
-    //
-    //    secbox_ctx.impl_data = vs_nix_storage_impl_data_init(vs_rpi_get_firmware_dir());
-    //    if (NULL == secbox_ctx.impl_data) {
-    //        res += 1;
-    //    }
-    //
-    //    res += vs_firmware_test(&secbox_ctx);
-    //
+    res += vs_secbox_test(hsm_impl);
+
+    res += vs_firmware_test(hsm_impl);
+
+    res += vs_sdmp_tests();
+
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
-    //    vs_tl_deinit(&tl_ctx);
+
+terminate:
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit secbox
+    vs_secbox_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
 
     return res;
 }

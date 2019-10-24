@@ -371,7 +371,7 @@ vs_files_remove(const char *folder, const char *file_name) {
 
 /******************************************************************************/
 bool
-vs_files_set_dir(const char *base_dir) {
+vs_files_set_base_dir(const char *base_dir) {
     struct passwd *pwd = NULL;
 
     assert(base_dir && base_dir[0]);
@@ -384,4 +384,9 @@ vs_files_set_dir(const char *base_dir) {
     return true;
 }
 
+/******************************************************************************/
+const char *
+vs_files_get_base_dir(void) {
+    return _base_dir;
+}
 /******************************************************************************/
