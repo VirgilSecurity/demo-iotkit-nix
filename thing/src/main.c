@@ -119,7 +119,7 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Firmware storage
-    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_slots_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
     // Soft HSM
