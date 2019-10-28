@@ -145,6 +145,11 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gateway)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thing)
 
 #
+#   Bootloader application
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/bootloader)
+
+#
 #   Unit tests
 #
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests)

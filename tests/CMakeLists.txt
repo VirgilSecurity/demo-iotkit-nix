@@ -57,9 +57,11 @@ target_link_libraries(rpi-tests
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
 		nix-common
+		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		virgil-iot-sdk-tests
+		vs-default-soft-hsm
 
 		enable_sanitizers
 		enable_pedantic_mode
