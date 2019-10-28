@@ -250,7 +250,9 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
     CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
     CHECK_NOT_ZERO_RET(_self_path, VS_CODE_ERR_FILE_READ);
 
-    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
+    uint8_t buf[footer_sz];
+
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)buf;
 
     fp = fopen(_self_path, "rb");
 
@@ -274,6 +276,7 @@ vs_load_own_footer(uint8_t *footer, uint16_t footer_sz) {
           errno,
           strerror(errno));
 
+    memcpy(buf, footer, footer_sz);
     vs_firmware_ntoh_descriptor(&own_footer->descriptor);
 
     // Simple validation of own descriptor
