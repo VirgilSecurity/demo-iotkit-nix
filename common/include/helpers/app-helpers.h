@@ -36,9 +36,14 @@
 #define VS_IOT_APP_HELPERS_H
 
 #include <virgil/iot/protocols/sdmp.h>
+char *
+vs_app_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname);
 
 vs_status_e
-vs_app_commandline_params(int argc, char **argv, vs_mac_addr_t *forced_mac_addr);
+vs_app_get_mac_from_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr);
+
+vs_status_e
+vs_app_get_image_path_from_commandline_params(int argc, char *argv[], char **path);
 
 void
 vs_app_print_title(const char *devices_dir,

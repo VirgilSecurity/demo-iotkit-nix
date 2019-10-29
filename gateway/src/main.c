@@ -94,7 +94,7 @@ main(int argc, char *argv[]) {
     vs_logger_init(VS_LOGLEV_DEBUG);
 
     // Get input parameters
-    STATUS_CHECK(vs_app_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+    STATUS_CHECK(vs_app_get_mac_from_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
 
     // Prepare device parameters
     vs_app_get_serial(serial, forced_mac_addr);

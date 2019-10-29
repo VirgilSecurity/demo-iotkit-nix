@@ -65,7 +65,7 @@ vs_app_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac) {
         return VS_CODE_ERR_TOO_SMALL_BUFFER;
     }
 
-    return vs_files_set_dir(base_dir) ? VS_CODE_OK : VS_CODE_ERR_FILE;
+    return vs_files_set_base_dir(base_dir) ? VS_CODE_OK : VS_CODE_ERR_FILE;
 }
 
 /******************************************************************************/
