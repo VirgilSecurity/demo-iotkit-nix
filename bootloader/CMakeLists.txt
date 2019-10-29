@@ -46,7 +46,7 @@ function(bootloader_executable _is_gateway _manufacture _model)
     if(${_is_gateway})
         set(_targetname "gateway-bootloader")
     else()
-        set(_targetname "thing-booloader")
+        set(_targetname "thing-bootloader")
     endif()
 
     #
