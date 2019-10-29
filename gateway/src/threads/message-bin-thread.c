@@ -41,7 +41,6 @@
 #include <virgil/iot/cloud/cloud.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <cloud-config.h>
 #include "helpers/msg-queue.h"
 
 #define MB_QUEUE_SZ 10
