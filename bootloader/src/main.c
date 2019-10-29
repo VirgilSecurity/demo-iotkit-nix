@@ -200,9 +200,8 @@ vs_firmware_self_verify(void) {
         uint32_t fw_rest = file_sz - footer_sz - offset;
         uint32_t required_chunk_size = fw_rest > desc.chunk_size ? desc.chunk_size : fw_rest;
 
-        if (VS_CODE_OK != _boot_load_image_chunk(offset, buf, required_chunk_size, &read_sz)) {
-            return VS_CODE_ERR_FILE_READ;
-        }
+        STATUS_CHECK_RET(_boot_load_image_chunk(offset, buf, required_chunk_size, &read_sz),
+                         "Error read firmware chunk");
 
         _hsm_impl->hash_update(&hash_ctx, buf, required_chunk_size);
         offset += required_chunk_size;
