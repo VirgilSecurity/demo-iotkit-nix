@@ -246,10 +246,13 @@ vs_status_e __attribute__((weak)) vs_firmware_get_own_firmware_footer_hal(void *
     assert(footer);
     assert(_self_path);
 
-    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_FILE_READ);
-    CHECK_NOT_ZERO_RET(_self_path, VS_CODE_ERR_FILE_READ);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(_self_path, VS_CODE_ERR_INCORRECT_PARAMETER);
+    CHECK_NOT_ZERO_RET(footer_sz, VS_CODE_ERR_INCORRECT_ARGUMENT);
 
-    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)footer;
+    uint8_t buf[footer_sz];
+
+    vs_firmware_footer_t *own_footer = (vs_firmware_footer_t *)buf;
 
     fp = fopen(_self_path, "rb");
 
@@ -273,6 +276,7 @@ vs_status_e __attribute__((weak)) vs_firmware_get_own_firmware_footer_hal(void *
           errno,
           strerror(errno));
 
+    memcpy(buf, footer, sizeof(buf));
     vs_firmware_ntoh_descriptor(&own_footer->descriptor);
 
     // Simple validation of own descriptor

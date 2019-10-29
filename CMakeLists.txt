@@ -72,9 +72,8 @@ create_text_option(THING_MODEL "4" "MCU1" "Thing model code")
 create_text_option(APP_MAJOR "3" "0" "Application major version")
 create_text_option(APP_MINOR "3" "0" "Application minor version")
 create_text_option(APP_PATCH "3" "0" "Application patch version")
-create_text_option(APP_DEV_MILESTONE "1" "0" "Application milestone version")
-create_text_option(APP_DEV_BUILD "3" "0" "Application build version")
-set(APP_VERSION "${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}.${APP_DEV_MILESTONE}.${APP_DEV_BUILD}")
+create_text_option(APP_BUILD "10" "33333" "Application build version")
+set(APP_VERSION "${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}.${APP_BUILD}")
 
 #
 # Path to config file for a firmware signer
@@ -144,6 +143,11 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gateway)
 #   Thing application
 #
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thing)
+
+#
+#   Bootloader application
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/bootloader)
 
 #
 #   Unit tests

@@ -72,13 +72,14 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
                 VS_LOG_DEBUG("[MB_NOTIFY]:FW Successful fetched");
 
-                fw_info = calloc(1, sizeof(*fw_info));
+                fw_info = calloc(1, sizeof(vs_update_file_type_t));
                 if (!fw_info) {
                     VS_LOG_ERROR("Can't allocate memory");
                     exit(-1);
                 }
                 fw_info->type = VS_UPDATE_FIRMWARE;
-                fw_info->info = header.descriptor.info;
+                fw_info->info.version.build = ntohl(fw_info->info.version.build);
+                memcpy(&fw_info->info, &header.descriptor.info, sizeof(vs_file_info_t));
 
                 if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
                     free(fw_info);
@@ -110,7 +111,6 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
     vs_tl_element_info_t elem = {.id = VS_TL_ELEMENT_TLH};
     vs_tl_header_t tl_header;
     uint16_t tl_header_sz = sizeof(tl_header);
-    uint16_t tl_ver;
 
     if (0 == pthread_mutex_lock(&gtwy->tl_mutex)) {
         VS_LOG_DEBUG("[MB_NOTIFY]:In while loop and got TL semaphore\r\n");
@@ -118,18 +118,20 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
         if (VS_CODE_OK == vs_cloud_fetch_and_store_tl(request->upd_file_url)) {
             VS_LOG_DEBUG("[MB_NOTIFY]:TL Successful fetched\r\n");
 
-            tl_info = calloc(1, sizeof(*tl_info));
-            if (!tl_info) {
-                VS_LOG_ERROR("[MB] Failed memory allocation!!!");
-                goto terminate;
-            }
-
             CHECK(VS_CODE_OK == vs_tl_load_part(&elem, (uint8_t *)&tl_header, tl_header_sz, &tl_header_sz) &&
                           tl_header_sz == sizeof(tl_header),
                   "Unable to load Trust List header");
-            tl_ver = ntohs(tl_header.version);
-            // TODO: Fix it
-            tl_info->info.version.major = tl_ver;
+
+            tl_info = calloc(1, sizeof(vs_update_file_type_t));
+            if (!tl_info) {
+                VS_LOG_ERROR("Can't allocate memory");
+                exit(-1);
+            }
+
+            tl_header.version.build = ntohl(tl_header.version.build);
+            memset(tl_info, 0, sizeof(vs_update_file_type_t));
+            memcpy(&tl_info->info.version, &tl_header.version, sizeof(vs_file_version_t));
+
             tl_info->type = VS_UPDATE_TRUST_LIST;
 
             if (0 != vs_msg_queue_push(_event_queue, tl_info, NULL, 0)) {

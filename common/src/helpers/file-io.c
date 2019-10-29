@@ -154,7 +154,7 @@ vs_files_get_len(const char *folder, const char *file_name) {
         res = ftell(fp);
 
         if (res <= 0) {
-            VS_LOG_ERROR("Unable to prepare file %s to write. errno = %d (%s)", file_path, errno, strerror(errno));
+            VS_LOG_ERROR("Unable to prepare file %s to read. errno = %d (%s)", file_path, errno, strerror(errno));
             res = -1;
             goto terminate;
         }
