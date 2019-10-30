@@ -355,7 +355,7 @@ vs_status_e
 vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz) {
     vs_queue_data_t *queue_data;
     int8_t res;
-    CHECK_NOT_ZERO_RET(ctx, -1);
+    CHECK_NOT_ZERO_RET(ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
 
     // Allocate structure
     queue_data = malloc(sizeof(vs_queue_data_t));
@@ -396,10 +396,10 @@ vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data
 vs_status_e
 vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz) {
     vs_queue_data_t *queue_data;
-    CHECK_NOT_ZERO_RET(ctx, -1);
-    CHECK_NOT_ZERO_RET(info, -1);
-    CHECK_NOT_ZERO_RET(data, -1);
-    CHECK_NOT_ZERO_RET(data_sz, -1);
+    CHECK_NOT_ZERO_RET(ctx, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(info, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(data, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(data_sz, VS_CODE_ERR_NULLPTR_ARGUMENT);
     queue_data = _queue_get(ctx, true);
 
     if (!queue_data) {

@@ -79,7 +79,7 @@ _msg_processing(void *ctx) {
 
     while (true) {
         // Block until new message appears.
-        CHECK_RET(!vs_msg_queue_pop(_queue_ctx, (const void **)&netif, &data, &data_sz),
+        CHECK_RET(VS_CODE_OK == vs_msg_queue_pop(_queue_ctx, (const void **)&netif, &data, &data_sz),
                   NULL,
                   "Error while reading message from queue");
 
@@ -99,7 +99,9 @@ static void *
 _periodical_processing(void *ctx) {
     while (true) {
         sleep(1);
-        vs_msg_queue_push(_queue_ctx, NULL, NULL, 0);
+        CHECK_RET(VS_CODE_OK == vs_msg_queue_push(_queue_ctx, NULL, NULL, 0),
+                  NULL,
+                  "Error while writing message to queue");
     }
     return NULL;
 }
