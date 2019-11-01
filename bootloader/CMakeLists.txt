@@ -34,23 +34,23 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(virgil-iot-initializer VERSION 0.1.0 LANGUAGES C)
+project(bootloader VERSION 0.1.0 LANGUAGES C)
 
 #
-#   Function to create targets for initializers
+#   Function to create targets for bootloaders
 #
-function(initializer_executable _is_gateway _manufacture _model)
+function(bootloader_executable _is_gateway _manufacture _model)
     #
     #	Prepare _targetname
     #
     if(${_is_gateway})
-        set(_targetname "gateway-initializer")
+        set(_targetname "gateway-bootloader")
     else()
-        set(_targetname "thing-initializer")
+        set(_targetname "thing-bootloader")
     endif()
 
     #
-    #	Initializer target
+    #	Bootloader target
     #
     add_executable(${_targetname})
 
@@ -59,33 +59,27 @@ function(initializer_executable _is_gateway _manufacture _model)
     #
     target_sources(${_targetname}
             PRIVATE
-
             # Sources
             ${CMAKE_CURRENT_LIST_DIR}/src/main.c
             )
-
-    #
-    #   Include directories
-    #
-    target_include_directories(${_targetname}
-            PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/include
-            )
-
     #
     #	Link libraries
     #
     target_link_libraries(${_targetname}
             PRIVATE
+
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
             nix-common
-            vs-module-sdmp-initializer
+            nix-common-firmware
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-            $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>
+            vs-module-firmware
+            virgil-iot-status-code
+
             enable_sanitizers
             enable_pedantic_mode
             )
+
     #
     #	Definitions
     #
@@ -95,7 +89,6 @@ function(initializer_executable _is_gateway _manufacture _model)
             MANUFACTURE_ID="${_manufacture}"
             DEVICE_MODEL="${_model}"
             )
-
     #
     # Format code
     #
@@ -104,19 +97,21 @@ function(initializer_executable _is_gateway _manufacture _model)
     endif()
 
     install(TARGETS ${_targetname}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        )
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            )
+
 endfunction()
 
+
 #
-#	Gateway initializer
+#	Gateway bootloader
 #
 set(GATEWAY_MODE 1)
-initializer_executable(${GATEWAY_MODE} ${GATEWAY_MANUFACTURE} ${GATEWAY_MODEL})
+bootloader_executable(${GATEWAY_MODE} ${GATEWAY_MANUFACTURE} ${GATEWAY_MODEL})
 
 
 #
-#	Thing initializer
+#	Thing bootloader
 #
 set(THING_MODE 0)
-initializer_executable(${THING_MODE} ${THING_MANUFACTURE} ${THING_MODEL})
+bootloader_executable(${THING_MODE} ${THING_MANUFACTURE} ${THING_MODEL})

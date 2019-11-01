@@ -43,13 +43,16 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
+#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
 
-#include "hal/storage/rpi-file-io.h"
-#include "hal/storage/rpi-storage-hal.h"
-#include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-file-cache.h"
+#include "helpers/app-helpers.h"
+#include "helpers/app-storage.h"
+#include "helpers/file-io.h"
+#include "sdk-impl/storage/storage-nix-impl.h"
+#include "sdk-impl/firmware/firmware-nix-impl.h"
 
 /******************************************************************************/
 static int
@@ -119,12 +122,7 @@ finish:
 /********************************************************************************/
 static void
 _remove_keystorage_dir() {
-    char folder[FILENAME_MAX];
-
-    if (!vs_rpi_get_keystorage_base_dir(folder)) {
-        return;
-    }
-    _recursive_delete(folder);
+    _recursive_delete(vs_files_get_base_dir());
 }
 
 /********************************************************************************/
@@ -133,66 +131,93 @@ _assert_handler_fn(const char *message, const char *file, int line) {
     VS_LOG_ERROR("%s %s %u", message, file, line);
 }
 
-/******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    assert(footer);
-    CHECK_NOT_ZERO_RET(footer, -1);
-
-    memset(footer, 0, footer_sz);
-
-    return VS_CODE_OK;
-}
-
 /********************************************************************************/
 int
 main(int argc, char *argv[]) {
-    int res = 0;
-    uint8_t mac[6];
-    self_path = argv[0];
-    vs_storage_op_ctx_t secbox_ctx;
-    vs_storage_op_ctx_t tl_ctx;
+    int res = -1;
+    vs_mac_addr_t mac;
 
-    memset(mac, 0, sizeof(mac));
+    // Device parameters
+    vs_device_manufacture_id_t manufacture_id;
+    vs_device_type_t device_type;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
+    vs_storage_op_ctx_t secbox_storage_impl;
+
+
+    // Prepare device parameters
+    memset(&mac, 0, sizeof(mac));
+    vs_app_str_to_bytes(manufacture_id, TEST_MANUFACTURE_ID, sizeof(manufacture_id));
+    vs_app_str_to_bytes(device_type, TEST_DEVICE_TYPE, sizeof(device_type));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
     vscf_assert_change_handler(_assert_handler_fn);
 
-    // Enable cached file IO
-    vs_file_cache_enable(true);
+    // Set self path
+    vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
 
-    vs_hal_files_set_dir("test");
-    vs_hal_files_set_mac(mac);
+    // Prepare local storage
+    STATUS_CHECK(vs_app_prepare_storage("test", mac), "Cannot prepare storage");
     _remove_keystorage_dir();
 
-    // Prepare TL storage
-    vs_rpi_get_storage_impl(&tl_ctx.impl);
-    tl_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_trust_list_dir());
-    tl_ctx.file_sz_limit = VS_TL_STORAGE_MAX_PART_SIZE;
-    vs_tl_init(&tl_ctx);
+    // TrustList storage
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Slots storage
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+                 "Cannot create Slots storage");
+
+    // Firmware storage
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+                 "Cannot create Firmware storage");
+
+    // Secbox storage
+    STATUS_CHECK(vs_app_storage_init_impl(&secbox_storage_impl, vs_app_secbox_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+                 "Cannot create Secbox storage");
+
+    // Soft HSM
+    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+
+    // Provision module.
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, hsm_impl),
+          "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
+
+    // Firmware module
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+                 "Unable to initialize Firmware module");
+
+    // Secbox module
+    STATUS_CHECK(vs_secbox_init(&secbox_storage_impl, hsm_impl), "Unable to initialize Secbox module");
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
-    res = vs_tests_checks(false); //, VS_FLDT_FIRMWARE, VS_FLDT_TRUSTLIST, VS_FLDT_OTHER);
+    res = vs_crypto_test(hsm_impl);
 
-    vs_rpi_get_storage_impl(&secbox_ctx.impl);
-    secbox_ctx.file_sz_limit = VS_MAX_FIRMWARE_UPDATE_SIZE;
-    secbox_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_secbox_dir());
-    if (NULL == secbox_ctx.storage_ctx) {
-        res += 1;
-    }
+    res += vs_secbox_test(hsm_impl);
 
-    res += vs_secbox_test(&secbox_ctx);
+    res += vs_firmware_test(hsm_impl);
 
-    secbox_ctx.storage_ctx = vs_rpi_storage_init(vs_rpi_get_firmware_dir());
-    if (NULL == secbox_ctx.storage_ctx) {
-        res += 1;
-    }
-
-    res += vs_firmware_test(&secbox_ctx);
+    res += vs_sdmp_tests();
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
-    vs_tl_deinit(&tl_ctx);
+
+terminate:
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit secbox
+    vs_secbox_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
 
     return res;
 }

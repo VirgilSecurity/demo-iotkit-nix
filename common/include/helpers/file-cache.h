@@ -32,29 +32,43 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef VS_IOT_FILE_CACHE_H
+#define VS_IOT_FILE_CACHE_H
 
-#include <virgil/iot/status_code/status_code.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <sys/types.h>
 
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
-
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
-
-vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
-
-vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+int
+vs_file_cache_enable(bool enable);
 
 bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+vs_file_cache_is_enabled();
+
+int
+vs_file_cache_open(const char *file_name);
+
+int
+vs_file_cache_create(const char *file_name, const uint8_t *data, size_t data_sz);
+
+ssize_t
+vs_file_cache_get_len(const char *file_name);
+
+int
+vs_file_cache_read(const char *file_name, uint32_t offset, uint8_t *data, size_t buf_sz, size_t *read_sz);
+
+int
+vs_file_cache_write(const char *file_name, uint32_t offset, const uint8_t *data, size_t data_sz);
+
+int
+vs_file_cache_sync(const char *file_name);
 
 void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
+vs_file_cache_close(const char *file_name);
 
 void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
+vs_file_cache_clean(void);
 
-#endif // VS_IOT_MESSAGE_QUEUE_H
+#endif // VS_IOT_FILE_CACHE_H

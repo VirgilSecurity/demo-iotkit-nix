@@ -32,29 +32,41 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef VS_IOT_APP_HELPERS_H
+#define VS_IOT_APP_HELPERS_H
 
-#include <virgil/iot/status_code/status_code.h>
-
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
-
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
+#include <virgil/iot/protocols/sdmp.h>
+char *
+vs_app_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname);
 
 vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
+vs_app_get_mac_from_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr);
 
 vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+vs_app_get_image_path_from_commandline_params(int argc, char *argv[], char **path);
+
+void
+vs_app_print_title(const char *devices_dir,
+                   const char *app_file,
+                   const char *manufacture_id_str,
+                   const char *device_type_str);
+
+void
+vs_app_sleep_until_stop(void);
+
+void
+vs_app_restart(void);
+
+void
+vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size);
+
+void
+vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
+
+vs_netif_t *
+vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr);
 
 bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+vs_app_is_need_restart(void);
 
-void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
-
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
-
-#endif // VS_IOT_MESSAGE_QUEUE_H
+#endif // VS_IOT_APP_HELPERS_H

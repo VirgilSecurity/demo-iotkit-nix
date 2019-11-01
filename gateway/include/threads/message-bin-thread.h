@@ -32,29 +32,35 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+/***************************************************************************/
 
-#include <virgil/iot/status_code/status_code.h>
+#ifndef GATEWAY_MESSAGE_BIN_H
+#define GATEWAY_MESSAGE_BIN_H
 
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
 
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
+#include "virgil/iot/cloud/cloud.h"
+
+#define MSG_BIN_UPD_TYPE_FW 0
+#define MSG_BIN_UPD_TYPE_TL 1
+
+typedef struct __attribute__((__packed__)) {
+    char upd_file_url[VS_UPD_URL_STR_SIZE];
+    uint8_t upd_type;
+} upd_request_t;
+
+pthread_t *
+vs_message_bin_start_thread();
 
 vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
-
-vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+vs_message_bin_register_handlers(void);
 
 bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+vs_message_bin_get_request(upd_request_t **request);
 
-void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
-
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
-
-#endif // VS_IOT_MESSAGE_QUEUE_H
+#endif // GATEWAY_MESSAGE_BIN_H

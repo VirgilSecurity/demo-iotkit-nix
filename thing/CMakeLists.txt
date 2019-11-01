@@ -46,16 +46,9 @@ add_executable(thing)
 #
 target_sources(thing
         PRIVATE
-
-        # Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/thing.h
-		${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-tg.h
-
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-		${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-tg.c
-        )
+		)
 
 #
 #	Definitions
@@ -93,13 +86,13 @@ target_link_libraries(thing
         PRIVATE
 
         $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
+		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		update
-		firmware
-		trust_list
+		vs-module-firmware
 		virgil-iot-status-code
+		vs-module-sdmp-thing
 
 		enable_sanitizers
         enable_pedantic_mode
@@ -108,14 +101,14 @@ target_link_libraries(thing
 #
 # Create a signed firmware image
 #
-if (NOT GO_DISABLE)
-	if (NOT THING_APP_FILE_SIZE)
-		set(THING_APP_FILE_SIZE "1000000" CACHE STRING "Full thing application file size")
-	endif ()
+if(NOT GO_DISABLE)
+	if(NOT THING_APP_FILE_SIZE)
+		set(THING_APP_FILE_SIZE "1048576" CACHE STRING "Full thing application file size")
+	endif()
 
-	if (NOT THING_APP_CHUNK_SIZE)
-		set(THING_APP_CHUNK_SIZE "64000" CACHE STRING "Thing application chunk size")
-	endif ()
+	if(NOT THING_APP_CHUNK_SIZE)
+		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
+	endif()
 
 	include(signFirmware)
 
@@ -131,11 +124,12 @@ if (NOT GO_DISABLE)
 
 	add_dependencies(thing-signed virgil-firmware-signer thing)
 
-endif ()
+endif()
 
-#
-# Format code
-#
 if(COMMAND add_clangformat)
 	add_clangformat(thing)
 endif()
+
+install(TARGETS thing
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)

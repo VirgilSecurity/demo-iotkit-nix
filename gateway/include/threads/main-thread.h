@@ -32,29 +32,35 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef GATEWAY_H
+#define GATEWAY_H
 
-#include <virgil/iot/status_code/status_code.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <errno.h>
 
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
+#include <helpers/event-group-bits.h>
+#include <global-hal.h>
 
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
+typedef struct gtwy_s {
+    vs_event_group_bits_t shared_events;
+    vs_event_group_bits_t message_bin_events;
+    vs_event_group_bits_t incoming_data_events;
 
-vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
+    pthread_mutex_t firmware_mutex;
+    pthread_mutex_t tl_mutex;
+} gtwy_t;
 
-vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+gtwy_t *
+vs_gateway_ctx_init(vs_mac_addr_t *mac_addr);
 
-bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+gtwy_t *
+vs_gateway_ctx(void);
 
 void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
+vs_main_start_threads(void);
 
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
-
-#endif // VS_IOT_MESSAGE_QUEUE_H
+#endif // GATEWAY_H

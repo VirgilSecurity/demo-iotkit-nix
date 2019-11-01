@@ -49,23 +49,15 @@ target_sources(gateway
 
         # Headers
 		${CMAKE_CURRENT_LIST_DIR}/include/event-flags.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/gateway.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/iot_mqtt.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/message_bin.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/fldt-impl-gw.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/test_update_thread.h
-        ${CMAKE_CURRENT_LIST_DIR}/include/upd_http_retrieval_thread.h
+		${CMAKE_CURRENT_LIST_DIR}/include/threads/main-thread.h
+		${CMAKE_CURRENT_LIST_DIR}/include/threads/message-bin-thread.h
+		${CMAKE_CURRENT_LIST_DIR}/include/threads/file-download-thread.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/cloud/https.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/message_bin.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/msg-bin-root-ca.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/mqtt/iot_mqtt.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/communication/sdmp/fldt-impl-gw.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/gateway/gateway.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/update/upd_http_retrieval_thread.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/platform/platform-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/threads/message-bin-thread.c
+		${CMAKE_CURRENT_LIST_DIR}/src/threads/main-thread.c
+		${CMAKE_CURRENT_LIST_DIR}/src/threads/file-download-thread.c
         )
 
 #
@@ -105,14 +97,16 @@ target_link_libraries(gateway
         PRIVATE
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
+		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		curl
-		aws-mqtt
-		cloud
-		update
+		vs-default-curl-http
+		vs-default-aws-message-bin
+		vs-module-cloud
+		vs-module-firmware
 		virgil-iot-status-code
+		vs-module-sdmp-gateway
 
 		enable_sanitizers
         enable_pedantic_mode
@@ -121,14 +115,14 @@ target_link_libraries(gateway
 #
 # Create a signed firmware image
 #
-if (NOT GO_DISABLE)
-	if (NOT GW_APP_FILE_SIZE)
-		set(GW_APP_FILE_SIZE "1000000" CACHE STRING "Full gateway application file size")
-	endif ()
+if(NOT GO_DISABLE)
+	if(NOT GW_APP_FILE_SIZE)
+		set(GW_APP_FILE_SIZE "1048576" CACHE STRING "Full gateway application file size")
+	endif()
 
-	if (NOT GW_APP_CHUNK_SIZE)
-		set(GW_APP_CHUNK_SIZE "64000" CACHE STRING "Gateway application chunk size")
-	endif ()
+	if(NOT GW_APP_CHUNK_SIZE)
+		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
+	endif()
 
 	include(signFirmware)
 
@@ -143,8 +137,7 @@ if (NOT GO_DISABLE)
 			APPL)
 
 	add_dependencies(gateway-signed virgil-firmware-signer gateway)
-
-endif ()
+endif()
 
 #
 # Format code
@@ -152,3 +145,7 @@ endif ()
 if(COMMAND add_clangformat)
 	add_clangformat(gateway)
 endif()
+
+install(TARGETS gateway
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

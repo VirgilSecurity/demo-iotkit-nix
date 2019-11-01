@@ -32,29 +32,37 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef VS_IOT_EVENT_GROUP_BITS_H
+#define VS_IOT_EVENT_GROUP_BITS_H
 
-#include <virgil/iot/status_code/status_code.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <pthread.h>
 
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
+typedef uint32_t vs_event_bits_t;
+typedef struct vs_event_group_bits_s {
+    pthread_cond_t cond;
+    pthread_mutex_t mtx;
+    vs_event_bits_t event_flags;
+} vs_event_group_bits_t;
 
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
+#define VS_EVENT_GROUP_WAIT_INFINITE (-1)
+vs_event_bits_t
+vs_event_group_wait_bits(vs_event_group_bits_t *ev_group,
+                         vs_event_bits_t bits_to_wait_for,
+                         bool is_clear_on_exit,
+                         bool is_wait_for_all,
+                         int32_t timeout);
 
-vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
+vs_event_bits_t
+vs_event_group_clear_bits(vs_event_group_bits_t *ev_group, vs_event_bits_t bits_to_clear);
 
-vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+vs_event_bits_t
+vs_event_group_set_bits(vs_event_group_bits_t *ev_group, vs_event_bits_t bits_to_set);
 
-bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+int
+vs_event_group_init(vs_event_group_bits_t *ev_group);
 
-void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
-
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
-
-#endif // VS_IOT_MESSAGE_QUEUE_H
+int
+vs_event_group_destroy(vs_event_group_bits_t *ev_group);
+#endif // VS_IOT_EVENT_GROUP_BITS_H

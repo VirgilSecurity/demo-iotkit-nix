@@ -46,7 +46,7 @@ add_executable(rpi-tests)
 #
 target_sources(rpi-tests
 		PRIVATE
-		main.c
+		${CMAKE_CURRENT_LIST_DIR}/main.c
 		)
 
 #
@@ -56,10 +56,12 @@ target_link_libraries(rpi-tests
 		PRIVATE
 
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
-		rpi-common
+		nix-common
+		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		virgil-iot-sdk-tests
+		vs-default-soft-hsm
 
 		enable_sanitizers
 		enable_pedantic_mode
@@ -68,6 +70,6 @@ target_link_libraries(rpi-tests
 #
 # Format code
 #
-if (COMMAND add_clangformat)
+if(COMMAND add_clangformat)
 	add_clangformat(rpi-tests)
-endif ()
+endif()

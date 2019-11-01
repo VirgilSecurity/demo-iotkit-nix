@@ -32,29 +32,29 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef VS_IOT_APP_STORAGE_H
+#define VS_IOT_APP_STORAGE_H
 
 #include <virgil/iot/status_code/status_code.h>
-
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
-
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
+#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
+#include <virgil/iot/storage_hal/storage_hal.h>
 
 vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
+vs_app_prepare_storage(const char *devices_dir, vs_mac_addr_t device_mac);
 
 vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+vs_app_storage_init_impl(vs_storage_op_ctx_t *storage_impl, const char *base_dir, size_t file_size_max);
 
-bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+const char *
+vs_app_trustlist_dir(void);
 
-void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
+const char *
+vs_app_firmware_dir(void);
 
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
+const char *
+vs_app_slots_dir(void);
 
-#endif // VS_IOT_MESSAGE_QUEUE_H
+const char *
+vs_app_secbox_dir(void);
+
+#endif // VS_IOT_APP_STORAGE_H

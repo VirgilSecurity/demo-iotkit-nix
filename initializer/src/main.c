@@ -32,66 +32,131 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <stdio.h>
-
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/sdmp.h>
 #include <virgil/iot/protocols/sdmp/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <hal/rpi-global-hal.h>
+#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <trust_list-config.h>
 
-#include "helpers/input-params.h"
-
-/******************************************************************************/
-vs_status_e
-vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
-    return VS_CODE_ERR_NOT_IMPLEMENTED;
-}
+#include "helpers/app-helpers.h"
+#include "helpers/app-storage.h"
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
-    // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
-    vs_storage_op_ctx_t tl_ctx;
+    const vs_sdmp_service_t *sdmp_prvs_server;
     vs_status_e ret_code;
+
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+
+    // Device parameters
+    vs_device_manufacture_id_t manufacture_id = {0};
+    vs_device_type_t device_type = {0};
+    vs_device_serial_t serial = {0};
+
+    // Device specific parameters
 #if GATEWAY
-    const char *base_dir = "gateway";
-    uint32_t roles = VS_SDMP_DEV_GATEWAY;
+    const char *title = "Gateway initializer";
+    const char *devices_dir = "gateway";
+    uint32_t device_roles = VS_SDMP_DEV_GATEWAY;
 #else
-    const char *base_dir = "thing";
-    uint32_t roles = VS_SDMP_DEV_THING;
+    const char *title = "Thing initializer";
+    const char *devices_dir = "thing";
+    uint32_t device_roles = VS_SDMP_DEV_THING;
 #endif
 
-    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
-        return -1;
+    // Initialize Logger module
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
+    // Get input parameters
+    STATUS_CHECK(vs_app_get_mac_from_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+
+    // Print title
+    vs_app_print_title(title, argv[0], MANUFACTURE_ID, DEVICE_MODEL);
+
+    // Prepare local storage
+    STATUS_CHECK(vs_app_prepare_storage(devices_dir, forced_mac_addr), "Cannot prepare storage");
+
+    // Prepare device parameters
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+
+
+    //
+    // ---------- Create implementations ----------
+    //
+
+    // Network interface
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+
+    // TrustList storage
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Slots storage
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Soft HSM
+    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+
+    //
+    // ---------- Initialize Virgil SDK modules ----------
+    //
+
+    // Provision module
+    ret_code = vs_provision_init(&tl_storage_impl, hsm_impl);
+    if (VS_CODE_OK != ret_code && VS_CODE_ERR_NOINIT != ret_code) {
+        VS_LOG_ERROR("Cannot initialize Provision module");
+        goto terminate;
     }
 
-    STATUS_CHECK_RET(vs_rpi_start(base_dir,
-                                  argv[0],
-                                  forced_mac_addr,
-                                  &tl_ctx,
-                                  NULL,
-                                  (const char *)MANUFACTURE_ID,
-                                  (const char *)DEVICE_MODEL,
-                                  roles,
-                                  true),
-                     "Cannot start initializer");
+    // SDMP module
+    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+                 "Unable to initialize SDMP module");
 
-    STATUS_CHECK_RET(vs_sdmp_register_service(vs_sdmp_prvs_server()), "Cannot register PRVS service");
+    //
+    // ---------- Register SDMP services ----------
+    //
+
+    //  PRVS service
+    sdmp_prvs_server = vs_sdmp_prvs_server(hsm_impl);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_prvs_server), "Cannot register PRVS service");
+
+
+    //
+    // ---------- Application work ----------
+    //
 
     // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
+    vs_app_sleep_until_stop();
 
-    VS_LOG_INFO("\n\n\nTerminating application ...");
 
+    //
+    // ---------- Terminate application ----------
+    //
+terminate:
+
+    VS_LOG_INFO("\n\n\n");
+    VS_LOG_INFO("Terminating application ...");
+
+    // Deinit Virgil SDK modules
     vs_sdmp_deinit();
 
-    vs_tl_deinit();
+    // Deinit provision
+    vs_provision_deinit();
 
-    return 0;
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
+    return VS_CODE_OK;
 }
-
-/******************************************************************************/

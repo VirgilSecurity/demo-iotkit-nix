@@ -34,83 +34,88 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-project(rpi-common VERSION 0.1.0 LANGUAGES C)
+project(nix-common VERSION 0.1.0 LANGUAGES C)
 
 #
-#   RaspberryPi common code library
+#   Common code libraries
 #
-add_library(rpi-common)
+add_library(nix-common)
+add_library(nix-common-firmware)
 
 #
 #	Header/Source files
 #
-target_sources(rpi-common
+target_sources(nix-common
 		PRIVATE
 
 		#	Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/netif-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/netif/rpi-udp-broadcast.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/storage/rpi-file-io.h
-		${CMAKE_CURRENT_LIST_DIR}/include/hal/rpi-global-hal.h
-		${CMAKE_CURRENT_LIST_DIR}/include/threads/event-group-bits.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-queue.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-udp-broadcast.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-io.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/event-group-bits.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/msg-queue.h
-		${CMAKE_CURRENT_LIST_DIR}/include/helpers/input-params.h
-		include/hal/storage/rpi-file-cache.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/app-helpers.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/app-storage.h
+		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-cache.h
 
 		#	Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/netif/rpi-udp-broadcast.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-storage-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-io.c
-		${CMAKE_CURRENT_LIST_DIR}/src/storage/rpi-file-cache.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-crypto-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/crypto/rpi-soft-hsm-keypair-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/rpi-global-hal.c
-		${CMAKE_CURRENT_LIST_DIR}/src/threads/event-group-bits.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-queue.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-udp-broadcast.c
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/storage/storage-nix-impl.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/logger/logger-impl.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-io.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/file-cache.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/event-group-bits.c
 		${CMAKE_CURRENT_LIST_DIR}/src/helpers/msg-queue.c
-		${CMAKE_CURRENT_LIST_DIR}/src/helpers/input-params.c
-		${CMAKE_CURRENT_LIST_DIR}/src/update/update-hal.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-helpers.c
+		${CMAKE_CURRENT_LIST_DIR}/src/helpers/app-storage.c
 		)
 
-#
-#	Path to crypto lib
-#
-include(GNUInstallDirs)
-if(EXISTS "${CRYPTO_C_BASE_DIR}")
-	set(CRYPTO_C_INCLUDES "${CRYPTO_C_BASE_DIR}/include")
-	set(CRYPTO_C_LIBS "${CRYPTO_C_BASE_DIR}/lib")
-else()
-	set(CRYPTO_C_INCLUDES "/usr/include/cryptoc-shsm")
-	set(CRYPTO_C_LIBS "/usr/${CMAKE_INSTALL_LIBDIR}/cryptoc-shsm")
-endif ()
+target_sources(nix-common-firmware
+		PRIVATE
+		#	Sources
+		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/firmware/firmware-impl.c
+		)
 
 #
 #   Include directories
 #
-target_include_directories(rpi-common
+target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${CRYPTO_C_INCLUDES}
-		${CRYPTO_C_INCLUDES}/virgil/crypto/common
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
+		)
+
+target_include_directories(nix-common-firmware
+		PUBLIC
+		${CMAKE_CURRENT_LIST_DIR}/include
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/firmware/include
 		)
 
 #
 #	Link libraries
 #
 find_package (Threads)
-target_link_libraries(rpi-common
+target_link_libraries(nix-common
 		PUBLIC
 		converters
-		${CRYPTO_C_LIBS}/libvsc_foundation.a
-		${CRYPTO_C_LIBS}/libvsc_common.a
-		${CRYPTO_C_LIBS}/libmbedcrypto.a
-		${CRYPTO_C_LIBS}/libed25519.a
-		secbox
-		trust_list
-		firmware
-		vs-module-high-level
+		vs-module-secbox
+		vs-module-provision
+		vs-default-soft-hsm
+		${CMAKE_THREAD_LIBS_INIT}
+
+		PRIVATE
+		enable_pedantic_mode
+		enable_sanitizers
+		)
+
+target_link_libraries(nix-common-firmware
+		PUBLIC
+		vs-default-soft-hsm
+		vs-module-firmware
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
@@ -121,5 +126,6 @@ target_link_libraries(rpi-common
 # Format code
 #
 if(COMMAND add_clangformat)
-	add_clangformat(rpi-common)
+	add_clangformat(nix-common)
+	add_clangformat(nix-common-firmware)
 endif()

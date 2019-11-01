@@ -32,69 +32,202 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#include <arpa/inet.h>
-
+#include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt_server.h>
-#include "gateway.h"
-#include "helpers/input-params.h"
-#include "fldt-impl-gw.h"
-#include "hal/rpi-global-hal.h"
-#include "hal/storage/rpi-file-cache.h"
+#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
+#include <virgil/iot/vs-curl-http/curl-http.h>
+#include <virgil/iot/protocols/sdmp/info/info-server.h>
+#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/firmware/firmware.h>
+#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <trust_list-config.h>
+#include <update-config.h>
+#include "threads/main-thread.h"
+#include "helpers/app-helpers.h"
+#include "helpers/file-cache.h"
+#include "helpers/app-storage.h"
+#include "sdk-impl/firmware/firmware-nix-impl.h"
+#include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
+#include <threads/message-bin-thread.h>
+
+/******************************************************************************/
+static vs_status_e
+_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
+    switch (file_type->type) {
+    case VS_UPDATE_FIRMWARE:
+        *update_ctx = vs_firmware_update_ctx();
+        break;
+    case VS_UPDATE_TRUST_LIST:
+        *update_ctx = vs_tl_update_ctx();
+        break;
+    default:
+        VS_LOG_ERROR("Unsupported file type : %d", file_type->type);
+        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
+    }
+
+    return VS_CODE_OK;
+}
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
-    // Setup forced mac address
     vs_mac_addr_t forced_mac_addr;
+    const vs_sdmp_service_t *sdmp_info_server;
+    const vs_sdmp_service_t *sdmp_fldt_server;
+    int res = -1;
 
-    if (0 != vs_process_commandline_params(argc, argv, &forced_mac_addr)) {
-        return -1;
-    }
+    // Implementation variables
+    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_netif_t *netif_impl = NULL;
+    vs_storage_op_ctx_t tl_storage_impl;
+    vs_storage_op_ctx_t slots_storage_impl;
+    vs_storage_op_ctx_t fw_storage_impl;
 
-    if (0 != vs_rpi_start("gateway",
-                          argv[0],
-                          forced_mac_addr,
-                          &_tl_storage_ctx,
-                          &_fw_storage_ctx,
-                          (const char *)GW_MANUFACTURE_ID,
-                          (const char *)GW_DEVICE_MODEL,
-                          VS_SDMP_DEV_GATEWAY | VS_SDMP_DEV_LOGGER,
-                          false)) {
-        return -1;
-    }
+    // Device parameters
+    vs_device_manufacture_id_t manufacture_id = {0};
+    vs_device_type_t device_type = {0};
+    vs_device_serial_t serial = {0};
 
-    VS_LOG_INFO("%s", argv[0]);
-    self_path = argv[0];
+    // Initialize Logger module
+    vs_logger_init(VS_LOGLEV_DEBUG);
+
+    // Get input parameters
+    STATUS_CHECK(vs_app_get_mac_from_commandline_params(argc, argv, &forced_mac_addr), "Cannot read input parameters");
+
+    // Prepare device parameters
+    vs_app_get_serial(serial, forced_mac_addr);
+    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+
+    // Set device info path
+    vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
+
+    // Print title
+    vs_app_print_title("Gateway", argv[0], GW_MANUFACTURE_ID, GW_DEVICE_MODEL);
+
+    // Prepare local storage
+    STATUS_CHECK(vs_app_prepare_storage("gateway", forced_mac_addr), "Cannot prepare storage");
 
     // Enable cached file IO
     vs_file_cache_enable(true);
 
-    // Init Thing's FLDT implementation
-    CHECK_RET(!vs_sdmp_register_service(vs_sdmp_fldt_server()), -1, "FLDT server is not registered");
-    CHECK_RET(!vs_fldt_gateway_init(&forced_mac_addr), -2, "Unable to initialize FLDT");
+    //
+    // ---------- Create implementations ----------
+    //
+
+    // Network interface
+    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+
+    // TrustList storage
+    STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Slots storage
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Firmware storage
+    STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
+                 "Cannot create TrustList storage");
+
+    // Soft HSM
+    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+
+    //
+    // ---------- Initialize Virgil SDK modules ----------
+    //
+
+    // Provision module
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+
+    // Firmware module
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+                 "Unable to initialize Firmware module");
+
+    // SDMP module
+    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
+                 "Unable to initialize SDMP module");
+
+    // Cloud module
+    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
+                 "Unable to initialize Cloud module");
+
+    // Register message bin default handlers
+    STATUS_CHECK(vs_message_bin_register_handlers(), "Unable to register message bin handlers");
+
+    //
+    // ---------- Register SDMP services ----------
+    //
+
+    //  INFO server service
+    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
+
+    //  FLDT server service
+    sdmp_fldt_server = vs_sdmp_fldt_server(&forced_mac_addr, _add_filetype);
+    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT server service");
+    STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
+                 "Unable to add firmware file type");
+    STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
+                 "Unable to add firmware file type");
+
+
+    //
+    // ---------- Application work ----------
+    //
 
     // Init gateway object
-    init_gateway_ctx(&forced_mac_addr);
+    vs_gateway_ctx_init(&forced_mac_addr);
 
     // Start app
-    start_gateway_threads();
+    vs_main_start_threads();
 
     // Sleep until CTRL_C
-    vs_rpi_hal_sleep_until_stop();
+    vs_app_sleep_until_stop();
 
+
+    //
+    // ---------- Terminate application ----------
+    //
+
+terminate:
+
+    VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
+
+    // Deinitialize Virgil SDK modules
     vs_sdmp_deinit();
 
-    int res = vs_rpi_hal_update((const char *)GW_MANUFACTURE_ID, (const char *)GW_DEVICE_MODEL, argc, argv);
+    // Deinit firmware
+    vs_firmware_deinit();
+
+    // Deinit provision
+    vs_provision_deinit();
+
+    // Deinit SoftHSM
+    vs_softhsm_deinit();
+
+    res = vs_firmware_nix_update(argc, argv);
 
     // Clean File cache
     vs_file_cache_clean();
 
     return res;
+}
+
+/******************************************************************************/
+void
+vs_impl_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
+
+/******************************************************************************/
+void
+vs_impl_device_serial(vs_device_serial_t serial_number) {
+    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/

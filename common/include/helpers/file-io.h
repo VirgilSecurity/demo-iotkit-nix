@@ -32,29 +32,39 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_MESSAGE_QUEUE_H
-#define VS_IOT_MESSAGE_QUEUE_H
+#ifndef VS_IOT_FILE_IO_HAL_H
+#define VS_IOT_FILE_IO_HAL_H
 
-#include <virgil/iot/status_code/status_code.h>
-
-typedef struct vs_msg_queue_ctx_s vs_msg_queue_ctx_t;
-
-vs_msg_queue_ctx_t *
-vs_msg_queue_init(size_t queue_sz, size_t num_adders, size_t num_getters);
-
-vs_status_e
-vs_msg_queue_push(vs_msg_queue_ctx_t *ctx, const void *info, const uint8_t *data, size_t data_sz);
-
-vs_status_e
-vs_msg_queue_pop(vs_msg_queue_ctx_t *ctx, const void **info, const uint8_t **data, size_t *data_sz);
+#include <stdint.h>
+#include <stdio.h>
 
 bool
-vs_msg_queue_data_present(vs_msg_queue_ctx_t *ctx);
+vs_files_set_base_dir(const char *base_dir);
 
-void
-vs_msg_queue_reset(vs_msg_queue_ctx_t *ctx);
+const char *
+vs_files_get_base_dir(void);
 
-void
-vs_msg_queue_free(vs_msg_queue_ctx_t *ctx);
+ssize_t
+vs_files_get_len(const char *folder, const char *file_name);
 
-#endif // VS_IOT_MESSAGE_QUEUE_H
+bool
+vs_files_write(const char *folder, const char *file_name, uint32_t offset, const void *data, size_t data_sz);
+
+bool
+vs_files_sync(const char *folder, const char *file_name);
+
+bool
+vs_files_read(const char *folder,
+              const char *file_name,
+              uint32_t offset,
+              uint8_t *data,
+              size_t buf_sz,
+              size_t *read_sz);
+
+bool
+vs_files_remove(const char *folder, const char *file_name);
+
+bool
+vs_files_create_subdir(const char *folder);
+
+#endif // VS_IOT_FILE_IO_HAL_H
