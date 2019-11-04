@@ -147,7 +147,7 @@ main(int argc, char *argv[]) {
                  "Unable to initialize Firmware module");
 
     // SDMP module
-    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_THING),
+    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_GATEWAY),
                  "Unable to initialize SDMP module");
 
     // Cloud module
