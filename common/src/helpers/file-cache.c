@@ -40,7 +40,7 @@
 
 #include "helpers/file-cache.h"
 
-#define VS_FILE_CACHE_SZ (10)
+#define VS_FILE_CACHE_SZ (30)
 #define VS_FILE_CACHE_MAX_FILE_SZ (2 * 1024 * 1024)
 
 typedef struct {
