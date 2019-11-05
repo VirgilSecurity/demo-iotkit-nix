@@ -162,7 +162,7 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl);
+    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl, NULL, forced_mac_addr);
     STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
 
     //  FLDT server service
