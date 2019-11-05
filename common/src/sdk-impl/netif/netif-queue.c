@@ -51,6 +51,8 @@ static pthread_t _queue_thread;
 static bool _queue_thread_ready = false;
 static pthread_t _periodical_thread;
 static bool _periodical_ready = false;
+static volatile bool _stop_queue = false;
+static volatile bool _stop_periodical = false;
 
 /******************************************************************************/
 static vs_status_e
@@ -77,7 +79,7 @@ _msg_processing(void *ctx) {
         return NULL;
     }
 
-    while (true) {
+    while (!_stop_queue) {
         // Block until new message appears.
         CHECK_RET(VS_CODE_OK == vs_msg_queue_pop(_queue_ctx, (const void **)&netif, &data, &data_sz),
                   NULL,
@@ -97,7 +99,7 @@ _msg_processing(void *ctx) {
 /******************************************************************************/
 static void *
 _periodical_processing(void *ctx) {
-    while (true) {
+    while (!_stop_periodical) {
         sleep(1);
         CHECK_RET(VS_CODE_OK == vs_msg_queue_push(_queue_ctx, NULL, NULL, 0),
                   NULL,
@@ -146,7 +148,7 @@ _deinit_with_queue() {
 
     // Stop RX processing thread
     if (_queue_thread_ready) {
-        pthread_cancel(_queue_thread);
+        _stop_queue = true;
         pthread_join(_queue_thread, NULL);
         _queue_thread_ready = false;
     }
@@ -161,7 +163,7 @@ _deinit_with_queue() {
 
     // Stop periodical thread
     if (_periodical_ready) {
-        pthread_cancel(_periodical_thread);
+        _stop_periodical = true;
         pthread_join(_periodical_thread, NULL);
         _periodical_ready = false;
     }
