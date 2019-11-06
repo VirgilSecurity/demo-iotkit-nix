@@ -35,14 +35,6 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 #------------------------------------------------------------------------------
-#   Includes
-#------------------------------------------------------------------------------
-
-# Clang format
-include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
-
-#------------------------------------------------------------------------------
 #   Settings
 #------------------------------------------------------------------------------
 option(GO_DISABLE "Disable Go apps" OFF)
@@ -57,6 +49,26 @@ option(USE_MSAN "On/Off Memory sanitizer." OFF)
 option(USE_LSAN "On/Off Leak memory sanitizer." OFF)
 option(USE_UBSAN "On/Off Undefined behavior sanitizer." OFF)
 option(USE_TSAN "On/Off Thread sanitizer." OFF)
+
+if(BIGENDIAN_64_BIT_BUILD)
+    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips64.toolchain.cmake")
+endif()
+
+if(BIGENDIAN_32_BIT_BUILD)
+    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips32.toolchain.cmake")
+endif()
+
+
+#------------------------------------------------------------------------------
+#   Includes
+#------------------------------------------------------------------------------
+
+# Clang format
+include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
+
 
 #
 # Manufacture and model options
@@ -86,18 +98,6 @@ endif()
 
 option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
 
-#
-#   Check setting compatibility
-#
-if(BIGENDIAN_64_BIT_BUILD)
-    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips64.toolchain.cmake")
-endif()
-
-if(BIGENDIAN_32_BIT_BUILD)
-    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips32.toolchain.cmake")
-endif()
 
 #------------------------------------------------------------------------------
 #   Golang
