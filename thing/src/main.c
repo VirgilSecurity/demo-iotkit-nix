@@ -61,14 +61,6 @@ _on_file_updated(vs_update_file_type_t *file_type,
                  bool successfully_updated);
 
 /******************************************************************************/
-static vs_status_e
-device_start_cb(vs_sdmp_info_device_t *device) {
-    return vs_fldt_client_request_all_files();
-};
-
-static const vs_sdmp_info_srv_callbacks_t _info_server_callback = {.device_start_cb = device_start_cb};
-
-/******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
@@ -153,7 +145,7 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl, &_info_server_callback);
+    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
     STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT client service");
 
     //  FLDT client service
