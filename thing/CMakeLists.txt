@@ -106,10 +106,6 @@ if(NOT GO_DISABLE)
 		set(THING_APP_FILE_SIZE "1048576" CACHE STRING "Full thing application file size")
 	endif()
 
-	if(NOT THING_APP_CHUNK_SIZE)
-		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
-	endif()
-
 	include(signFirmware)
 
 	sign_firmware(thing-signed
@@ -119,7 +115,6 @@ if(NOT GO_DISABLE)
 			${APP_VERSION}
 			${THING_MANUFACTURE}
 			${THING_MODEL}
-			${THING_APP_CHUNK_SIZE}
 			APPL)
 
 	add_dependencies(thing-signed virgil-firmware-signer thing)
