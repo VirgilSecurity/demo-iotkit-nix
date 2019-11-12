@@ -121,8 +121,8 @@ if(NOT GO_DISABLE)
 	endif()
 
 	if(NOT GW_APP_CHUNK_SIZE)
-    		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
-    endif()
+		set(GW_APP_CHUNK_SIZE "65535" CACHE STRING "Gateway application chunk size")
+	endif()
 
 	include(signFirmware)
 

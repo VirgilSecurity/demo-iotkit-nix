@@ -107,8 +107,8 @@ if(NOT GO_DISABLE)
 	endif()
 
 	if(NOT THING_APP_CHUNK_SIZE)
-    		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
-    endif()
+		set(THING_APP_CHUNK_SIZE "65535" CACHE STRING "Thing application chunk size")
+	endif()
 
 	include(signFirmware)
 
