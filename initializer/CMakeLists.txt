@@ -79,7 +79,7 @@ function(initializer_executable _is_gateway _manufacture _model)
             PRIVATE
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
             nix-common
-            vs-module-sdmp-initializer
+            vs-module-snap-initializer
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
             $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>

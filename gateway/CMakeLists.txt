@@ -106,7 +106,7 @@ target_link_libraries(gateway
 		vs-module-cloud
 		vs-module-firmware
 		virgil-iot-status-code
-		vs-module-sdmp-gateway
+		vs-module-snap-gateway
 
 		enable_sanitizers
         enable_pedantic_mode

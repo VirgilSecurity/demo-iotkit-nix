@@ -35,8 +35,8 @@
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/prvs/prvs-server.h>
+#include <virgil/iot/protocols/snap.h>
+#include <virgil/iot/protocols/snap/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
 #include <trust_list-config.h>
@@ -48,7 +48,7 @@
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_sdmp_service_t *sdmp_prvs_server;
+    const vs_snap_service_t *snap_prvs_server;
     vs_status_e ret_code;
 
     // Implementation variables
@@ -66,11 +66,11 @@ main(int argc, char *argv[]) {
 #if GATEWAY
     const char *title = "Gateway initializer";
     const char *devices_dir = "gateway";
-    uint32_t device_roles = VS_SDMP_DEV_GATEWAY;
+    uint32_t device_roles = VS_SNAP_DEV_GATEWAY;
 #else
     const char *title = "Thing initializer";
     const char *devices_dir = "thing";
-    uint32_t device_roles = VS_SDMP_DEV_THING;
+    uint32_t device_roles = VS_SNAP_DEV_THING;
 #endif
 
     // Initialize Logger module
@@ -120,17 +120,17 @@ main(int argc, char *argv[]) {
         goto terminate;
     }
 
-    // SDMP module
-    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, device_roles),
-                 "Unable to initialize SDMP module");
+    // SNAP module
+    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+                 "Unable to initialize SNAP module");
 
     //
-    // ---------- Register SDMP services ----------
+    // ---------- Register SNAP services ----------
     //
 
     //  PRVS service
-    sdmp_prvs_server = vs_sdmp_prvs_server(hsm_impl);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_prvs_server), "Cannot register PRVS service");
+    snap_prvs_server = vs_snap_prvs_server(hsm_impl);
+    STATUS_CHECK(vs_snap_register_service(snap_prvs_server), "Cannot register PRVS service");
 
 
     //
@@ -150,7 +150,7 @@ terminate:
     VS_LOG_INFO("Terminating application ...");
 
     // Deinit Virgil SDK modules
-    vs_sdmp_deinit();
+    vs_snap_deinit();
 
     // Deinit provision
     vs_provision_deinit();

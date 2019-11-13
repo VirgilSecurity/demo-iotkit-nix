@@ -42,7 +42,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
+#include <virgil/iot/protocols/snap/snap-structs.h>
 #include <virgil/iot/logger/logger.h>
 
 static vs_status_e

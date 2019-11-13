@@ -202,7 +202,7 @@ main(int argc, char *argv[]) {
 
     res += vs_firmware_test(hsm_impl);
 
-    res += vs_sdmp_tests();
+    res += vs_snap_tests();
 
     VS_LOG_INFO("[RPI] Finish IoT rpi gateway tests");
 

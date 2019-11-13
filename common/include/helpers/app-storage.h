@@ -36,7 +36,7 @@
 #define VS_IOT_APP_STORAGE_H
 
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
+#include <virgil/iot/protocols/snap/snap-structs.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 
 vs_status_e
