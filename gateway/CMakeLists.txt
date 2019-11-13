@@ -136,7 +136,7 @@ if(NOT GO_DISABLE)
 			${GW_APP_CHUNK_SIZE}
 			APPL)
 
-	add_dependencies(gateway-signed virgil-firmware-signer gateway)
+	add_dependencies(gateway-signed vs-tool-virgil-firmware-signer gateway)
 endif()
 
 #
