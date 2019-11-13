@@ -35,10 +35,10 @@
 #include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
-#include <virgil/iot/protocols/sdmp.h>
-#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
+#include <virgil/iot/protocols/snap.h>
+#include <virgil/iot/protocols/snap/fldt/fldt-server.h>
 #include <virgil/iot/vs-curl-http/curl-http.h>
-#include <virgil/iot/protocols/sdmp/info/info-server.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-softhsm/vs-softhsm.h>
@@ -74,8 +74,8 @@ _add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **up
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_sdmp_service_t *sdmp_info_server;
-    const vs_sdmp_service_t *sdmp_fldt_server;
+    const vs_snap_service_t *snap_info_server;
+    const vs_snap_service_t *snap_fldt_server;
     int res = -1;
 
     // Implementation variables
@@ -146,9 +146,9 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
                  "Unable to initialize Firmware module");
 
-    // SDMP module
-    STATUS_CHECK(vs_sdmp_init(netif_impl, manufacture_id, device_type, serial, VS_SDMP_DEV_GATEWAY),
-                 "Unable to initialize SDMP module");
+    // SNAP module
+    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, VS_SNAP_DEV_GATEWAY),
+                 "Unable to initialize SNAP module");
 
     // Cloud module
     STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
@@ -158,16 +158,16 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_message_bin_register_handlers(), "Unable to register message bin handlers");
 
     //
-    // ---------- Register SDMP services ----------
+    // ---------- Register SNAP services ----------
     //
 
     //  INFO server service
-    sdmp_info_server = vs_sdmp_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_info_server), "Cannot register FLDT server service");
+    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
+    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register FLDT server service");
 
     //  FLDT server service
-    sdmp_fldt_server = vs_sdmp_fldt_server(&forced_mac_addr, _add_filetype);
-    STATUS_CHECK(vs_sdmp_register_service(sdmp_fldt_server), "Cannot register FLDT server service");
+    snap_fldt_server = vs_snap_fldt_server(&forced_mac_addr, _add_filetype);
+    STATUS_CHECK(vs_snap_register_service(snap_fldt_server), "Cannot register FLDT server service");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
                  "Unable to add firmware file type");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
@@ -199,7 +199,7 @@ terminate:
 
 
     // Deinitialize Virgil SDK modules
-    vs_sdmp_deinit();
+    vs_snap_deinit();
 
     // Deinit firmware
     vs_firmware_deinit();
@@ -227,7 +227,7 @@ vs_impl_msleep(size_t msec) {
 /******************************************************************************/
 void
 vs_impl_device_serial(vs_device_serial_t serial_number) {
-    memcpy(serial_number, vs_sdmp_device_serial(), VS_DEVICE_SERIAL_SIZE);
+    memcpy(serial_number, vs_snap_device_serial(), VS_DEVICE_SERIAL_SIZE);
 }
 
 /******************************************************************************/

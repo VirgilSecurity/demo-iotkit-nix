@@ -43,7 +43,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/protocols/sdmp/fldt/fldt-server.h>
+#include <virgil/iot/protocols/snap/fldt/fldt-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 
 static gtwy_t _gtwy = {.firmware_mutex = PTHREAD_MUTEX_INITIALIZER, .tl_mutex = PTHREAD_MUTEX_INITIALIZER};
@@ -154,7 +154,7 @@ _gateway_task(void *pvParameters) {
     // Main cycle
     while (true) {
         vs_event_group_wait_bits(&_gtwy.incoming_data_events, EID_BITS_ALL, true, false, MAIN_THREAD_SLEEP_S);
-        vs_event_group_set_bits(&_gtwy.shared_events, SDMP_INIT_FINITE_BIT);
+        vs_event_group_set_bits(&_gtwy.shared_events, SNAP_INIT_FINITE_BIT);
 
         while (vs_file_download_get_request(&queued_file)) {
 
@@ -174,7 +174,7 @@ _gateway_task(void *pvParameters) {
                     }
                 }
 
-                VS_LOG_DEBUG("Send info about new Firmware over SDMP");
+                VS_LOG_DEBUG("Send info about new Firmware over SNAP");
 
                 if (vs_fldt_server_add_file_type(queued_file, vs_firmware_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new firmware");
@@ -183,7 +183,7 @@ _gateway_task(void *pvParameters) {
                 break;
 
             case VS_UPDATE_TRUST_LIST:
-                VS_LOG_DEBUG("Send info about new Trust List over SDMP");
+                VS_LOG_DEBUG("Send info about new Trust List over SNAP");
 
                 if (vs_fldt_server_add_file_type(queued_file, vs_tl_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new Trust List");

@@ -36,7 +36,7 @@
 #ifndef VS_IOT_NETIF_QUEUE_IMPL_H
 #define VS_IOT_NETIF_QUEUE_IMPL_H
 
-#include <virgil/iot/protocols/sdmp/sdmp-structs.h>
+#include <virgil/iot/protocols/snap/snap-structs.h>
 
 vs_netif_t *
 vs_netif_queued(const vs_netif_t *base_netif);

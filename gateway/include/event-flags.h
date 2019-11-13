@@ -3,7 +3,7 @@
 #define GATEWAY_EVENT_GROUP_BIT_FLAGS_H
 
 // Shared flags (shared_events)
-#define SDMP_INIT_FINITE_BIT (1 << 0)
+#define SNAP_INIT_FINITE_BIT (1 << 0)
 
 // Firmware upgrade flags (message_bin)
 #define NEW_FIRMWARE_HTTP_BIT (1 << 0)
