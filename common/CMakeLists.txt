@@ -83,7 +83,7 @@ target_sources(nix-common-firmware
 target_include_directories(nix-common
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/snap/include
 		PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 		)
@@ -91,7 +91,7 @@ target_include_directories(nix-common
 target_include_directories(nix-common-firmware
 		PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}/include
-		${VIRGIL_IOT_DIRECTORY}/modules/protocols/sdmp/include
+		${VIRGIL_IOT_DIRECTORY}/modules/protocols/snap/include
 		${VIRGIL_IOT_DIRECTORY}/modules/firmware/include
 		)
 
