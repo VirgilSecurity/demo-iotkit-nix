@@ -122,7 +122,7 @@ if(NOT GO_DISABLE)
 			${THING_APP_CHUNK_SIZE}
 			APPL)
 
-	add_dependencies(thing-signed virgil-firmware-signer thing)
+	add_dependencies(thing-signed vs-tool-virgil-firmware-signer thing)
 
 endif()
 
