@@ -155,8 +155,8 @@ static void *
 _upd_http_retrieval_task(void *pvParameters) {
     gtwy_t *gtwy = vs_gateway_ctx();
 
-    // Wait for the sdmp stack and services to be up before looking for new firmware
-    vs_event_group_wait_bits(&gtwy->shared_events, SDMP_INIT_FINITE_BIT, false, true, VS_EVENT_GROUP_WAIT_INFINITE);
+    // Wait for the snap stack and services to be up before looking for new firmware
+    vs_event_group_wait_bits(&gtwy->shared_events, SNAP_INIT_FINITE_BIT, false, true, VS_EVENT_GROUP_WAIT_INFINITE);
 
     VS_LOG_DEBUG("vs_upd_http_retrieval thread started");
 

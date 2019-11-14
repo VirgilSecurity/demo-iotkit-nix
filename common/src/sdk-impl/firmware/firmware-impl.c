@@ -37,7 +37,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include <virgil/iot/protocols/sdmp.h>
+#include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/firmware/firmware.h>

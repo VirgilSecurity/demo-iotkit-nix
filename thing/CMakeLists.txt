@@ -92,7 +92,7 @@ target_link_libraries(thing
 
 		vs-module-firmware
 		virgil-iot-status-code
-		vs-module-sdmp-thing
+		vs-module-snap-thing
 
 		enable_sanitizers
         enable_pedantic_mode
