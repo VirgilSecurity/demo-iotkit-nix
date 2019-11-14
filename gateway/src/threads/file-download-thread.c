@@ -65,7 +65,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
 
         res = vs_cloud_fetch_and_store_fw_file(request->upd_file_url, &header);
         if (VS_CODE_OK == res) {
-            VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored succesfully");
+            VS_LOG_DEBUG("[MB_NOTIFY]:FW image stored successfully");
 
             res = vs_firmware_verify_firmware(&header.descriptor);
             if (VS_CODE_OK == res) {
@@ -78,6 +78,7 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                     exit(-1);
                 }
                 fw_info->type = VS_UPDATE_FIRMWARE;
+                // TODO : odd operation below...
                 fw_info->info.version.build = ntohl(fw_info->info.version.build);
                 memcpy(&fw_info->info, &header.descriptor.info, sizeof(vs_file_info_t));
 
