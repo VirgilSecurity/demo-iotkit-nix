@@ -181,7 +181,7 @@ main(int argc, char *argv[]) {
                  "Cannot create Secbox storage");
 
     // Soft HSM
-    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+    hsm_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
     CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, hsm_impl),
@@ -217,7 +217,7 @@ terminate:
     vs_secbox_deinit();
 
     // Deinit SoftHSM
-    vs_softhsm_deinit();
+    vs_soft_secmodule_deinit();
 
     return res;
 }

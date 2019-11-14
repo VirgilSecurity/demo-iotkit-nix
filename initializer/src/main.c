@@ -107,7 +107,7 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Soft HSM
-    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+    hsm_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
@@ -156,7 +156,7 @@ terminate:
     vs_provision_deinit();
 
     // Deinit SoftHSM
-    vs_softhsm_deinit();
+    vs_soft_secmodule_deinit();
 
     return VS_CODE_OK;
 }
