@@ -52,7 +52,7 @@ main(int argc, char *argv[]) {
     vs_status_e ret_code;
 
     // Implementation variables
-    vs_hsm_impl_t *secmodule_impl = NULL;
+    vs_secmodule_impl_t *secmodule_impl = NULL;
     vs_netif_t *netif_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
@@ -106,7 +106,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
-    // Soft HSM
+    // Soft SECMODULE
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
@@ -155,7 +155,7 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftHSM
+    // Deinit SoftSECMODULE
     vs_soft_secmodule_deinit();
 
     return VS_CODE_OK;

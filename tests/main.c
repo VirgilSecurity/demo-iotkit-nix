@@ -142,7 +142,7 @@ main(int argc, char *argv[]) {
     vs_device_type_t device_type;
 
     // Implementation variables
-    vs_hsm_impl_t *secmodule_impl = NULL;
+    vs_secmodule_impl_t *secmodule_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
     vs_storage_op_ctx_t fw_storage_impl;
@@ -180,7 +180,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&secbox_storage_impl, vs_app_secbox_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create Secbox storage");
 
-    // Soft HSM
+    // Soft SECMODULE
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
@@ -216,7 +216,7 @@ terminate:
     // Deinit secbox
     vs_secbox_deinit();
 
-    // Deinit SoftHSM
+    // Deinit SoftSECMODULE
     vs_soft_secmodule_deinit();
 
     return res;
