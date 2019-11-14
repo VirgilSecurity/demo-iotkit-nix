@@ -42,9 +42,9 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/hsm/hsm.h>
-#include <virgil/iot/hsm/hsm_helpers.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/secmodule/secmodule.h>
+#include <virgil/iot/secmodule/secmodule-helpers.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 
 #include <trust_list-config.h>
 #include <update-config.h>
@@ -54,7 +54,7 @@ static vs_device_manufacture_id_t _manufacture_id;
 static vs_device_type_t _device_type;
 static const vs_key_type_e sign_rules_list[VS_FW_SIGNATURES_QTY] = VS_FW_SIGNER_TYPE_LIST;
 static char *_path_to_image = NULL;
-static vs_hsm_impl_t *_hsm_impl = NULL;
+static vs_secmodule_impl_t *_secmodule_impl = NULL;
 
 /******************************************************************************/
 static ssize_t
@@ -158,7 +158,7 @@ vs_firmware_self_verify(void) {
     ssize_t file_sz;
     uint8_t sign_rules = 0;
     uint16_t i;
-    vs_hsm_sw_sha256_ctx hash_ctx;
+    vs_secmodule_sw_sha256_ctx hash_ctx;
     vs_status_e ret_code;
     size_t read_sz;
 
@@ -193,7 +193,7 @@ vs_firmware_self_verify(void) {
     uint8_t buf[desc.chunk_size];
     uint32_t offset = 0;
 
-    _hsm_impl->hash_init(&hash_ctx);
+    _secmodule_impl->hash_init(&hash_ctx);
 
     // Update hash by firmware
     while (offset < file_sz - footer_sz) {
@@ -203,13 +203,13 @@ vs_firmware_self_verify(void) {
         STATUS_CHECK_RET(_boot_load_image_chunk(offset, buf, required_chunk_size, &read_sz),
                          "Error read firmware chunk");
 
-        _hsm_impl->hash_update(&hash_ctx, buf, required_chunk_size);
+        _secmodule_impl->hash_update(&hash_ctx, buf, required_chunk_size);
         offset += required_chunk_size;
     }
 
     // Update hash by footer
-    _hsm_impl->hash_update(&hash_ctx, footer_buf, sizeof(vs_firmware_footer_t));
-    _hsm_impl->hash_finish(&hash_ctx, hash);
+    _secmodule_impl->hash_update(&hash_ctx, footer_buf, sizeof(vs_firmware_footer_t));
+    _secmodule_impl->hash_finish(&hash_ctx, hash);
 
     // First signature
     vs_sign_t *sign = (vs_sign_t *)footer->signatures;
@@ -223,8 +223,8 @@ vs_firmware_self_verify(void) {
 
         CHECK_RET(sign->hash_type == VS_HASH_SHA_256, VS_CODE_ERR_UNSUPPORTED, "Unsupported hash size for sign FW");
 
-        sign_len = vs_hsm_get_signature_len(sign->ec_type);
-        key_len = vs_hsm_get_pubkey_len(sign->ec_type);
+        sign_len = vs_secmodule_get_signature_len(sign->ec_type);
+        key_len = vs_secmodule_get_pubkey_len(sign->ec_type);
 
         CHECK_RET(sign_len > 0 && key_len > 0, VS_CODE_ERR_UNSUPPORTED, "Unsupported signature ec_type");
 
@@ -235,13 +235,13 @@ vs_firmware_self_verify(void) {
                          "Signer key is wrong");
 
         if (_is_rule_equal_to(sign->signer_type)) {
-            STATUS_CHECK_RET(_hsm_impl->ecdsa_verify(sign->ec_type,
-                                                     pubkey,
-                                                     (uint16_t)key_len,
-                                                     sign->hash_type,
-                                                     hash,
-                                                     sign->raw_sign_pubkey,
-                                                     (uint16_t)sign_len),
+            STATUS_CHECK_RET(_secmodule_impl->ecdsa_verify(sign->ec_type,
+                                                           pubkey,
+                                                           (uint16_t)key_len,
+                                                           sign->hash_type,
+                                                           hash,
+                                                           sign->raw_sign_pubkey,
+                                                           (uint16_t)sign_len),
                              "Signature is wrong");
             sign_rules++;
         }
@@ -316,15 +316,15 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
-    // Soft HSM
-    _hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+    // Soft Security Module
+    _secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, _hsm_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, _secmodule_impl), "Cannot initialize Provision module");
 
     //
     // ---------- Check firmware image ----------
@@ -338,8 +338,8 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftHSM
-    vs_softhsm_deinit();
+    // Deinit Soft Security Module
+    vs_soft_secmodule_deinit();
 
     if (is_image_correct) {
         _start_app_image(argc, argv);
