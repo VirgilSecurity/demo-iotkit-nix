@@ -43,7 +43,7 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
@@ -142,7 +142,7 @@ main(int argc, char *argv[]) {
     vs_device_type_t device_type;
 
     // Implementation variables
-    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_secmodule_impl_t *secmodule_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
     vs_storage_op_ctx_t fw_storage_impl;
@@ -180,27 +180,27 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&secbox_storage_impl, vs_app_secbox_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create Secbox storage");
 
-    // Soft HSM
-    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+    // Soft Security Module
+    secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
-    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, hsm_impl),
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl),
           "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
 
     // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
                  "Unable to initialize Firmware module");
 
     // Secbox module
-    STATUS_CHECK(vs_secbox_init(&secbox_storage_impl, hsm_impl), "Unable to initialize Secbox module");
+    STATUS_CHECK(vs_secbox_init(&secbox_storage_impl, secmodule_impl), "Unable to initialize Secbox module");
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
-    res = vs_crypto_test(hsm_impl);
+    res = vs_crypto_test(secmodule_impl);
 
-    res += vs_secbox_test(hsm_impl);
+    res += vs_secbox_test(secmodule_impl);
 
-    res += vs_firmware_test(hsm_impl);
+    res += vs_firmware_test(secmodule_impl);
 
     res += vs_snap_tests();
 
@@ -216,8 +216,8 @@ terminate:
     // Deinit secbox
     vs_secbox_deinit();
 
-    // Deinit SoftHSM
-    vs_softhsm_deinit();
+    // Deinit Soft Security Module
+    vs_soft_secmodule_deinit();
 
     return res;
 }
