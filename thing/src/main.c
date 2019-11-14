@@ -122,7 +122,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
-    // Soft SECMODULE
+    // Soft Security Module
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
@@ -189,7 +189,7 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftSECMODULE
+    // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
 
     res = vs_firmware_nix_update(argc, argv);

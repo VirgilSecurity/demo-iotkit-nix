@@ -180,7 +180,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&secbox_storage_impl, vs_app_secbox_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create Secbox storage");
 
-    // Soft SECMODULE
+    // Soft Security Module
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
@@ -216,7 +216,7 @@ terminate:
     // Deinit secbox
     vs_secbox_deinit();
 
-    // Deinit SoftSECMODULE
+    // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
 
     return res;

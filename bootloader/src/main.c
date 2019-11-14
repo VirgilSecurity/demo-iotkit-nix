@@ -316,7 +316,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
                  "Cannot create TrustList storage");
 
-    // Soft SECMODULE
+    // Soft Security Module
     _secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
@@ -338,7 +338,7 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftSECMODULE
+    // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
 
     if (is_image_correct) {
