@@ -42,7 +42,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <update-config.h>
 
 #include <stdlib-config.h>

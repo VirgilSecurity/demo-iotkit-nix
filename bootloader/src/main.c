@@ -43,8 +43,8 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/secmodule/secmodule.h>
-#include <virgil/iot/secmodule/secmodule_helpers.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/secmodule/secmodule-helpers.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 
 #include <trust_list-config.h>
 #include <update-config.h>

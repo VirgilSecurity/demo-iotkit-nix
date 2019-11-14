@@ -41,7 +41,7 @@
 #include <virgil/iot/protocols/snap/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "threads/main-thread.h"

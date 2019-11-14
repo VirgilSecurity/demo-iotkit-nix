@@ -38,7 +38,7 @@
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
 
 #include "helpers/app-helpers.h"

@@ -43,7 +43,7 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/crypto/foundation/vscf_assert.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
