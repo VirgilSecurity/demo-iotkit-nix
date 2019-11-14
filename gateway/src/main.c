@@ -70,6 +70,32 @@ _add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **up
     return VS_CODE_OK;
 }
 
+void
+init_manufacture_id(vs_device_manufacture_id_t manufacture_id, void *src_data) {
+    size_t pos;
+    const uint8_t *raw_data = src_data;
+
+    memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
+
+    for (pos = 0; pos < sizeof(vs_device_manufacture_id_t) && raw_data[pos]; ++pos) {
+        manufacture_id[pos] = raw_data[pos];
+    }
+}
+
+void
+init_device_type(vs_device_type_t device_type, void *src_data, size_t src_data_size) {
+    size_t pos;
+    const uint8_t *raw_data = src_data;
+
+    assert(src_data_size <= sizeof(vs_device_type_t));
+
+    memset(device_type, 0, sizeof(vs_device_type_t));
+
+    for (pos = 0; pos < src_data_size && raw_data[pos]; ++pos) {
+        device_type[pos] = raw_data[pos];
+    }
+}
+
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
@@ -98,8 +124,10 @@ main(int argc, char *argv[]) {
 
     // Prepare device parameters
     vs_app_get_serial(serial, forced_mac_addr);
-    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+    printf(" - %s -\n", GW_MANUFACTURE_ID);
+    init_manufacture_id(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    printf(" - %s -\n", GW_DEVICE_MODEL);
+    init_device_type(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     // Set device info path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
