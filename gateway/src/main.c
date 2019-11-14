@@ -41,7 +41,7 @@
 #include <virgil/iot/protocols/snap/info/info-server.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "threads/main-thread.h"
@@ -70,32 +70,6 @@ _add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **up
     return VS_CODE_OK;
 }
 
-void
-init_manufacture_id(vs_device_manufacture_id_t manufacture_id, void *src_data) {
-    size_t pos;
-    const uint8_t *raw_data = src_data;
-
-    memset(manufacture_id, 0, sizeof(vs_device_manufacture_id_t));
-
-    for (pos = 0; pos < sizeof(vs_device_manufacture_id_t) && raw_data[pos]; ++pos) {
-        manufacture_id[pos] = raw_data[pos];
-    }
-}
-
-void
-init_device_type(vs_device_type_t device_type, void *src_data, size_t src_data_size) {
-    size_t pos;
-    const uint8_t *raw_data = src_data;
-
-    assert(src_data_size <= sizeof(vs_device_type_t));
-
-    memset(device_type, 0, sizeof(vs_device_type_t));
-
-    for (pos = 0; pos < src_data_size && raw_data[pos]; ++pos) {
-        device_type[pos] = raw_data[pos];
-    }
-}
-
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
@@ -105,7 +79,7 @@ main(int argc, char *argv[]) {
     int res = -1;
 
     // Implementation variables
-    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_secmodule_impl_t *secmodule_impl = NULL;
     vs_netif_t *netif_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
@@ -124,10 +98,8 @@ main(int argc, char *argv[]) {
 
     // Prepare device parameters
     vs_app_get_serial(serial, forced_mac_addr);
-    printf(" - %s -\n", GW_MANUFACTURE_ID);
-    init_manufacture_id(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
-    printf(" - %s -\n", GW_DEVICE_MODEL);
-    init_device_type(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
+    vs_app_str_to_bytes(manufacture_id, GW_MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
+    vs_app_str_to_bytes(device_type, GW_DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
     // Set device info path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
@@ -160,18 +132,18 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE),
                  "Cannot create TrustList storage");
 
-    // Soft HSM
-    hsm_impl = vs_softhsm_impl(&slots_storage_impl);
+    // Soft Security Module
+    secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl), "Cannot initialize Provision module");
 
     // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
                  "Unable to initialize Firmware module");
 
     // SNAP module
@@ -179,7 +151,7 @@ main(int argc, char *argv[]) {
                  "Unable to initialize SNAP module");
 
     // Cloud module
-    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
+    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), secmodule_impl),
                  "Unable to initialize Cloud module");
 
     // Register message bin default handlers
@@ -235,8 +207,8 @@ terminate:
     // Deinit provision
     vs_provision_deinit();
 
-    // Deinit SoftHSM
-    vs_softhsm_deinit();
+    // Deinit Soft Security Module
+    vs_soft_secmodule_deinit();
 
     res = vs_firmware_nix_update(argc, argv);
 

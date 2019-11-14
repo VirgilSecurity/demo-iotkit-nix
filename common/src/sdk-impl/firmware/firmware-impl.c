@@ -42,7 +42,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
-#include <virgil/iot/vs-softhsm/vs-softhsm.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <update-config.h>
 
 #include <stdlib-config.h>
@@ -120,8 +120,9 @@ _delete_bad_firmware(void) {
     vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE);
     vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE);
 
-    CHECK(VS_CODE_OK == vs_firmware_init(
-                                &fw_storage_impl, vs_softhsm_impl(&slots_storage_impl), _manufacture_id, _device_type),
+    CHECK(VS_CODE_OK ==
+                  vs_firmware_init(
+                          &fw_storage_impl, vs_soft_secmodule_impl(&slots_storage_impl), _manufacture_id, _device_type),
           "Unable to initialize Firmware module");
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(_manufacture_id, _device_type, &desc)) {
@@ -138,7 +139,7 @@ _delete_bad_firmware(void) {
 
 terminate:
     vs_firmware_deinit();
-    vs_softhsm_deinit();
+    vs_soft_secmodule_deinit();
 }
 
 /******************************************************************************/
