@@ -52,7 +52,7 @@ main(int argc, char *argv[]) {
     vs_status_e ret_code;
 
     // Implementation variables
-    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_hsm_impl_t *secmodule_impl = NULL;
     vs_netif_t *netif_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
@@ -107,14 +107,14 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Soft HSM
-    hsm_impl = vs_soft_secmodule_impl(&slots_storage_impl);
+    secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
     //
 
     // Provision module
-    ret_code = vs_provision_init(&tl_storage_impl, hsm_impl);
+    ret_code = vs_provision_init(&tl_storage_impl, secmodule_impl);
     if (VS_CODE_OK != ret_code && VS_CODE_ERR_NOINIT != ret_code) {
         VS_LOG_ERROR("Cannot initialize Provision module");
         goto terminate;
@@ -129,7 +129,7 @@ main(int argc, char *argv[]) {
     //
 
     //  PRVS service
-    snap_prvs_server = vs_snap_prvs_server(hsm_impl);
+    snap_prvs_server = vs_snap_prvs_server(secmodule_impl);
     STATUS_CHECK(vs_snap_register_service(snap_prvs_server), "Cannot register PRVS service");
 
 

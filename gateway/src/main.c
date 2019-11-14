@@ -79,7 +79,7 @@ main(int argc, char *argv[]) {
     int res = -1;
 
     // Implementation variables
-    vs_hsm_impl_t *hsm_impl = NULL;
+    vs_hsm_impl_t *secmodule_impl = NULL;
     vs_netif_t *netif_impl = NULL;
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
@@ -133,17 +133,17 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Soft HSM
-    hsm_impl = vs_soft_secmodule_impl(&slots_storage_impl);
+    secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
     // ---------- Initialize Virgil SDK modules ----------
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, hsm_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl), "Cannot initialize Provision module");
 
     // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, hsm_impl, manufacture_id, device_type),
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
                  "Unable to initialize Firmware module");
 
     // SNAP module
@@ -151,7 +151,7 @@ main(int argc, char *argv[]) {
                  "Unable to initialize SNAP module");
 
     // Cloud module
-    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), hsm_impl),
+    STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), secmodule_impl),
                  "Unable to initialize Cloud module");
 
     // Register message bin default handlers
