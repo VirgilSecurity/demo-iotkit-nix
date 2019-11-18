@@ -178,7 +178,6 @@ _gateway_task(void *pvParameters) {
 
                 if (vs_fldt_server_add_file_type(queued_file, vs_firmware_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new firmware");
-                    // TODO :how to process???
                 }
                 break;
 
@@ -187,7 +186,6 @@ _gateway_task(void *pvParameters) {
 
                 if (vs_fldt_server_add_file_type(queued_file, vs_tl_update_ctx(), true)) {
                     VS_LOG_ERROR("Unable to add new Trust List");
-                    // TODO :how to process???
                 }
                 break;
 
