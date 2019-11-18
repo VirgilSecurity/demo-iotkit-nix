@@ -100,8 +100,7 @@ While working with Demo you can:
 &nbsp;
 
 - View devices information using integrated device manager (Virgil SnapD) that can be run in browser under http://localhost:8081/:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/device_manager.png" align="left" hspace="0" vspace="6">
-
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/device_manager.png" align="left" hspace="0" vspace="6"> 
 &nbsp;
 
 ## Explore Demo
@@ -132,7 +131,7 @@ Now, you have to emulate IoT devices. There are two types of devices:
   - IoT Gateway - an internet-capable smart device that communicates with other IoT devices and Clouds;
   - and IoT Device - end-device, like smart bulb, that can be controlled remotely through the IoT Gateway.
 
-<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulate_device.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulate_device.png" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
@@ -140,7 +139,7 @@ Now, you have to emulate IoT devices. There are two types of devices:
 
 &nbsp; 
 
-&nbsp; &nbsp;
+&nbsp;
 
 Generate both of them. The information about generated devices can be found in the Demo window:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulated_device.png" align="left" hspace="0" vspace="6">
