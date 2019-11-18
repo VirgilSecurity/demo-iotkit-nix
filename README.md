@@ -21,7 +21,7 @@ The IoTKit Demo allows you to:
 - Sign and publish new Firmware and TrustList
 - Manage a user's IoT devices
 
-Demo also allows you to:
+Also, while working with Demo you can:
 - View logs of all operations using integrated logs viewer
 - View devices information using integrated device manager (Virgil SnapD)
 
@@ -32,7 +32,6 @@ Clone the IoTKit package via the following link:
 ```shell
 $ git clone https://github.com/VirgilSecurity/virgil-iotkit.git
 ```
-
 
 ## Configure and Run Demo
 To launch the IoTKit Demo you will need to run the Docker and generate Virgil application token (`App Token`).
@@ -94,11 +93,57 @@ If you did everything correctly, you would see the following Demo window:
 
 &nbsp;
 
+### Run Logs Viewer
+While working with Demo you can:
+- View logs of all operations using integrated logs viewer that can be run in browser under http://localhost:8080/:
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/logs-viewer.png" align="left" hspace="0" vspace="6">
+&nbsp;
+
+- View devices information using integrated device manager (Virgil SnapD) that can be run in browser under http://localhost:8081/:
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/device_manager.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
+
 ## Explore Demo
 The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory and End-user) and shows secure lifecycle of IoT devices. The IoTKit Demo allows you to:
-- **Generate trusted provisioning package**. To start working with emulated IoT infrastructure the Demo uses Virgil Trust Provisioner utility for generating provisioning files, such as private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
-- **Emulate IoT devices**. Then, you can emulate two IoT device types: IoT Gateway - an internet-capable smart device that communicates with other IoT devices and Clouds; and IoT Device - end-device, like smart bulb, that can be controlled remotely through the IoT Gateway.
-- **Securely perform IoT device provisioning**. Demo uses the Virgil Device Initializer for IoT devices provisioning to make them identifiable, verifiable and trusted. Securely integrate trust list and crypto library on IoT devices, then generate key pairs and create digital cards, and sign digital cards with the Factory Key.
+- **Step #1. Generate trusted provisioning package**.
+
+To start working with emulated IoT infrastructure you have to generate a trusted provisioning package that includes such as private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
+
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png" align="left" hspace="0" vspace="6"> &nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
+
+- **Step #2. Emulate IoT devices**.
+
+Now, you have to emulate IoT devices. There are two types of devices:
+  - IoT Gateway - an internet-capable smart device that communicates with other IoT devices and Clouds;
+  - and IoT Device - end-device, like smart bulb, that can be controlled remotely through the IoT Gateway.
+
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulate_device.png" align="left" hspace="0" vspace="6"> &nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp; &nbsp; &nbsp;
+
+Generate both of them. The information about generated devices can be found in the Demo window:
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulated_device.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
+
+- **Step #3. Securely perform IoT device provisioning**.
+
+Demo uses the Virgil Device Initializer for IoT devices provisioning to make them identifiable, verifiable and trusted. Securely integrate trust list and crypto library on IoT devices, then generate key pairs and create digital cards, and sign digital cards with the Factory Key.
 - **Register IoT devices on the security platform**. At this step the Virgil Device Registrar is used to register digital cards of IoT devices at Virgil Cloud for further device authentication and management.
 - **Sign and publish new Firmware and TrustList**. Also, you can emulate process of creating and publishing new Firmware or TrustList to Virgil Cloud. Demo uses Virgil Firmware Signer to sign a firmware before its distributing.
 - **Manage IoT devices**. Demo allows to manage IoT devices and get information about their state. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trust lists before updating them.
