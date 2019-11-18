@@ -143,7 +143,7 @@ To make each IoT device identifiable, verifiable and trusted by each party of Io
 Demo uses the [Virgil Device Initializer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-device-initializer) for IoT devices provisioning to securely integrate trust list and crypto library on IoT devices, then generate key pairs and create digital cards, and sign digital cards with the Factory Key.
 
 The information about initialized (provisioned) devices can be found in the Demo window:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_devices.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_device.png" align="left" hspace="0" vspace="6"> &nbsp;
 
 or in browser under http://localhost:8080/ in the Device Initializer section.
 
