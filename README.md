@@ -122,6 +122,7 @@ To start working with emulated IoT infrastructure you have to generate a trusted
 
 &nbsp;
 
+&nbsp;
 
 Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
 
@@ -137,7 +138,9 @@ Now, you have to emulate IoT devices. There are two types of devices:
 
 &nbsp;
 
-&nbsp; &nbsp; &nbsp;
+&nbsp; 
+
+&nbsp; &nbsp;
 
 Generate both of them. The information about generated devices can be found in the Demo window:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulated_device.png" align="left" hspace="0" vspace="6">
