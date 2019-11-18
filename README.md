@@ -22,9 +22,13 @@ The IoTKit Demo allows you to:
 - Manage a user's IoT devices
 
 ## Download Demo
-Download the latest IoTKit Demo version via the following links:
-- for [Unix-like OS](https://github.com/VirgilSecurity/virgil-iotkit/blob/release/v0.1.0-alpha/scripts/run-demo.sh).
-- for [Windows OS](https://github.com/VirgilSecurity/virgil-iotkit/blob/release/v0.1.0-alpha/scripts/run-simulator.bat)
+The IoTKit Demo is a part of the [IoTKit package](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/scripts), so you will run the Demo from the IoTKit repository.
+
+Clone the IoTKit package via the following link:
+```shell
+$ git clone https://github.com/VirgilSecurity/virgil-iotkit.git
+```
+
 
 ## Configure and Run Demo
 To launch the IoTKit Demo you will need to run the Docker and generate Virgil application token (`App Token`).
@@ -51,12 +55,18 @@ $ virgil register <email>
 ```shell
 $ virgil login
 ```
-- Create Virgil Application. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-applications)
+- Create Virgil Application. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-applications).
 ```shell
 $ virgil app create <App Name>
 ```
 As a result, you'll get `App_ID`.
-- Generate App Token specifying `App_ID` and App name. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-apptokens)
+- Generate `App Key` specifying `App_ID` and `App Name`. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-app-keys)
+```shell
+$ virgil app key create --app_id <App ID> <App Key Name>
+```
+As a result, you'll get `App Key` and `App Key ID`.
+
+- Generate App Token specifying `App_ID` and `App Name`. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-apptokens).
 ```shell
 $ virgil app token create --app-id <App ID> --name <Name>
 ```
@@ -77,6 +87,8 @@ $ ./run-demo.sh
 
 If you did everything correctly, you would see the following Demo window:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/virgil_demo_iotkit_nix.png" align="left" hspace="0" vspace="6"> &nbsp;
+
+&nbsp;
 
 ## Explore Demo
 The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory and End-user) and shows secure lifecycle of IoT devices. The IoTKit Demo allows you to:
