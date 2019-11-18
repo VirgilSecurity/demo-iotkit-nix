@@ -5,6 +5,9 @@ The Demo is based on [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-io
 - [Functions](#functions)
 - [Download Demo](#download-demo)
 - [Configure and Run Demo](#configure-and-run-demo)
+  - [Prerequisites](#prerequisites)
+  - [Generate App Token](#generate-app-token)
+  - [Run Demo](#run-demo)
 - [Explore Demo](#explore-demo)
 - [Reference](#reference)
 - [Support](#support)
@@ -74,11 +77,6 @@ $ ./run-demo.sh
 
 If you did everything correctly, you would see the following Demo window:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/virgil_demo_iotkit_nix.png" align="left" hspace="0" vspace="6"> &nbsp;
-
-
-
-on the step 4, and then specify your App Token obtained in the previous step.
-
 
 ## Explore Demo
 
