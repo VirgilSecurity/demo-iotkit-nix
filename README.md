@@ -140,14 +140,24 @@ Generate both of them. The information about generated devices can be found in t
 
 To make each IoT device identifiable, verifiable and trusted by each party of IoT solution you have to make device provisioning.
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_devices.png" align="left" hspace="0" vspace="6"> &nbsp;
-
 Demo uses the [Virgil Device Initializer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-device-initializer) for IoT devices provisioning to securely integrate trust list and crypto library on IoT devices, then generate key pairs and create digital cards, and sign digital cards with the Factory Key.
 
+The information about initialized (provisioned) devices can be found in the Demo window:
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_devices.png" align="left" hspace="0" vspace="6"> &nbsp;
 
+or in browser under http://localhost:8080/ in the Device Initializer section.
 
+- **Step #4. Register IoT devices on the security platform**.
 
-- **Register IoT devices on the security platform**. At this step the Virgil Device Registrar is used to register digital cards of IoT devices at Virgil Cloud for further device authentication and management.
+At this step the Virgil Device Registrar is used to register digital cards of IoT devices at Virgil Cloud for further device authentication and management.
+
+After the IoT devices were registered at Virgil they are conditionally shipped to end-user for further operations:
+
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices.png" align="left" hspace="0" vspace="6">
+&nbsp;
+
+The information about registered IoT devices can be also found or in browser under http://localhost:8080/ in the Device Registrar section.
+
 - **Sign and publish new Firmware and TrustList**. Also, you can emulate process of creating and publishing new Firmware or TrustList to Virgil Cloud. Demo uses Virgil Firmware Signer to sign a firmware before its distributing.
 - **Manage IoT devices**. Demo allows to manage IoT devices and get information about their state. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trust lists before updating them.
 
