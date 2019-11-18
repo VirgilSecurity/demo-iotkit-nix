@@ -163,7 +163,7 @@ main(int argc, char *argv[]) {
 
     //  INFO server service
     snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
-    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register FLDT server service");
+    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
 
     //  FLDT server service
     snap_fldt_server = vs_snap_fldt_server(&forced_mac_addr, _add_filetype);
