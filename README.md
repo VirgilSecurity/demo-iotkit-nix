@@ -1,4 +1,4 @@
-# Virgil Demo IoTKit Nix
+# Virgil IoTKit Demo
 The Demo is based on [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-iotkit) and its dev tools to demonstrate secure IoT devices development in action. The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory, and End-user) to easily understand the whole development process.
 
 ## Content
