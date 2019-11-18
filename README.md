@@ -110,7 +110,7 @@ The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory and End-
 
 To start working with emulated IoT infrastructure you have to generate a trusted provisioning package that includes such as private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
 
-<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png" align="left" hspace="0" vspace="6">  
 
 &nbsp;
 
@@ -119,6 +119,9 @@ To start working with emulated IoT infrastructure you have to generate a trusted
 &nbsp;
 
 &nbsp;
+
+&nbsp;
+
 
 Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
 
