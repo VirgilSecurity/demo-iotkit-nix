@@ -100,7 +100,7 @@ While working with Demo you can:
 &nbsp;
 
 - View devices information using integrated device manager (Virgil SnapD) that can be run in browser under http://localhost:8081/:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/device_manager.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/devices_manager.png" align="left" hspace="0" vspace="6">
 &nbsp;
 
 ## Explore Demo
@@ -156,9 +156,12 @@ After the IoT devices were registered at Virgil they are conditionally shipped t
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices.png" align="left" hspace="0" vspace="6">
 &nbsp;
 
-The information about registered IoT devices can be also found or in browser under http://localhost:8080/ in the Device Registrar section.
+The information about registered IoT devices can be also found in Logs Viewer (http://localhost:8080/) in the Device Registrar section and in Virgil SnapD (http://localhost:8081/):
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices_manager.png" align="left" hspace="0" vspace="6"> &nbsp;
 
-- **Sign and publish new Firmware and TrustList**. Also, you can emulate process of creating and publishing new Firmware or TrustList to Virgil Cloud. Demo uses Virgil Firmware Signer to sign a firmware before its distributing.
+- **Sign and publish new Firmware and TrustList**.
+
+Also, you can emulate process of creating and publishing new Firmware or TrustList to Virgil Cloud. Demo uses Virgil Firmware Signer to sign a firmware before its distributing.
 - **Manage IoT devices**. Demo allows to manage IoT devices and get information about their state. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trust lists before updating them.
 
 ## Reference
