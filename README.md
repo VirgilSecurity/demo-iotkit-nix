@@ -21,6 +21,10 @@ The IoTKit Demo allows you to:
 - Sign and publish new Firmware and TrustList
 - Manage a user's IoT devices
 
+Demo also allows you to:
+- View logs of all operations using integrated logs viewer
+- View devices information using integrated device manager (Virgil SnapD)
+
 ## Download Demo
 The IoTKit Demo is a part of the [IoTKit package](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/scripts), so you will run the Demo from the IoTKit repository.
 
