@@ -98,7 +98,8 @@ vs_files_create_subdir(const char *folder) {
 
     CHECK_NOT_ZERO(folder && folder[0]);
 
-    CHECK_SNPRINTF(tmp, "%s/%s", _base_dir, folder);
+    int res = snprintf(tmp, sizeof(tmp), "%s/%s", _base_dir, folder);
+    CHECK(res > 0 && res <= FILENAME_MAX, "Error create path");
 
     return 0 == _mkdir_recursive(tmp);
 
