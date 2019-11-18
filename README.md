@@ -149,7 +149,7 @@ or in browser under http://localhost:8080/ in the Device Initializer section.
 
 - **Step #4. Register IoT devices on the security platform**.
 
-At this step the Virgil Device Registrar is used to register digital cards of IoT devices at Virgil Cloud for further device authentication and management.
+At this step the [Virgil Device Registrar](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-device-registrar) is used to register digital cards of IoT devices at Virgil Cloud for further device authentication and management.
 
 After the IoT devices were registered at Virgil they are conditionally shipped to end-user for further operations:
 
@@ -157,12 +157,47 @@ After the IoT devices were registered at Virgil they are conditionally shipped t
 &nbsp;
 
 The information about registered IoT devices can be also found in Logs Viewer (http://localhost:8080/) in the Device Registrar section and in Virgil SnapD (http://localhost:8081/):
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices_manager.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices_manager.png" align="left" hspace="0" vspace="6">
 
-- **Sign and publish new Firmware and TrustList**.
+&nbsp;
 
-Also, you can emulate process of creating and publishing new Firmware or TrustList to Virgil Cloud. Demo uses Virgil Firmware Signer to sign a firmware before its distributing.
-- **Manage IoT devices**. Demo allows to manage IoT devices and get information about their state. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trust lists before updating them.
+- **Step 5. Sign and publish new Firmware**.
+
+Now, you can emulate process of creating and publishing new Firmware to Virgil Cloud. Demo uses [Virgil Firmware Signer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-firmware-signer) to sign a firmware before its distributing. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trustlists before updating them.
+
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/update_firmware.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+After the Firmware is successfully uploaded to the Virgil Cloud, IoT device gets information about new firmware. Then Firmware is downloaded, verified using integrated crypto library and updated on devices.
+
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
+
+The information about signed Firmware can be also found in Logs Viewer (http://localhost:8080/) in the Firmware Signer section and in Virgil SnapD (http://localhost:8081/):
+
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
+
+- **Step 6. Sign and publish new TrustList**.
+Now, you can emulate process of creating and publishing new TrustList to Virgil Cloud. Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
+After you generate a new TrustList it will be distributed to all IoT devices.
+
+After the new TrustList is successfully uploaded to the Virgil Cloud, IoT device gets information about new TrustList. Then TrustList is downloaded, verified using integrated crypto library and updated on devices.
+
+The information about generated TrustList can be also found in Logs Viewer (http://localhost:8080/) and in Virgil SnapD (http://localhost:8081/):
+
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager.png" align="left" hspace="0" vspace="6">
+
+- **Manage IoT devices**.
+
+Demo also allows you to manage IoT devices and get information about their state in the in Virgil SnapD (http://localhost:8081/).
 
 ## Reference
 - [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-iotkit)
