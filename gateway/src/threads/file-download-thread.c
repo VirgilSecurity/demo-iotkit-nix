@@ -78,8 +78,6 @@ _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                     exit(-1);
                 }
                 fw_info->type = VS_UPDATE_FIRMWARE;
-                // TODO : odd operation below...
-                fw_info->info.version.build = ntohl(fw_info->info.version.build);
                 memcpy(&fw_info->info, &header.descriptor.info, sizeof(vs_file_info_t));
 
                 if (0 != vs_msg_queue_push(_event_queue, fw_info, NULL, 0)) {
