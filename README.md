@@ -173,7 +173,7 @@ Now, you can emulate process of creating and publishing new Firmware to Virgil C
 
 &nbsp;
 
-After the Firmware is successfully uploaded to the Virgil Cloud, IoT device gets information about new firmware. Then Firmware is downloaded, verified using integrated crypto library and updated on devices.
+After the Firmware is successfully uploaded to the Virgil Cloud, IoT device gets information about new firmware. Then Firmware is downloaded, verified using integrated crypto library and updated on devices for which the Firmware was created (in our case for IoT Gateway).
 
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices.png" align="left" hspace="0" vspace="6">
 
@@ -190,11 +190,15 @@ The information about signed Firmware can be also found in Logs Viewer (http://l
 Now, you can emulate process of creating and publishing new TrustList to Virgil Cloud. Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
 After you generate a new TrustList it will be distributed to all IoT devices.
 
-After the new TrustList is successfully uploaded to the Virgil Cloud, IoT device gets information about new TrustList. Then TrustList is downloaded, verified using integrated crypto library and updated on devices.
+After the new TrustList is successfully uploaded to the Virgil Cloud, IoT device gets information about new TrustList. Then TrustList is downloaded, verified using integrated crypto library and updated on all devices.
+
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_tl.png" align="left" hspace="0" vspace="6">
+
+&nbsp;
 
 The information about generated TrustList can be also found in Logs Viewer (http://localhost:8080/) and in Virgil SnapD (http://localhost:8081/):
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager_tl.png" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
