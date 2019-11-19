@@ -83,18 +83,18 @@ $ ./run-demo.sh
 - Specify your `App_Token` in the appeared window to run the Demo
 
 If you did everything correctly, you would see the following Demo window:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/virgil_demo_iotkit_nix.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/virgil_demo_iotkit_nix.png?demo" align="left" hspace="0" vspace="6"> &nbsp;
 
 &nbsp;
 
 ### Run Logs Viewer
 While working with the Demo you can:
 - View logs of all operations using integrated logs viewer that can be run in browser under http://localhost:8080/:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/logs-viewer.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/logs-viewer.png?demo" align="left" hspace="0" vspace="6">
 &nbsp;
 
 - View devices information using integrated device manager (Virgil SnapD) that can be run in browser under http://localhost:8081/:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/devices_manager.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/devices_manager.png?demo" align="left" hspace="0" vspace="6">
 &nbsp;
 
 ## Explore Demo
@@ -103,7 +103,7 @@ The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory and End-
 
 To start working with emulated IoT infrastructure you have to generate a trusted provisioning package that includes private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
 
-<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png" align="left" hspace="0" vspace="6">  
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png?demo" align="left" hspace="0" vspace="6">  
 
 &nbsp;
 
@@ -126,7 +126,7 @@ Now, you have to emulate IoT devices. There are two types of devices:
   - and IoT Device - end-device, like smart bulb, that can be controlled remotely through the IoT Gateway.
 
 Generate both of them. The information about generated devices can be found in the Demo window:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulated_device.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/emulated_device.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
@@ -137,7 +137,7 @@ To make each IoT device identifiable, verifiable and trusted by each party of Io
 Demo uses the [Virgil Device Initializer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-device-initializer) for IoT devices provisioning to securely integrate trust list and crypto library on IoT devices, then generate key pairs and create digital cards, and sign digital cards with the Factory Key.
 
 The information about initialized (provisioned) devices can be found in the Demo window:
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_device.png" align="left" hspace="0" vspace="6"> &nbsp;
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_device.png?demo" align="left" hspace="0" vspace="6"> &nbsp;
 
 or in browser under http://localhost:8080 in the Device Initializer section.
 
@@ -147,11 +147,11 @@ At this step the [Virgil Device Registrar](https://github.com/VirgilSecurity/vir
 
 After the IoT devices were registered at Virgil they are conditionally shipped to end-user for further operations:
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices.png?demo" align="left" hspace="0" vspace="6">
 &nbsp;
 
 The information about registered IoT devices can be also found in Logs Viewer (http://localhost:8080/) in the Device Registrar section and in Virgil SnapD (http://localhost:8081/):
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices_manager.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/shipped_devices_manager.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
@@ -159,7 +159,7 @@ The information about registered IoT devices can be also found in Logs Viewer (h
 
 Now, you can emulate the process of creating and publishing new Firmware to Virgil Cloud. Demo uses [Virgil Firmware Signer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-firmware-signer) to sign a firmware before its distributing. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trustlists before updating them.
 
-<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/update_firmware.png" align="left" hspace="0" vspace="6">
+<img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/update_firmware.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
@@ -169,13 +169,13 @@ Now, you can emulate the process of creating and publishing new Firmware to Virg
 
 After the Firmware is successfully uploaded to the Virgil Cloud, IoT device gets information about new firmware. Then Firmware is downloaded, verified using integrated crypto library and updated on devices for which the Firmware was created (in our case for IoT Gateway).
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
 The information about signed Firmware can be also found in Logs Viewer (http://localhost:8080/) in the Firmware Signer section and in Virgil SnapD (http://localhost:8081/):
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
@@ -186,13 +186,13 @@ After you generate a new TrustList it will be distributed to all IoT devices.
 
 After the new TrustList is successfully uploaded to the Virgil Cloud, IoT device gets information about new TrustList. Then TrustList is downloaded, verified using integrated crypto library and updated on all devices.
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_tl.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_tl.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
 The information about generated TrustList can be also found in Logs Viewer (http://localhost:8080/) and in Virgil SnapD (http://localhost:8081/):
 
-<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager_tl.png" align="left" hspace="0" vspace="6">
+<img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/updated_devices_manager_tl.png?demo" align="left" hspace="0" vspace="6">
 
 &nbsp;
 
