@@ -63,12 +63,6 @@ $ virgil login
 $ virgil app create <App Name>
 ```
 As a result, you'll get `App_ID`.
-- Generate `App Key` specifying `App_ID` and `App Name`. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-app-keys)
-```shell
-$ virgil app key create --app_id <App ID> <App Key Name>
-```
-As a result, you'll get `App Key` and `App Key ID`.
-
 - Generate App Token specifying `App_ID` and `App Name`. Find examples [here](https://developer.virgilsecurity.com/docs/sdk-and-tools/virgil-cli/manage-apptokens).
 ```shell
 $ virgil app token create --app-id <App ID> --name <Name>
@@ -128,7 +122,7 @@ Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-io
 - **Step #2. Emulate IoT devices**.
 
 Now, you have to emulate IoT devices. There are two types of devices:
-  - IoT Gateway - an internet-capable smart device that communicates with other IoT devices and Clouds;
+  - IoT Gateway - an internet-capable smart device that communicates with other IoT devices and Clouds; NOTE! At this moment demo supports only one active IoT-Gateway in network.
   - and IoT Device - end-device, like smart bulb, that can be controlled remotely through the IoT Gateway.
 
 Generate both of them. The information about generated devices can be found in the Demo window:
