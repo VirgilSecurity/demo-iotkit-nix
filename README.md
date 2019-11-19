@@ -54,7 +54,7 @@ $ virgil
 ```shell
 $ virgil register <email>
 ```
-- Login you Virgil Account:
+- Log into your Virgil Account:
 ```shell
 $ virgil login
 ```
@@ -74,7 +74,7 @@ As a result, you'll get `Token`.
 ### Run Demo
 Now, you can run the Demo.
 
-- Firs of all, check whether the Docker is launched.
+- First of all, check whether the Docker is launched.
 - Navigate to your CLI terminal and run the Demo script (Unix-like OS: `run-demo.sh` and Windows:`run-simulator.bat`) from the scripts folder of the downloaded Demo package.
 ```shell
 # for MacOS
@@ -88,7 +88,7 @@ If you did everything correctly, you would see the following Demo window:
 &nbsp;
 
 ### Run Logs Viewer
-While working with Demo you can:
+While working with the Demo you can:
 - View logs of all operations using integrated logs viewer that can be run in browser under http://localhost:8080/:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/logs-viewer.png" align="left" hspace="0" vspace="6">
 &nbsp;
@@ -101,7 +101,7 @@ While working with Demo you can:
 The IoTKit Demo is conditionally divided into 3 actors (Vendor, Factory and End-user) and shows secure lifecycle of IoT devices. The IoTKit Demo allows you to:
 - **Step #1. Generate trusted provisioning package**.
 
-To start working with emulated IoT infrastructure you have to generate a trusted provisioning package that includes such as private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
+To start working with emulated IoT infrastructure you have to generate a trusted provisioning package that includes private keys (e.g. for factory, firmware) and a distributed trust list that contains public keys and signatures of trusted services providers (e.g. factory, cloud).
 
 <img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/generate_files.png" align="left" hspace="0" vspace="6">  
 
@@ -157,7 +157,7 @@ The information about registered IoT devices can be also found in Logs Viewer (h
 
 - **Step 5. Sign and publish new Firmware**.
 
-Now, you can emulate process of creating and publishing new Firmware to Virgil Cloud. Demo uses [Virgil Firmware Signer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-firmware-signer) to sign a firmware before its distributing. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trustlists before updating them.
+Now, you can emulate the process of creating and publishing new Firmware to Virgil Cloud. Demo uses [Virgil Firmware Signer](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-firmware-signer) to sign a firmware before its distributing. Demo uses Virgil services to notify IoT devices about new updates and then securely verify incoming firmware or trustlists before updating them.
 
 <img width="320" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/update_firmware.png" align="left" hspace="0" vspace="6">
 
@@ -181,7 +181,7 @@ The information about signed Firmware can be also found in Logs Viewer (http://l
 
 - **Step 6. Sign and publish new TrustList**.
 
-Now, you can emulate process of creating and publishing new TrustList to Virgil Cloud. Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
+Now, you can emulate the process of creating and publishing new TrustList to Virgil Cloud. Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
 After you generate a new TrustList it will be distributed to all IoT devices.
 
 After the new TrustList is successfully uploaded to the Virgil Cloud, IoT device gets information about new TrustList. Then TrustList is downloaded, verified using integrated crypto library and updated on all devices.
