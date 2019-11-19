@@ -115,8 +115,6 @@ To start working with emulated IoT infrastructure you have to generate a trusted
 
 &nbsp;
 
-&nbsp;
-
 Demo uses [Virgil Trust Provisioner](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha/tools/virgil-trust-provisioner) utility under the hood for this purpose.
 
 - **Step #2. Emulate IoT devices**.
