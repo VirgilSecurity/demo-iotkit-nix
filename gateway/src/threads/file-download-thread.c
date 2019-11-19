@@ -127,7 +127,7 @@ _tl_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
                 exit(-1);
             }
 
-            tl_header.version.build = ntohl(tl_header.version.build);
+            vs_tl_header_to_host(&tl_header, &tl_header);
             memset(tl_info, 0, sizeof(vs_update_file_type_t));
             memcpy(&tl_info->info.version, &tl_header.version, sizeof(vs_file_version_t));
 
