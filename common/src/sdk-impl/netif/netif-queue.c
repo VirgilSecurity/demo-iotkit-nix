@@ -101,6 +101,7 @@ static void *
 _periodical_processing(void *ctx) {
     while (!_stop_periodical) {
         sleep(1);
+        // TODO: To improve working with periodical timer
         CHECK_RET(VS_CODE_OK == vs_msg_queue_push(_queue_ctx, NULL, NULL, 0),
                   NULL,
                   "Error while writing message to queue");
