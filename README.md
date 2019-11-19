@@ -139,7 +139,7 @@ Demo uses the [Virgil Device Initializer](https://github.com/VirgilSecurity/virg
 The information about initialized (provisioned) devices can be found in the Demo window:
 <img width="100%" src="https://cdn.virgilsecurity.com/assets/images/github/iotkit_demo/initialized_device.png" align="left" hspace="0" vspace="6"> &nbsp;
 
-or in browser under http://localhost:8080/ in the Device Initializer section.
+or in browser under http://localhost:8080 in the Device Initializer section.
 
 - **Step #4. Register IoT devices on the security platform**.
 
