@@ -2,13 +2,15 @@
 
 To demonstrate Virgil IoTKit in action we developed Demo based on [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-iotkit) and its dev tools. The Demo contains samples for UNIX-like OS.
 
-## Content
-- [Run Tests](#run-tests)
-- [Reference](#reference)
-- [License](#license)
-- [Support](#support)
+## Demo Content
+The Demo provides you with the following functionality:
+- **common**. Contains implementation of HAL (hardware abstraction layer). Find all implementations [here](https://github.com/VirgilSecurity/demo-iotkit-nix/tree/develop-review/common/src/sdk-impl)
+- **initializer**. Contains implementation of initializer of IoT. Find all implementations [here](/initializer/src/main.c)
+- **bootloader**. Contains application that simulates a bootloader of controller. The application performs firmware verification
+- **thing**. Contains samples of IoT Device (end-device) implementation based on IoTKit. Find all examples on how to work with IoT device [here](/thing/src/main.c)
+- **gateway**. Contains samples of IoT Gateway implementation based on IoTKit. Find all examples on how to work with Cloud, Getaway or its threads [here](/gateway/src).
+- **dummy-keys**. Contains testing keys for signing a testing firmware.
 
-## Demo Features
 
 ## Run Tests
 To make sure that everything goes in the right way, we also provide a set of ready code-snippets for testing the necessary features:
