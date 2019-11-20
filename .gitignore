@@ -13,11 +13,13 @@ format_list.txt
 .idea/
 cmake-build-*/
 build_debug_*/
+debug/
 .settings/*
 .depends_cache
 
 .project
 .cproject
+.DS_Store
 
 *.pyc
 *.cbp
@@ -25,3 +27,4 @@ ap/bin/psram/fw.bin
 .vscode/
 
 build*/
+ext/deps/*

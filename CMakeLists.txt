@@ -34,61 +34,122 @@
 
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-#
-#   Clang format
-#
-include("ap/security-sdk/cmake/clangformat.cmake")
+#------------------------------------------------------------------------------
+#   Settings
+#------------------------------------------------------------------------------
+option(GO_DISABLE "Disable Go apps" OFF)
+option(BIGENDIAN_64_BIT_BUILD "Build for MIPS 64 big endian" OFF)
+option(BIGENDIAN_32_BIT_BUILD "Build for MIPS 32 big endian" OFF)
+option(GATEWAY_SIMULATOR "On/Off code for simulator." ON)
+option(VIRGIL_IOT_MCU_BUILD "Enable build for MCU" OFF)
+
+# Sanitizers
+option(USE_ASAN "On/Off Address sanitizer." OFF)
+option(USE_MSAN "On/Off Memory sanitizer." OFF)
+option(USE_LSAN "On/Off Leak memory sanitizer." OFF)
+option(USE_UBSAN "On/Off Undefined behavior sanitizer." OFF)
+option(USE_TSAN "On/Off Thread sanitizer." OFF)
+
+if(BIGENDIAN_64_BIT_BUILD)
+    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips64.toolchain.cmake")
+endif()
+
+if(BIGENDIAN_32_BIT_BUILD)
+    set(GO_DISABLE ON CACHE BOOL "Disable Go apps" FORCE)
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/mips32.toolchain.cmake")
+endif()
+
+
+#------------------------------------------------------------------------------
+#   Includes
+#------------------------------------------------------------------------------
+
+# Clang format
+include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
+
 
 #
+# Manufacture and model options
+#
+create_text_option(GATEWAY_MANUFACTURE "16" "VRGL" "Gateway manufacture code")
+create_text_option(GATEWAY_MODEL "4" "Cf01" "Gateway model code")
+create_text_option(THING_MANUFACTURE "16" "VIRGIL" "Thing manufacture code")
+create_text_option(THING_MODEL "4" "MCU1" "Thing model code")
+
+#
+# Project version options
+#
+create_text_option(APP_MAJOR "3" "0" "Application major version")
+create_text_option(APP_MINOR "3" "0" "Application minor version")
+create_text_option(APP_PATCH "3" "0" "Application patch version")
+create_text_option(APP_BUILD "10" "33333" "Application build version")
+set(APP_VERSION "${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}.${APP_BUILD}")
+
+#
+# Path to config file for a firmware signer
+#
+if(NOT VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH AND NOT GO_DISABLE)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json" "[{\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-auth1.key\", \"key_type\": 1}, {\"path\": \"${CMAKE_CURRENT_LIST_DIR}/dummy-keys/dummy-firmware1.key\", \"key_type\": 3}]")
+    set(VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/signer-config/signer-template-config.json")
+    message(WARNING "VIRGIL_FIRMWARE_SIGNER_CONFIG_FILE_PATH is not defined. Use default config with dummy keys")
+endif()
+
+option(GATEWAY_SIMULATOR "On/Off Test message" OFF)
+
+
+#------------------------------------------------------------------------------
+#   Golang
+#------------------------------------------------------------------------------
+if(NOT GO_DISABLE)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/golang.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/flags.cmake)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
+endif()
+
+#------------------------------------------------------------------------------
 #   Setup project
-#
-project(iot-rpi-gateway VERSION 0.1.0 LANGUAGES C)
-
-
-#
-#   Address sanitizer
-#
-set(USE_ASAN OFF CACHE BOOL "Enable Address sanitizer")
-message("-- Address Sanitizer: ${USE_ASAN}")
-if (USE_ASAN)
-    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-endif()
-
-
-#
-#   Undefined behavior sanitizer
-#
-set(USE_UBSAN OFF CACHE BOOL "Enable Undefined behavior sanitizer")
-message("-- Undefined behavior Sanitizer: ${USE_UBSAN}")
-if (USE_UBSAN)
-    set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined")
-    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=undefined")
+#------------------------------------------------------------------------------
+if(GO_DISABLE)
+    project(iot-rpi VERSION 0.1.0 LANGUAGES C)
+else()
+    project(iot-rpi VERSION 0.1.0 LANGUAGES C Go)
 endif()
 
 #
-#   Security processor
+#   Virgil IoT SDK
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sp)
-
-
-#
-#   Application
-#
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ap)
+set(VIRGIL_IOT_MCU_BUILD OFF CACHE BOOL "Turn off MCU build" FORCE)
+set(VIRGIL_IOT_CONFIG_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)
 
 #
-#   MCU Initializer
+#   Common code library
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/device/initializer)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/common)
 
-# Build examples
-if (ENABLE_EXAMPLES)
-    add_subdirectory (examples/iot_crypto_app)
-endif (ENABLE_EXAMPLES)
+#
+#   Initalizers for Gateway and Thing
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/initializer)
 
-# Unit tests
-#if (ENABLE_TESTING)
-    enable_testing ()
-    add_subdirectory (tests)
-#endif (ENABLE_TESTING)
+#
+#   Gateway application
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/gateway)
+
+#
+#   Thing application
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thing)
+
+#
+#   Bootloader application
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/bootloader)
+
+#
+#   Unit tests
+#
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests)
