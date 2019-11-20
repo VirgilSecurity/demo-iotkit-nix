@@ -3,14 +3,26 @@
 To demonstrate Virgil IoTKit in action we developed Demo based on [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-iotkit) and its dev tools. The Demo contains samples for UNIX-like OS.
 
 ## Demo Content
-The Demo provides you with the following functionality:
+The Demo provides you with samples of key elements that necessary implement secure IoT lifecycle:
 - **common**. Contains implementation of HAL (hardware abstraction layer). Find all implementations [here](https://github.com/VirgilSecurity/demo-iotkit-nix/tree/develop-review/common/src/sdk-impl)
-- **initializer**. Contains implementation of initializer of IoT. Find all implementations [here](/initializer/src/main.c)
-- **bootloader**. Contains application that simulates a bootloader of controller. The application performs firmware verification
-- **thing**. Contains samples of IoT Device (end-device) implementation based on IoTKit. Find all examples on how to work with IoT device [here](/thing/src/main.c)
-- **gateway**. Contains samples of IoT Gateway implementation based on IoTKit. Find all examples on how to work with Cloud, Getaway or its threads [here](/gateway/src).
-- **dummy-keys**. Contains testing keys for signing a testing firmware.
+- **initializer**. Implementation of initializer of IoT Device and Gateway. Find all implementations [here](/initializer/src/main.c)
+- **bootloader**. Application that simulates a bootloader of controller. The application performs firmware verification
+- **thing**. Samples of IoT Device (end-device) implementation based on IoTKit. Find all examples on how to work with IoT device [here](/thing/src/main.c)
+- **gateway**. Samples of IoT Gateway implementation based on IoTKit. Find all examples on how to work with Cloud, Getaway or its threads [here](/gateway/src).
+- **dummy-keys**. Testing keys for signing a testing firmware.
+- **tests**. A set of ready code-snippets for testing the necessary features
 
+
+## Prerequisites
+To start working with the IoTKit Demo you have to:
+- Clone IoTKit repository
+```shell
+$ git clone --recursive https://github.com/VirgilSecurity/virgil-iotkit
+```
+- Install Virgil Crypto library from IoTKit scripts folder by running the script:
+```shell
+$ scripts/install-virgil-crypto.sh
+```
 
 ## Run Tests
 To make sure that everything goes in the right way, we also provide a set of ready code-snippets for testing the necessary features:
