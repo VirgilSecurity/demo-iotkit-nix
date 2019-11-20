@@ -4,13 +4,13 @@ To demonstrate Virgil IoTKit in action we developed Demo based on [Virgil IoTKit
 
 ## Demo Content
 The Demo provides you with samples of key elements that necessary implement secure IoT lifecycle:
-- **common**. Contains implementation of HAL (hardware abstraction layer). Find all implementations [here](https://github.com/VirgilSecurity/demo-iotkit-nix/tree/develop-review/common/src/sdk-impl)
-- **initializer**. Implementation of initializer of IoT Device and Gateway. Find all implementations [here](/initializer/src/main.c)
-- **bootloader**. Application that simulates a bootloader of controller. The application performs firmware verification
-- **thing**. Samples of IoT Device (end-device) implementation based on IoTKit. Find all examples on how to work with IoT device [here](/thing/src/main.c)
+- **common**. Contains samples of HAL implementations (hardware abstraction layer). Find all implementations [here](https://github.com/VirgilSecurity/demo-iotkit-nix/tree/develop-review/common/src/sdk-impl).
+- **initializer**. Implementation of initializer of IoT Device and Gateway. Find all implementations [here](/initializer/src/main.c).
+- **bootloader**. Application that simulates a bootloader of controller. The application performs firmware verification.
+- **thing**. Samples of IoT Device (end-device) implementation based on IoTKit. Find all examples on how to work with IoT device [here](/thing/src/main.c).
 - **gateway**. Samples of IoT Gateway implementation based on IoTKit. Find all examples on how to work with Cloud, Getaway or its threads [here](/gateway/src).
 - **dummy-keys**. Testing keys for signing a testing firmware.
-- **tests**. A set of ready code-snippets for testing the necessary features
+- **tests**. A set of ready code-snippets for testing the necessary features.
 
 
 ## Prerequisites
