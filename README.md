@@ -1,6 +1,11 @@
-# IoTKit Demo Nix
+# IoTKit Demo
 
+<a href="https://developer.virgilsecurity.com/docs"><img width="230px" src="https://cdn.virgilsecurity.com/assets/images/github/logos/iotkit/IoTKit.png" align="left" hspace="1" vspace="3"></a>
+
+## Introduction
 To demonstrate Virgil IoTKit in action we developed Demo based on [Virgil IoTKit](https://github.com/VirgilSecurity/virgil-iotkit) and its dev tools. The Demo contains samples for UNIX-like OS.
+
+&nbsp;
 
 ## Demo Content
 The Demo provides you with samples of key elements that necessary implement secure IoT lifecycle:
