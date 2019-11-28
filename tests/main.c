@@ -42,7 +42,6 @@
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/crypto/foundation/vscf_assert.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
@@ -126,12 +125,6 @@ _remove_keystorage_dir() {
 }
 
 /********************************************************************************/
-static void
-_assert_handler_fn(const char *message, const char *file, int line) {
-    VS_LOG_ERROR("%s %s %u", message, file, line);
-}
-
-/********************************************************************************/
 int
 main(int argc, char *argv[]) {
     int res = -1;
@@ -155,7 +148,6 @@ main(int argc, char *argv[]) {
     vs_app_str_to_bytes(device_type, TEST_DEVICE_TYPE, sizeof(device_type));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
-    vscf_assert_change_handler(_assert_handler_fn);
 
     // Set self path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
