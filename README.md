@@ -9,7 +9,7 @@ To demonstrate Virgil IoTKit in action we developed a demo based on [Virgil IoTK
 
 ## Demo Content
 The Demo provides you with samples of key elements that are necessary to build a secure IoT lifecycle:
-- **common**. Contains samples of HAL implementations (hardware abstraction layer). Find all implementations [here](https://github.com/VirgilSecurity/demo-iotkit-nix/tree/develop-review/common/src/sdk-impl).
+- **common**. Contains samples of HAL implementations (hardware abstraction layer). Find all implementations [here](/common/src/sdk-impl).
 - **initializer**. Implementation of initializer of IoT Device and Gateway. Find all implementations [here](/initializer/src/main.c).
 - **bootloader**. Application that simulates a bootloader for the controller. The application performs firmware verification.
 - **thing**. Samples of IoT Device (end-device) implementation based on IoTKit. Find examples on how to work with IoT device [here](/thing/src/main.c).
@@ -52,7 +52,7 @@ $ make rpi-tests
 - Run tests
 
 ## Reference
-- [Virgil IoTKit repository](https://github.com/VirgilSecurity/virgil-iotkit/tree/release/v0.1.0-alpha)
+- [Virgil IoTKit repository](https://github.com/VirgilSecurity/virgil-iotkit)
 
 
 ## License
