@@ -74,8 +74,8 @@ _add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **up
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_snap_service_t *snap_info_server;
-    const vs_snap_service_t *snap_fldt_server;
+    vs_snap_service_t *snap_info_server;
+    vs_snap_service_t *snap_fldt_server;
     int res = -1;
 
     // Implementation variables

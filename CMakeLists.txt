@@ -120,7 +120,6 @@ endif()
 #
 #   Virgil IoT SDK
 #
-set(VIRGIL_IOT_MCU_BUILD OFF CACHE BOOL "Turn off MCU build" FORCE)
 set(VIRGIL_IOT_CONFIG_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)
 
