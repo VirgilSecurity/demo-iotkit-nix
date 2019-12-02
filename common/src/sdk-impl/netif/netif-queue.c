@@ -57,6 +57,7 @@ static volatile bool _stop_periodical = false;
 /******************************************************************************/
 static vs_status_e
 _queue_and_process(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
+    (void)netif;
     assert(_queue_ctx);
     CHECK_RET(_queue_ctx, -1, "Queue context is Wrong");
 
@@ -111,9 +112,10 @@ _periodical_processing(void *ctx) {
 
 /******************************************************************************/
 static vs_status_e
-_init_with_queue(struct vs_netif_t *netif,
+_init_with_queue(vs_snap_service_user_data_t netif_user_data,
                  const vs_netif_rx_cb_t netif_rx_cb,
                  const vs_netif_process_cb_t netif_process_cb) {
+    (void)netif_user_data;
     assert(_base_netif);
     CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
 
@@ -132,22 +134,24 @@ _init_with_queue(struct vs_netif_t *netif,
     // Create thread to call Callbacks on data receive
     if (0 == pthread_create(&_queue_thread, NULL, _msg_processing, NULL)) {
         _queue_thread_ready = true;
-        return _base_netif->init(_base_netif, netif_rx_cb, _queue_and_process);
+        return _base_netif->init(_base_netif->user_data, netif_rx_cb, _queue_and_process);
     }
 
     VS_LOG_ERROR("Cannot start thread to process RX Queue");
-    _queued_netif.deinit(&_queued_netif);
+    _queued_netif.deinit(_queued_netif.user_data);
 
     return VS_CODE_ERR_THREAD;
 }
 
 /******************************************************************************/
 static vs_status_e
-_deinit_with_queue(struct vs_netif_t *netif) {
+_deinit_with_queue(vs_snap_service_user_data_t netif_user_data) {
     vs_status_e res;
 
+    (void)netif_user_data;
+
     // Stop base Network Interface
-    res = _base_netif->deinit(_base_netif);
+    res = _base_netif->deinit(_base_netif->user_data);
 
     // Stop RX processing thread
     if (_queue_thread_ready) {
