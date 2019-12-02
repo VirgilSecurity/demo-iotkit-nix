@@ -19,11 +19,6 @@ To start working with the IoTKit Demo you have to:
 ```shell
 $ git clone --recursive https://github.com/VirgilSecurity/virgil-iotkit
 ```
-- Install Virgil Crypto library from IoTKit scripts folder by running the script:
-```shell
-$ scripts/install-virgil-crypto.sh
-```
-
 ## Run Tests
 To make sure that everything goes in the right way, we also provide a set of ready code-snippets for testing the necessary features:
 - Crypto: crypto algorithms (e. g. hash, RNG, AES) and crypto operations (key pair, sign/verify etc.).
