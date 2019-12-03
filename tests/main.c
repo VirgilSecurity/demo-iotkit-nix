@@ -121,7 +121,7 @@ finish:
 
 /********************************************************************************/
 static void
-_remove_keystorage_dir() {
+_remove_keystorage_dir(void) {
     _recursive_delete(vs_files_get_base_dir());
 }
 

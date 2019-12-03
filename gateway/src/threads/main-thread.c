@@ -107,7 +107,7 @@ _cancel_thread(pthread_t *thread) {
 
 /*************************************************************************/
 static void
-_restart_app() {
+_restart_app(void) {
 
     // Stop message bin thread
     if (0 != _cancel_thread(message_bin_thread)) {

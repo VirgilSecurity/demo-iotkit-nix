@@ -377,7 +377,7 @@ terminate:
 
 /******************************************************************************/
 bool
-vs_file_cache_is_enabled() {
+vs_file_cache_is_enabled(void) {
     bool res;
     _safe_mutex_lock(&_lock);
     { res = _ctx.enabled; }

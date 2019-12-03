@@ -46,16 +46,16 @@
 #include <virgil/iot/logger/logger.h>
 
 static vs_status_e
-_udp_bcast_init(struct vs_netif_t *netif, const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb);
+_udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb);
 
 static vs_status_e
-_udp_bcast_deinit(struct vs_netif_t *netif);
+_udp_bcast_deinit(void);
 
 static vs_status_e
-_udp_bcast_tx(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz);
+_udp_bcast_tx(const uint8_t *data, const uint16_t data_sz);
 
 static vs_status_e
-_udp_bcast_mac(const struct vs_netif_t *netif, struct vs_mac_addr_t *mac_addr);
+_udp_bcast_mac(struct vs_mac_addr_t *mac_addr);
 
 static vs_netif_t _netif_udp_bcast = {.user_data = NULL,
                                       .init = _udp_bcast_init,
@@ -115,7 +115,7 @@ _udp_bcast_receive_processor(void *sock_desc) {
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_connect() {
+_udp_bcast_connect(void) {
     struct sockaddr_in server;
     struct timeval tv;
     int enable = 1;
@@ -174,14 +174,14 @@ _udp_bcast_connect() {
 
 terminate:
 
-    _udp_bcast_deinit(&_netif_udp_bcast);
+    _udp_bcast_deinit();
 
     return VS_CODE_ERR_SOCKET;
 }
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_tx(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
+_udp_bcast_tx(const uint8_t *data, const uint16_t data_sz) {
     struct sockaddr_in broadcast_addr;
 
     memset((void *)&broadcast_addr, 0, sizeof(struct sockaddr_in));
@@ -196,7 +196,7 @@ _udp_bcast_tx(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_init(struct vs_netif_t *netif, const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb) {
+_udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb) {
     assert(rx_cb);
     _netif_udp_bcast_rx_cb = rx_cb;
     _netif_udp_bcast_process_cb = process_cb;
@@ -208,7 +208,7 @@ _udp_bcast_init(struct vs_netif_t *netif, const vs_netif_rx_cb_t rx_cb, const vs
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_deinit(struct vs_netif_t *netif) {
+_udp_bcast_deinit(void) {
     if (_udp_bcast_sock >= 0) {
 #if !defined(__APPLE__)
         shutdown(_udp_bcast_sock, SHUT_RDWR);
@@ -222,7 +222,7 @@ _udp_bcast_deinit(struct vs_netif_t *netif) {
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_mac(const struct vs_netif_t *netif, struct vs_mac_addr_t *mac_addr) {
+_udp_bcast_mac(struct vs_mac_addr_t *mac_addr) {
 
     if (mac_addr) {
         memcpy(mac_addr->bytes, _sim_mac_addr, sizeof(vs_mac_addr_t));

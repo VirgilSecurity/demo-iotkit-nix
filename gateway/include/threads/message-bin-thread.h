@@ -55,7 +55,7 @@ typedef struct __attribute__((__packed__)) {
 } upd_request_t;
 
 pthread_t *
-vs_message_bin_start_thread();
+vs_message_bin_start_thread(void);
 
 vs_status_e
 vs_message_bin_register_handlers(void);

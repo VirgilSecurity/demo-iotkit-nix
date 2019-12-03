@@ -53,7 +53,7 @@ static long long _processing_time = 0;
 static long _calls_counter = 0;
 
 static long long
-current_timestamp() {
+current_timestamp(void) {
     struct timeval te;
     gettimeofday(&te, NULL);                            // get current time
     long long _us = te.tv_sec * 1000000LL + te.tv_usec; // calculate us
