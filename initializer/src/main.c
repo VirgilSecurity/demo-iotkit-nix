@@ -48,7 +48,7 @@
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    vs_snap_service_t *snap_prvs_server;
+    const vs_snap_service_t *snap_prvs_server;
     vs_status_e ret_code;
 
     // Implementation variables

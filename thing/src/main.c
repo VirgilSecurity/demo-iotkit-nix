@@ -64,8 +64,8 @@ _on_file_updated(vs_update_file_type_t *file_type,
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    vs_snap_service_t *snap_info_server;
-    vs_snap_service_t *snap_fldt_client;
+    const vs_snap_service_t *snap_info_server;
+    const vs_snap_service_t *snap_fldt_client;
     int res = -1;
 
     // Implementation variables
