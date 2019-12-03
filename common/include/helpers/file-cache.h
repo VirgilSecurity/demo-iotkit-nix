@@ -45,7 +45,7 @@ int
 vs_file_cache_enable(bool enable);
 
 bool
-vs_file_cache_is_enabled(void);
+vs_file_cache_is_enabled();
 
 int
 vs_file_cache_open(const char *file_name);

@@ -43,7 +43,7 @@
 
 #define VS_NETIF_QUEUE_SZ (100)
 
-static vs_netif_t *_base_netif = 0;
+static const vs_netif_t *_base_netif = 0;
 static vs_netif_process_cb_t _netif_process_cb = 0;
 static vs_netif_t _queued_netif = {0};
 static vs_msg_queue_ctx_t *_queue_ctx = 0;
@@ -174,7 +174,7 @@ _deinit_with_queue(void) {
 
 /******************************************************************************/
 vs_netif_t *
-vs_netif_queued(vs_netif_t *base_netif) {
+vs_netif_queued(const vs_netif_t *base_netif) {
     assert(base_netif);
     CHECK_RET(base_netif, NULL, "Unable to initialize queued Netif because of wrong Base Netif");
     _base_netif = base_netif;

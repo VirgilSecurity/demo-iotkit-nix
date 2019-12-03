@@ -127,7 +127,7 @@ vs_message_bin_register_handlers(void) {
 
 /*************************************************************************/
 pthread_t *
-vs_message_bin_start_thread(void) {
+vs_message_bin_start_thread() {
     static bool is_threads_started = 0;
 
     if (!is_threads_started) {

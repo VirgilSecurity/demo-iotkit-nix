@@ -49,7 +49,7 @@ static vs_status_e
 _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t process_cb);
 
 static vs_status_e
-_udp_bcast_deinit(void);
+_udp_bcast_deinit();
 
 static vs_status_e
 _udp_bcast_tx(const uint8_t *data, const uint16_t data_sz);
@@ -115,7 +115,7 @@ _udp_bcast_receive_processor(void *sock_desc) {
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_connect(void) {
+_udp_bcast_connect() {
     struct sockaddr_in server;
     struct timeval tv;
     int enable = 1;
@@ -208,7 +208,7 @@ _udp_bcast_init(const vs_netif_rx_cb_t rx_cb, const vs_netif_process_cb_t proces
 
 /******************************************************************************/
 static vs_status_e
-_udp_bcast_deinit(void) {
+_udp_bcast_deinit() {
     if (_udp_bcast_sock >= 0) {
 #if !defined(__APPLE__)
         shutdown(_udp_bcast_sock, SHUT_RDWR);
