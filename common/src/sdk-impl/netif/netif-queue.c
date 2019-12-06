@@ -141,7 +141,7 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t
 
 /******************************************************************************/
 static vs_status_e
-_deinit_with_queue() {
+_deinit_with_queue(void) {
     vs_status_e res;
 
     // Stop base Network Interface
