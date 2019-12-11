@@ -69,7 +69,6 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
 
-
 #
 # Manufacture and model options
 #
@@ -120,6 +119,12 @@ endif()
 #
 #   Virgil IoT SDK
 #
+option(VIRGIL_IOT_DEFAULT_IMPL "Enable Default implementations" ON)
+option(VIRGIL_IOT_DEFAULT_SECMODULE_IMPL "Enable Default secmodule implementations" ON)
+option(VIRGIL_IOT_DEFAULT_VS_SOFT_SECMODULE "Enable default Virgil crypto soft SECMODULE implementation" ON)
+option(VIRGIL_IOT_DEFAULT_CLOUD_CURL_HTTP "Enable default curl http implementation" ON)
+option(VIRGIL_IOT_DEFAULT_CLOUD_MESSAGE_BIN_AWS "Enable default message bin aws implementation" ON)
+
 set(VIRGIL_IOT_CONFIG_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)
 
