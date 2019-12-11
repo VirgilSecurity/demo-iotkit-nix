@@ -118,7 +118,7 @@ _delete_bad_firmware(void) {
     vs_storage_op_ctx_t slots_storage_impl;
 
     vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE);
-    vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE);
+    vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), KEY_SLOT_EXT_DATA_SIZE);
 
     CHECK(VS_CODE_OK ==
                   vs_firmware_init(

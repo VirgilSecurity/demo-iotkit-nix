@@ -161,7 +161,7 @@ main(int argc, char *argv[]) {
                  "Cannot create TrustList storage");
 
     // Slots storage
-    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE),
+    STATUS_CHECK(vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), KEY_SLOT_EXT_DATA_SIZE),
                  "Cannot create Slots storage");
 
     // Firmware storage
