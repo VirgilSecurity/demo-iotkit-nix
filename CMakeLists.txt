@@ -122,6 +122,7 @@ endif()
 option(VIRGIL_IOT_DEFAULT_IMPL "Enable Default implementations" ON)
 option(VIRGIL_IOT_DEFAULT_SECMODULE_IMPL "Enable Default secmodule implementations" ON)
 option(VIRGIL_IOT_DEFAULT_VS_SOFT_SECMODULE "Enable default Virgil crypto soft SECMODULE implementation" ON)
+option(VIRGIL_IOT_DEFAULT_SOFT_PROVISION "Enable default Virgil soft provision implementation" ON)
 option(VIRGIL_IOT_DEFAULT_CLOUD_CURL_HTTP "Enable default curl http implementation" ON)
 option(VIRGIL_IOT_DEFAULT_CLOUD_MESSAGE_BIN_AWS "Enable default message bin aws implementation" ON)
 

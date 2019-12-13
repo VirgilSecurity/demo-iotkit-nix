@@ -42,6 +42,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/vs-soft-provision/vs-soft-provision.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 #include "threads/main-thread.h"
@@ -140,7 +141,8 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl, vs_soft_provision_impl()),
+                 "Cannot initialize Provision module");
 
     // Firmware module
     STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),

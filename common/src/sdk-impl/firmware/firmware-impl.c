@@ -43,6 +43,7 @@
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/vs-soft-secmodule/vs-soft-slots-config.h>
 #include <update-config.h>
 
 #include <stdlib-config.h>

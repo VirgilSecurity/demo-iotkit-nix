@@ -43,6 +43,7 @@
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/vs-soft-provision/vs-soft-provision.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
@@ -176,7 +177,7 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
-    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl),
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl, vs_soft_provision_impl()),
           "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
 
     // Firmware module

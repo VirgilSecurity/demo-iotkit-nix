@@ -39,6 +39,7 @@
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/vs-soft-provision/vs-soft-provision.h>
 #include <trust_list-config.h>
 
 #include "helpers/app-helpers.h"
@@ -114,7 +115,7 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    ret_code = vs_provision_init(&tl_storage_impl, secmodule_impl);
+    ret_code = vs_provision_init(&tl_storage_impl, secmodule_impl, vs_soft_provision_impl());
     if (VS_CODE_OK != ret_code && VS_CODE_ERR_NOINIT != ret_code) {
         VS_LOG_ERROR("Cannot initialize Provision module");
         goto terminate;

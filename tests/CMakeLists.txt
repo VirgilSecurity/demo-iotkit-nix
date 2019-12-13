@@ -61,7 +61,6 @@ target_link_libraries(rpi-tests
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
 		virgil-iot-sdk-tests
-		vs-default-soft-secmodule
 
 		enable_sanitizers
 		enable_pedantic_mode

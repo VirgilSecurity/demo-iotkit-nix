@@ -105,6 +105,8 @@ target_link_libraries(nix-common
 		vs-module-secbox
 		vs-module-provision
 		vs-default-soft-secmodule
+		vs-default-soft-provision
+
 		${CMAKE_THREAD_LIBS_INIT}
 
 		PRIVATE
@@ -115,6 +117,7 @@ target_link_libraries(nix-common
 target_link_libraries(nix-common-firmware
 		PUBLIC
 		vs-default-soft-secmodule
+		vs-default-soft-provision
 		vs-module-firmware
 		${CMAKE_THREAD_LIBS_INIT}
 
