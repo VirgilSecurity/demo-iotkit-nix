@@ -44,6 +44,7 @@
 #include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/vs-soft-provision/vs-soft-provision.h>
+#include <virgil/iot/vs-soft-test/vs-soft-test.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
 #include <trust_list-config.h>
@@ -189,7 +190,8 @@ main(int argc, char *argv[]) {
 
     VS_LOG_INFO("[RPI] Start IoT tests");
 
-    res = vs_crypto_test(secmodule_impl);
+    res = vs_soft_crypto_test(secmodule_impl);
+    res += vs_crypto_test(secmodule_impl);
 
     res += vs_secbox_test(secmodule_impl);
 

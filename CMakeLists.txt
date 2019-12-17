@@ -125,6 +125,7 @@ option(VIRGIL_IOT_DEFAULT_VS_SOFT_SECMODULE "Enable default Virgil crypto soft S
 option(VIRGIL_IOT_DEFAULT_SOFT_PROVISION "Enable default Virgil soft provision implementation" ON)
 option(VIRGIL_IOT_DEFAULT_CLOUD_CURL_HTTP "Enable default curl http implementation" ON)
 option(VIRGIL_IOT_DEFAULT_CLOUD_MESSAGE_BIN_AWS "Enable default message bin aws implementation" ON)
+option(VIRGIL_IOT_DEFAULT_SOFT_TEST "Enable default Virgil soft implementation test" ON)
 
 set(VIRGIL_IOT_CONFIG_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/config/pc CACHE STRING "Path to the Virgil IoT SDK configuration")
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk)

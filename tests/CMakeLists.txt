@@ -60,6 +60,7 @@ target_link_libraries(rpi-tests
 		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
+		vs-default-soft-crypto-test
 		virgil-iot-sdk-tests
 
 		enable_sanitizers
