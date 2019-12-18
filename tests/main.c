@@ -34,14 +34,12 @@
 
 #include <sys/stat.h>
 #include <fts.h>
-#include <errno.h>
 
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/tests/tests.h>
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
-#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/vs-soft-provision/vs-soft-provision.h>
 #include <virgil/iot/vs-soft-test/vs-soft-test.h>
@@ -52,7 +50,6 @@
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 #include "helpers/file-io.h"
-#include "sdk-impl/storage/storage-nix-impl.h"
 #include "sdk-impl/firmware/firmware-nix-impl.h"
 
 /******************************************************************************/
@@ -191,7 +188,10 @@ main(int argc, char *argv[]) {
     VS_LOG_INFO("[RPI] Start IoT tests");
 
     res = vs_soft_crypto_test(secmodule_impl);
-    res += vs_crypto_test(secmodule_impl);
+
+    res += vs_sign_converters_test();
+
+    res += vs_pubkeys_converters_test();
 
     res += vs_secbox_test(secmodule_impl);
 

@@ -37,7 +37,7 @@
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/fldt/fldt-client.h>
 #include <virgil/iot/protocols/snap/info/info-server.h>
-#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/trust-list.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/vs-soft-provision/vs-soft-provision.h>

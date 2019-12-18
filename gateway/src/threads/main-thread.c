@@ -44,7 +44,7 @@
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/protocols/snap/fldt/fldt-server.h>
-#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/trust-list.h>
 
 static gtwy_t _gtwy = {.firmware_mutex = PTHREAD_MUTEX_INITIALIZER, .tl_mutex = PTHREAD_MUTEX_INITIALIZER};
 

@@ -33,7 +33,7 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/trust-list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>

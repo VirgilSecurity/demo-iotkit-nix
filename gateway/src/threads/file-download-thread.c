@@ -40,7 +40,7 @@
 #include "event-flags.h"
 
 #include <virgil/iot/logger/logger.h>
-#include <virgil/iot/trust_list/trust_list.h>
+#include <virgil/iot/trust_list/trust-list.h>
 #include "helpers/msg-queue.h"
 
 static pthread_t upd_retrieval_thread;
