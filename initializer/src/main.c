@@ -33,10 +33,10 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
@@ -49,6 +49,7 @@ int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     const vs_snap_service_t *snap_prvs_server;
+    const vs_snap_service_t *snap_info_server;
     vs_status_e ret_code;
 
     // Implementation variables
@@ -66,11 +67,11 @@ main(int argc, char *argv[]) {
 #if GATEWAY
     const char *title = "Gateway initializer";
     const char *devices_dir = "gateway";
-    uint32_t device_roles = VS_SNAP_DEV_GATEWAY;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_GATEWAY | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #else
     const char *title = "Thing initializer";
     const char *devices_dir = "thing";
-    uint32_t device_roles = VS_SNAP_DEV_THING;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_THING | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #endif
 
     // Initialize Logger module
@@ -124,6 +125,10 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, device_roles),
                  "Unable to initialize SNAP module");
 
+    //  INFO server service
+    snap_info_server = vs_snap_info_server(NULL);
+    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
+
     //
     // ---------- Register SNAP services ----------
     //
@@ -157,6 +162,32 @@ terminate:
 
     // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
+
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
+vs_status_e
+vs_firmware_install_prepare_space_hal(void) {
+    return VS_CODE_ERR_NOT_IMPLEMENTED;
+}
+
+/******************************************************************************/
+vs_status_e
+vs_firmware_install_append_data_hal(const void *data, uint16_t data_sz) {
+    return VS_CODE_ERR_NOT_IMPLEMENTED;
+}
+
+/******************************************************************************/
+vs_status_e
+vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
+
+    assert(footer);
+    assert(footer_sz);
+    CHECK_NOT_ZERO_RET(footer, VS_CODE_ERR_NULLPTR_ARGUMENT);
+    CHECK_NOT_ZERO_RET(footer_sz, VS_CODE_ERR_INCORRECT_ARGUMENT);
+
+    memset(footer, 0, footer_sz);
 
     return VS_CODE_OK;
 }
