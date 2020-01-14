@@ -37,6 +37,7 @@
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>
 #include <virgil/iot/protocols/snap/info/info-server.h>
+#include <virgil/iot/protocols/snap/cfg/cfg-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
@@ -44,12 +45,16 @@
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 
+static vs_status_e
+vs_snap_cfg_config(const vs_cfg_configuration_t *configuration);
+
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     const vs_snap_service_t *snap_prvs_server;
     const vs_snap_service_t *snap_info_server;
+    const vs_snap_service_t *snap_cfg_server;
     vs_status_e ret_code;
 
     // Implementation variables
@@ -125,13 +130,17 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, device_roles),
                  "Unable to initialize SNAP module");
 
+    //
+    // ---------- Register SNAP services ----------
+    //
+
     //  INFO server service
     snap_info_server = vs_snap_info_server(NULL);
     STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
 
-    //
-    // ---------- Register SNAP services ----------
-    //
+    //  _CFG service
+    snap_cfg_server = vs_snap_cfg_server(vs_snap_cfg_config);
+    STATUS_CHECK(vs_snap_register_service(snap_cfg_server), "Cannot register CFG service");
 
     //  PRVS service
     snap_prvs_server = vs_snap_prvs_server(secmodule_impl);
@@ -191,3 +200,16 @@ vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
 
     return VS_CODE_OK;
 }
+
+/******************************************************************************/
+vs_status_e
+vs_snap_cfg_config(const vs_cfg_configuration_t *configuration) {
+    CHECK_NOT_ZERO_RET(configuration, VS_CODE_ERR_INCORRECT_ARGUMENT);
+    VS_LOG_DEBUG("Configure :");
+    VS_LOG_DEBUG("     ssid : %s", configuration->ssid);
+    VS_LOG_DEBUG("     pass : %s", configuration->pass);
+    VS_LOG_DEBUG("     account : %s", configuration->account);
+    return VS_CODE_OK;
+}
+
+/******************************************************************************/
