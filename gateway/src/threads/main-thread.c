@@ -106,8 +106,18 @@ _cancel_thread(pthread_t *thread) {
 }
 
 /*************************************************************************/
-static void
+static bool
 _restart_app() {
+
+    if (vs_fldt_server_is_distributing_in_progress()) {
+        return false;
+    }
+
+    vs_impl_msleep(2000);
+
+    if (vs_fldt_server_is_distributing_in_progress()) {
+        return false;
+    }
 
     // Stop message bin thread
     if (0 != _cancel_thread(message_bin_thread)) {
@@ -134,6 +144,7 @@ _restart_app() {
 
     vs_app_restart();
     pthread_exit(0);
+    return true;
 }
 
 /******************************************************************************/
@@ -168,7 +179,9 @@ _gateway_task(void *pvParameters) {
                             VS_CODE_OK == vs_firmware_install_firmware(&desc)) {
                             (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
 
-                            _restart_app();
+                            while (!_restart_app()) {
+                                vs_impl_msleep(1000);
+                            }
                         }
                         (void)pthread_mutex_unlock(&_gtwy.firmware_mutex);
                     }
