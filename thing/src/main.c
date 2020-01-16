@@ -46,7 +46,11 @@
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 #include "helpers/file-cache.h"
+
 #include "sdk-impl/firmware/firmware-nix-impl.h"
+#include "sdk-impl/netif/netif-udp-broadcast.h"
+#include "sdk-impl/netif/packets-queue.h"
+
 
 #if SIMULATOR
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
@@ -108,7 +112,8 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+    vs_packets_queue_init(vs_snap_default_processor);
+    netif_impl = vs_hal_netif_udp_bcast(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -137,7 +142,7 @@ main(int argc, char *argv[]) {
                  "Unable to initialize Firmware module");
 
     // SNAP module
-    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, VS_SNAP_DEV_THING),
+    STATUS_CHECK(vs_snap_init(netif_impl, vs_packets_queue_add, manufacture_id, device_type, serial, VS_SNAP_DEV_THING),
                  "Unable to initialize SNAP module");
 
     //
@@ -191,6 +196,9 @@ terminate:
 
     // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
+
+    // Deinit packets Queue
+    vs_packets_queue_deinit();
 
     res = vs_firmware_nix_update(argc, argv);
 

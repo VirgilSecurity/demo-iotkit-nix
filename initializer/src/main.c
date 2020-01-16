@@ -45,6 +45,9 @@
 #include "helpers/app-helpers.h"
 #include "helpers/app-storage.h"
 
+#include "sdk-impl/netif/netif-udp-broadcast.h"
+#include "sdk-impl/netif/packets-queue.h"
+
 static vs_status_e
 vs_snap_cfg_config(const vs_cfg_configuration_t *configuration);
 
@@ -102,7 +105,8 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+    vs_packets_queue_init(vs_snap_default_processor);
+    netif_impl = vs_hal_netif_udp_bcast(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -127,7 +131,7 @@ main(int argc, char *argv[]) {
     }
 
     // SNAP module
-    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, device_roles),
+    STATUS_CHECK(vs_snap_init(netif_impl, vs_packets_queue_add, manufacture_id, device_type, serial, device_roles),
                  "Unable to initialize SNAP module");
 
     //
@@ -172,6 +176,9 @@ terminate:
     // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
 
+    // Deinit packets Queue
+    vs_packets_queue_deinit();
+
     return VS_CODE_OK;
 }
 
@@ -202,7 +209,7 @@ vs_firmware_get_own_firmware_footer_hal(void *footer, size_t footer_sz) {
 }
 
 /******************************************************************************/
-vs_status_e
+static vs_status_e
 vs_snap_cfg_config(const vs_cfg_configuration_t *configuration) {
     CHECK_NOT_ZERO_RET(configuration, VS_CODE_ERR_INCORRECT_ARGUMENT);
     VS_LOG_DEBUG("Configure :");

@@ -63,9 +63,6 @@ vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size);
 void
 vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
 
-vs_netif_t *
-vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr);
-
 bool
 vs_app_is_need_restart(void);
 

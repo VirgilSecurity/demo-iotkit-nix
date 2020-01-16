@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -33,12 +33,18 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 
-#ifndef VS_IOT_NETIF_QUEUE_IMPL_H
-#define VS_IOT_NETIF_QUEUE_IMPL_H
+#ifndef VS_IOT_PACKETS_QUEUE_H
+#define VS_IOT_PACKETS_QUEUE_H
 
 #include <virgil/iot/protocols/snap/snap-structs.h>
 
-vs_netif_t *
-vs_netif_queued(vs_netif_t *base_netif);
+vs_status_e
+vs_packets_queue_init(vs_netif_process_cb_t packet_processor);
 
-#endif // VS_IOT_NETIF_QUEUE_IMPL_H
+vs_status_e
+vs_packets_queue_deinit(void);
+
+vs_status_e
+vs_packets_queue_add(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz);
+
+#endif // VS_IOT_PACKETS_QUEUE_H

@@ -49,7 +49,7 @@ target_sources(nix-common
 		PRIVATE
 
 		#	Headers
-		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-queue.h
+		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/packets-queue.h
 		${CMAKE_CURRENT_LIST_DIR}/include/sdk-impl/netif/netif-udp-broadcast.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-io.h
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/event-group-bits.h
@@ -59,7 +59,7 @@ target_sources(nix-common
 		${CMAKE_CURRENT_LIST_DIR}/include/helpers/file-cache.h
 
 		#	Sources
-		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-queue.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/packets-queue.c
 		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/netif/netif-udp-broadcast.c
 		${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/storage/storage-nix-impl.c
         ${CMAKE_CURRENT_LIST_DIR}/src/sdk-impl/logger/logger-impl.c

@@ -36,9 +36,9 @@
 #include <stdio.h>
 #include <signal.h>
 #include <pthread.h>
-#include "sdk-impl/netif/netif-udp-broadcast.h"
-#include "sdk-impl/netif/netif-queue.h"
 #include <virgil/iot/macros/macros.h>
+#include <virgil/iot/status_code/status_code.h>
+#include <virgil/iot/protocols/snap/snap-structs.h>
 
 static pthread_mutex_t _sleep_lock;
 static bool _need_restart = false;
@@ -206,21 +206,6 @@ void
 vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac) {
     VS_IOT_MEMSET(serial, 0x03, VS_DEVICE_SERIAL_SIZE);
     VS_IOT_MEMCPY(serial, mac.bytes, ETH_ADDR_LEN);
-}
-
-/******************************************************************************/
-vs_netif_t *
-vs_app_create_netif_impl(vs_mac_addr_t forced_mac_addr) {
-    vs_netif_t *netif = NULL;
-    vs_netif_t *queued_netif = NULL;
-
-    // Get Network interface
-    netif = vs_hal_netif_udp_bcast(forced_mac_addr);
-
-    // Prepare queued network interface
-    queued_netif = vs_netif_queued(netif);
-
-    return queued_netif;
 }
 
 /******************************************************************************/
