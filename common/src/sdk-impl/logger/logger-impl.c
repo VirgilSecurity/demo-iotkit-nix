@@ -47,3 +47,22 @@ vs_logger_output_hal(const char *buffer) {
 }
 
 /******************************************************************************/
+bool
+vs_logger_current_time_hal(void) {
+    time_t result = time(NULL);
+    char buf[50];
+    size_t len;
+    snprintf(buf, sizeof(buf), "%s", asctime(gmtime(&result)));
+    len = strlen(buf);
+
+    if (!len) {
+        return false;
+    }
+
+    buf[len - 1] = 0;
+    if (result != -1) {
+        int res = printf("[%s]", buf);
+        return res != 0;
+    }
+    return false;
+}
