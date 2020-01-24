@@ -162,7 +162,7 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
+    snap_info_server = vs_snap_info_server(NULL);
     STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register FLDT server service");
 
     //  FLDT server service
