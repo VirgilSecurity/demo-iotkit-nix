@@ -74,6 +74,8 @@ _msg_processing(void *ctx) {
     const uint8_t *data = 0;
     size_t data_sz = 0;
 
+    vs_log_thread_descriptor("netif msg thr");
+
     assert(_queue_ctx);
     if (!_queue_ctx) {
         return NULL;
@@ -99,6 +101,8 @@ _msg_processing(void *ctx) {
 /******************************************************************************/
 static void *
 _periodical_processing(void *ctx) {
+    vs_log_thread_descriptor("netif periodic thr");
+
     while (!_stop_periodical) {
         sleep(1);
         // TODO: To improve working with periodical timer

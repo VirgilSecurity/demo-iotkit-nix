@@ -85,6 +85,8 @@ _udp_bcast_receive_processor(void *sock_desc) {
     const uint8_t *packet_data = NULL;
     uint16_t packet_data_sz = 0;
 
+    vs_log_thread_descriptor("udp bcast thr");
+
     while (1) {
         memset(received_data, 0, RX_BUF_SZ);
 
