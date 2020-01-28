@@ -69,6 +69,10 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/ext/virgil-iot-sdk/cmake/clangformat.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/helpers.cmake)
 
+#
+# Use x509 certs
+#
+option(VIRGIL_IOT_USE_X509 "Use x509 certificates" ON)
 
 #
 # Manufacture and model options
