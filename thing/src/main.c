@@ -32,6 +32,7 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/snap.h>
@@ -59,6 +60,12 @@ _on_file_updated(vs_update_file_type_t *file_type,
                  vs_update_interface_t *update_interface,
                  const vs_mac_addr_t *gateway,
                  bool successfully_updated);
+
+/******************************************************************************/
+void
+vs_impl_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
 
 /******************************************************************************/
 int
@@ -145,7 +152,7 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
+    snap_info_server = vs_snap_info_server(NULL);
     STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
 
     //  FLDT client service

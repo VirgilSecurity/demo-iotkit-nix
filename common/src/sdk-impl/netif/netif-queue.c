@@ -43,7 +43,7 @@
 
 #define VS_NETIF_QUEUE_SZ (100)
 
-static const vs_netif_t *_base_netif = 0;
+static vs_netif_t *_base_netif = 0;
 static vs_netif_process_cb_t _netif_process_cb = 0;
 static vs_netif_t _queued_netif = {0};
 static vs_msg_queue_ctx_t *_queue_ctx = 0;
@@ -74,6 +74,8 @@ _msg_processing(void *ctx) {
     const uint8_t *data = 0;
     size_t data_sz = 0;
 
+    vs_log_thread_descriptor("netif msg thr");
+
     assert(_queue_ctx);
     if (!_queue_ctx) {
         return NULL;
@@ -99,6 +101,8 @@ _msg_processing(void *ctx) {
 /******************************************************************************/
 static void *
 _periodical_processing(void *ctx) {
+    vs_log_thread_descriptor("netif periodic thr");
+
     while (!_stop_periodical) {
         sleep(1);
         // TODO: To improve working with periodical timer
@@ -111,7 +115,10 @@ _periodical_processing(void *ctx) {
 
 /******************************************************************************/
 static vs_status_e
-_init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t netif_process_cb) {
+_init_with_queue(struct vs_netif_t *netif,
+                 const vs_netif_rx_cb_t netif_rx_cb,
+                 const vs_netif_process_cb_t netif_process_cb) {
+    (void)netif;
     assert(_base_netif);
     CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
 
@@ -130,22 +137,24 @@ _init_with_queue(const vs_netif_rx_cb_t netif_rx_cb, const vs_netif_process_cb_t
     // Create thread to call Callbacks on data receive
     if (0 == pthread_create(&_queue_thread, NULL, _msg_processing, NULL)) {
         _queue_thread_ready = true;
-        return _base_netif->init(netif_rx_cb, _queue_and_process);
+        return _base_netif->init(_base_netif, netif_rx_cb, _queue_and_process);
     }
 
     VS_LOG_ERROR("Cannot start thread to process RX Queue");
-    _queued_netif.deinit();
+    _queued_netif.deinit(_base_netif);
 
     return VS_CODE_ERR_THREAD;
 }
 
 /******************************************************************************/
 static vs_status_e
-_deinit_with_queue(void) {
+_deinit_with_queue(struct vs_netif_t *netif) {
     vs_status_e res;
 
+    (void)netif;
+
     // Stop base Network Interface
-    res = _base_netif->deinit();
+    res = _base_netif->deinit(_base_netif);
 
     // Stop RX processing thread
     if (_queue_thread_ready) {
@@ -174,7 +183,7 @@ _deinit_with_queue(void) {
 
 /******************************************************************************/
 vs_netif_t *
-vs_netif_queued(const vs_netif_t *base_netif) {
+vs_netif_queued(vs_netif_t *base_netif) {
     assert(base_netif);
     CHECK_RET(base_netif, NULL, "Unable to initialize queued Netif because of wrong Base Netif");
     _base_netif = base_netif;

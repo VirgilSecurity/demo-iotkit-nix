@@ -143,6 +143,8 @@ _gateway_task(void *pvParameters) {
     vs_update_file_type_t *queued_file;
     vs_file_info_t *request;
 
+    vs_log_thread_descriptor("gtw thr");
+
     // Start Message Bin processing thread
     message_bin_thread = vs_message_bin_start_thread();
     CHECK_NOT_ZERO_RET(message_bin_thread, (void *)-1);

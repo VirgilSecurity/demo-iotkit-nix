@@ -102,6 +102,8 @@ _tl_topic_process(const uint8_t *url, uint16_t length) {
 /*************************************************************************/
 static void *
 _mb_mqtt_task(void *params) {
+    vs_log_thread_descriptor("msg bin thr");
+
     VS_LOG_DEBUG("message bin thread started");
 
     while (true) {

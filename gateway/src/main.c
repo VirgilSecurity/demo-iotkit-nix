@@ -162,14 +162,12 @@ main(int argc, char *argv[]) {
     //
 
     //  INFO server service
-    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
+    snap_info_server = vs_snap_info_server(NULL);
     STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register FLDT server service");
 
     //  FLDT server service
     snap_fldt_server = vs_snap_fldt_server(&forced_mac_addr, _add_filetype);
     STATUS_CHECK(vs_snap_register_service(snap_fldt_server), "Cannot register FLDT server service");
-    STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
-                 "Unable to add Firmware file type");
     STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
                  "Unable to add Trust List file type");
 
