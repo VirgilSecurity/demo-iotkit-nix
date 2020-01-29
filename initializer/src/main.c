@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -37,6 +37,7 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/snap.h>
 #include <virgil/iot/protocols/snap/prvs/prvs-server.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
@@ -49,6 +50,7 @@ int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     const vs_snap_service_t *snap_prvs_server;
+    const vs_snap_service_t *snap_info_server;
     vs_status_e ret_code;
 
     // Implementation variables
@@ -66,11 +68,11 @@ main(int argc, char *argv[]) {
 #if GATEWAY
     const char *title = "Gateway initializer";
     const char *devices_dir = "gateway";
-    uint32_t device_roles = VS_SNAP_DEV_GATEWAY;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_GATEWAY | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #else
     const char *title = "Thing initializer";
     const char *devices_dir = "thing";
-    uint32_t device_roles = VS_SNAP_DEV_THING;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_THING | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #endif
 
     // Initialize Logger module
@@ -127,6 +129,10 @@ main(int argc, char *argv[]) {
     //
     // ---------- Register SNAP services ----------
     //
+
+    //  INFO server service
+    snap_info_server = vs_snap_info_server(NULL);
+    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
 
     //  PRVS service
     snap_prvs_server = vs_snap_prvs_server(secmodule_impl);
