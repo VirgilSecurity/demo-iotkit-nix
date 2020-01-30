@@ -116,13 +116,16 @@ _delete_bad_firmware(void) {
     vs_firmware_descriptor_t desc;
     vs_storage_op_ctx_t fw_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
+    vs_file_version_t ver;
 
     vs_app_storage_init_impl(&fw_storage_impl, vs_app_firmware_dir(), VS_MAX_FIRMWARE_UPDATE_SIZE);
     vs_app_storage_init_impl(&slots_storage_impl, vs_app_slots_dir(), VS_SLOTS_STORAGE_MAX_SIZE);
 
-    CHECK(VS_CODE_OK ==
-                  vs_firmware_init(
-                          &fw_storage_impl, vs_soft_secmodule_impl(&slots_storage_impl), _manufacture_id, _device_type),
+    CHECK(VS_CODE_OK == vs_firmware_init(&fw_storage_impl,
+                                         vs_soft_secmodule_impl(&slots_storage_impl),
+                                         _manufacture_id,
+                                         _device_type,
+                                         &ver),
           "Unable to initialize Firmware module");
 
     if (VS_CODE_OK != vs_firmware_load_firmware_descriptor(_manufacture_id, _device_type, &desc)) {

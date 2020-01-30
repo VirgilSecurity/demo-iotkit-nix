@@ -327,8 +327,6 @@ vs_files_read(const char *folder,
 
         *read_sz = max_avail_sz < buf_sz ? max_avail_sz : buf_sz;
 
-        VS_LOG_DEBUG("Read file '%s', %d bytes", file_path, (int)*read_sz);
-
         if (1 == fread((void *)data, *read_sz, 1, fp)) {
             res = true;
         } else {
