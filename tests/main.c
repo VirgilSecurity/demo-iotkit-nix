@@ -130,6 +130,9 @@ main(int argc, char *argv[]) {
     int res = -1;
     vs_mac_addr_t mac;
 
+    vs_provision_events_t provision_events = {NULL};
+    vs_file_version_t ver;
+
     // Device parameters
     vs_device_manufacture_id_t manufacture_id;
     vs_device_type_t device_type;
@@ -176,11 +179,11 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
-    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl),
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl, provision_events),
           "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
 
     // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type, &ver),
                  "Unable to initialize Firmware module");
 
     // Secbox module
