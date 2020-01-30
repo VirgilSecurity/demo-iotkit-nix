@@ -273,7 +273,7 @@ int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
     bool is_image_correct = false;
-
+    vs_provision_events_t provision_events = {NULL};
 
     // Implementation variables
     vs_storage_op_ctx_t tl_storage_impl;
@@ -324,7 +324,8 @@ main(int argc, char *argv[]) {
     //
 
     // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, _secmodule_impl), "Cannot initialize Provision module");
+    STATUS_CHECK(vs_provision_init(&tl_storage_impl, _secmodule_impl, provision_events),
+                 "Cannot initialize Provision module");
 
     //
     // ---------- Check firmware image ----------
