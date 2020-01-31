@@ -129,7 +129,7 @@ main(int argc, char *argv[]) {
     STATUS_CHECK(vs_high_level_init(manufacture_id,
                                     device_type,
                                     serial,
-                                    VS_SNAP_DEV_GATEWAY,
+                                    VS_SNAP_DEV_THING,
                                     secmodule_impl,
                                     &tl_storage_impl,
                                     &fw_storage_impl,
