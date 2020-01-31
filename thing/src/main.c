@@ -206,7 +206,6 @@ _on_file_updated(vs_update_file_type_t *file_type,
                  const vs_mac_addr_t *gateway,
                  bool successfully_updated) {
 
-    char file_descr[512];
     const char *file_type_descr = NULL;
 
     VS_IOT_ASSERT(update_interface);
@@ -214,26 +213,13 @@ _on_file_updated(vs_update_file_type_t *file_type,
     VS_IOT_ASSERT(new_file_ver);
     VS_IOT_ASSERT(gateway);
 
-    if (VS_UPDATE_FIRMWARE == file_type->type) {
-        file_type_descr = "firmware";
-    } else {
-        file_type_descr = "trust list";
-    }
+    file_type_descr = (VS_UPDATE_FIRMWARE == file_type->type) ? "firmware" : "trust list";
 
-    VS_LOG_INFO(
-            "New %s was loaded and %s : %s",
-            file_type_descr,
-            successfully_updated ? "successfully installed" : "did not installed successfully",
-            update_interface->describe_version(
-                    update_interface->storage_context, file_type, new_file_ver, file_descr, sizeof(file_descr), false));
-    VS_LOG_INFO("Previous %s : %s",
+    VS_LOG_INFO("New %s was loaded and %s : %s",
                 file_type_descr,
-                update_interface->describe_version(update_interface->storage_context,
-                                                   file_type,
-                                                   prev_file_ver,
-                                                   file_descr,
-                                                   sizeof(file_descr),
-                                                   false));
+                successfully_updated ? "successfully installed" : "did not installed successfully",
+                VS_UPDATE_FILE_VERSION_STR_STATIC(new_file_ver));
+    VS_LOG_INFO("Previous %s : %s", file_type_descr, VS_UPDATE_FILE_VERSION_STR_STATIC(prev_file_ver));
 
     if (file_type->type == VS_UPDATE_FIRMWARE && successfully_updated) {
         vs_app_restart();
