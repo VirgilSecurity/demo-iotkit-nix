@@ -36,10 +36,9 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/snap.h>
-#include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/high-level/high-level.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 
@@ -147,6 +146,9 @@ main(int argc, char *argv[]) {
         VS_LOG_INFO(_test_message);
     }
 #endif
+
+    // Send broadcast notification about self start
+    vs_snap_info_start_notification(NULL);
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();

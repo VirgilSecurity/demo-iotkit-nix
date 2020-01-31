@@ -48,6 +48,7 @@
 #include "sdk-impl/firmware/firmware-nix-impl.h"
 #include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
 #include <threads/message-bin-thread.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 
 /******************************************************************************/
 int
@@ -145,6 +146,9 @@ main(int argc, char *argv[]) {
 
     // Start app
     vs_main_start_threads();
+
+    // Send broadcast notification about self start
+    vs_snap_info_start_notification(NULL);
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();
