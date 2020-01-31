@@ -41,7 +41,7 @@
 #include <virgil/iot/protocols/snap/snap-structs.h>
 #include "helpers/msg-queue.h"
 
-#define VS_NETIF_QUEUE_SZ (100)
+#define VS_NETIF_QUEUE_SZ (512)
 
 static vs_netif_t *_base_netif = 0;
 static vs_netif_process_cb_t _netif_process_cb = 0;
