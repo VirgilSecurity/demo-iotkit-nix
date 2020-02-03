@@ -95,19 +95,29 @@ _is_self_firmware_image(vs_file_info_t *fw_info) {
 }
 
 /*************************************************************************/
+static int
+_cancel_thread(pthread_t *thread) {
+    void *res;
+
+    if (0 != pthread_cancel(*thread) || 0 != pthread_join(*thread, &res) || PTHREAD_CANCELED != res) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*************************************************************************/
 void
 _stop_all_threads(void) {
-
-
     // Stop message bin thread
-    if (!vs_file_download_stop_thread()) {
+    if (0 != _cancel_thread(message_bin_thread)) {
         VS_LOG_ERROR("Unable to cancel message_bin_thread");
         exit(-1);
     }
     VS_LOG_INFO("message_bin_thread thread canceled");
 
     // Stop retrieval thread
-    if (!vs_message_bin_stop_thread()) {
+    if (0 != _cancel_thread(upd_http_retrieval_thread)) {
         VS_LOG_ERROR("Unable to cancel upd_http_retrieval_thread");
         exit(-1);
     }
@@ -224,10 +234,6 @@ vs_main_stop_threads(void) {
     // Stop main thread
     if (is_threads_started) {
         stop_threads = true;
-        if (0 != pthread_join(gateway_starter_thread, NULL)) {
-            VS_LOG_ERROR("Unable to cancel _gateway_task thread");
-            exit(-1);
-        }
+        pthread_join(gateway_starter_thread, NULL);
     }
-    VS_LOG_INFO("_gateway_task thread canceled");
 }

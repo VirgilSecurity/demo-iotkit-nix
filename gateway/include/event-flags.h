@@ -7,7 +7,7 @@
 
 // Firmware upgrade flags (message_bin)
 #define NEW_FIRMWARE_HTTP_BIT (1 << 0)
-#define STOP_THREAD_BIT (1 << 1)
+#define NEW_FW_URL (1 << 1)
 #define MSG_BIN_RECEIVE_BIT (1 << 2)
 
 // Incoming data flags (incoming_data_event_group)

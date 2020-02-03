@@ -18,8 +18,6 @@
 
 pthread_t *
 vs_file_download_start_thread(void);
-bool
-vs_file_download_stop_thread(void);
 
 bool
 vs_file_download_get_request(vs_update_file_type_t **request);

@@ -61,9 +61,6 @@ vs_status_e
 vs_message_bin_register_handlers(void);
 
 bool
-vs_message_bin_stop_thread(void);
-
-bool
 vs_message_bin_get_request(upd_request_t **request);
 
 #endif // GATEWAY_MESSAGE_BIN_H

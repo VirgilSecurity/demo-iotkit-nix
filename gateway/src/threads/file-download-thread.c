@@ -46,8 +46,8 @@
 static pthread_t upd_retrieval_thread;
 static vs_msg_queue_ctx_t *_event_queue;
 
-static volatile bool is_thread_started;
-static volatile bool thread_stop;
+static bool is_retrieval_started;
+
 #define FWDIST_QUEUE_SZ 10
 
 /*************************************************************************/
@@ -158,20 +158,12 @@ _upd_http_retrieval_task(void *pvParameters) {
 
     VS_LOG_DEBUG("vs_upd_http_retrieval thread started");
 
-    while (!thread_stop) {
+    while (1) {
         upd_request_t *request = NULL;
-        vs_event_bits_t evnt = vs_event_group_wait_bits(&gtwy->message_bin_events,
-                                                        MSG_BIN_RECEIVE_BIT | STOP_THREAD_BIT,
-                                                        true,
-                                                        true,
-                                                        VS_EVENT_GROUP_WAIT_INFINITE);
 
-        if (evnt & STOP_THREAD_BIT) {
-            while (vs_message_bin_get_request(&request)) {
-                free(request);
-            }
-            return NULL;
-        }
+        vs_event_group_wait_bits(
+                &gtwy->message_bin_events, MSG_BIN_RECEIVE_BIT, true, true, VS_EVENT_GROUP_WAIT_INFINITE);
+
         VS_LOG_DEBUG("vs_upd_http_retrieval thread resume");
 
         while (vs_message_bin_get_request(&request)) {
@@ -186,38 +178,22 @@ _upd_http_retrieval_task(void *pvParameters) {
             }
         }
     }
-
     return NULL;
 }
 
 /*************************************************************************/
 pthread_t *
 vs_file_download_start_thread(void) {
-    if (!is_thread_started) {
+    if (!is_retrieval_started) {
 
         _event_queue = vs_msg_queue_init(FWDIST_QUEUE_SZ, 1, 1);
 
-        is_thread_started = (0 == pthread_create(&upd_retrieval_thread, NULL, _upd_http_retrieval_task, NULL));
-        if (!is_thread_started) {
+        is_retrieval_started = (0 == pthread_create(&upd_retrieval_thread, NULL, _upd_http_retrieval_task, NULL));
+        if (!is_retrieval_started) {
             return NULL;
         }
     }
     return &upd_retrieval_thread;
-}
-
-/******************************************************************************/
-bool
-vs_file_download_stop_thread(void) {
-    if (is_thread_started) {
-        thread_stop = true;
-        vs_event_group_set_bits(&vs_gateway_ctx()->message_bin_events, STOP_THREAD_BIT);
-
-        if (0 != pthread_join(upd_retrieval_thread, NULL)) {
-            return false;
-        }
-        is_thread_started = false;
-    }
-    return true;
 }
 
 /*************************************************************************/
