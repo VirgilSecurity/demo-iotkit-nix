@@ -47,6 +47,8 @@
 
 static vs_msg_queue_ctx_t *upd_event_queue = NULL;
 static pthread_t _mb_thread;
+static volatile bool is_thread_started;
+static volatile bool thread_stop;
 
 /*************************************************************************/
 static void
@@ -104,7 +106,7 @@ static void *
 _mb_mqtt_task(void *params) {
     VS_LOG_DEBUG("message bin thread started");
 
-    while (true) {
+    while (!thread_stop) {
         if (VS_CODE_OK == vs_cloud_message_bin_process()) {
             vs_impl_msleep(500);
         } else {
@@ -128,18 +130,30 @@ vs_message_bin_register_handlers(void) {
 /*************************************************************************/
 pthread_t *
 vs_message_bin_start_thread() {
-    static bool is_threads_started = 0;
 
-    if (!is_threads_started) {
+    if (!is_thread_started) {
 
         upd_event_queue = vs_msg_queue_init(MB_QUEUE_SZ, 1, 1);
 
-        is_threads_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
-        if (!is_threads_started) {
+        is_thread_started = (0 == pthread_create(&_mb_thread, NULL, _mb_mqtt_task, NULL));
+        if (!is_thread_started) {
             return NULL;
         }
     }
     return &_mb_thread;
+}
+
+/******************************************************************************/
+bool
+vs_message_bin_stop_thread(void) {
+    if (is_thread_started) {
+        thread_stop = true;
+        if (0 != pthread_join(_mb_thread, NULL)) {
+            return false;
+        }
+        is_thread_started = false;
+    }
+    return true;
 }
 
 /*************************************************************************/
