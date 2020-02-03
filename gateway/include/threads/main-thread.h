@@ -62,5 +62,7 @@ vs_gateway_ctx(void);
 
 void
 vs_main_start_threads(void);
+void
+vs_main_stop_threads(void);
 
 #endif // GATEWAY_H

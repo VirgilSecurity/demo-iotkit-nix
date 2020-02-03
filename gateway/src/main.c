@@ -194,8 +194,9 @@ terminate:
 
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
+    // Stop all gateway threads
 
-
+    vs_main_stop_threads();
     // Deinitialize Virgil SDK modules
     vs_snap_deinit();
 
