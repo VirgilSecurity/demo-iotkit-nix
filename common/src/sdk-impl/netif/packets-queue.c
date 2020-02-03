@@ -41,11 +41,9 @@
 #include <virgil/iot/protocols/snap/snap-structs.h>
 #include "helpers/msg-queue.h"
 
-#define VS_NETIF_QUEUE_SZ (512)
+#define VS_NETIF_QUEUE_SZ (100)
 
-static vs_netif_t *_base_netif = 0;
 static vs_netif_process_cb_t _netif_process_cb = 0;
-static vs_netif_t _queued_netif = {0};
 static vs_msg_queue_ctx_t *_queue_ctx = 0;
 static pthread_t _queue_thread;
 static bool _queue_thread_ready = false;
@@ -55,26 +53,11 @@ static volatile bool _stop_queue = false;
 static volatile bool _stop_periodical = false;
 
 /******************************************************************************/
-static vs_status_e
-_queue_and_process(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
-    assert(_queue_ctx);
-    CHECK_RET(_queue_ctx, -1, "Queue context is Wrong");
-
-    if (data && data_sz) {
-        return vs_msg_queue_push(_queue_ctx, &_queued_netif, data, data_sz);
-    }
-
-    return VS_CODE_ERR_NULLPTR_ARGUMENT;
-}
-
-/******************************************************************************/
 static void *
 _msg_processing(void *ctx) {
     vs_netif_t *netif = 0;
     const uint8_t *data = 0;
     size_t data_sz = 0;
-
-    vs_log_thread_descriptor("netif msg thr");
 
     assert(_queue_ctx);
     if (!_queue_ctx) {
@@ -101,8 +84,6 @@ _msg_processing(void *ctx) {
 /******************************************************************************/
 static void *
 _periodical_processing(void *ctx) {
-    vs_log_thread_descriptor("netif periodic thr");
-
     while (!_stop_periodical) {
         sleep(1);
         // TODO: To improve working with periodical timer
@@ -114,20 +95,14 @@ _periodical_processing(void *ctx) {
 }
 
 /******************************************************************************/
-static vs_status_e
-_init_with_queue(struct vs_netif_t *netif,
-                 const vs_netif_rx_cb_t netif_rx_cb,
-                 const vs_netif_process_cb_t netif_process_cb) {
-    (void)netif;
-    assert(_base_netif);
-    CHECK_RET(_base_netif, -1, "Unable to initialize queued Netif because of wrong Base Netif");
+vs_status_e
+vs_packets_queue_init(vs_netif_process_cb_t packet_processor) {
+    // Save Callback function
+    _netif_process_cb = packet_processor;
 
     // Initialize RX Queue
     _queue_ctx = vs_msg_queue_init(VS_NETIF_QUEUE_SZ, 1, 1);
     CHECK_RET(_queue_ctx, -1, "Cannot create message queue.");
-
-    // Save Callback function
-    _netif_process_cb = netif_process_cb;
 
     // Create thread for periodical actions
     if (0 == pthread_create(&_periodical_thread, NULL, _periodical_processing, NULL)) {
@@ -137,25 +112,17 @@ _init_with_queue(struct vs_netif_t *netif,
     // Create thread to call Callbacks on data receive
     if (0 == pthread_create(&_queue_thread, NULL, _msg_processing, NULL)) {
         _queue_thread_ready = true;
-        return _base_netif->init(_base_netif, netif_rx_cb, _queue_and_process);
+        return VS_CODE_OK;
     }
 
     VS_LOG_ERROR("Cannot start thread to process RX Queue");
-    _queued_netif.deinit(_base_netif);
 
     return VS_CODE_ERR_THREAD;
 }
 
 /******************************************************************************/
-static vs_status_e
-_deinit_with_queue(struct vs_netif_t *netif) {
-    vs_status_e res;
-
-    (void)netif;
-
-    // Stop base Network Interface
-    res = _base_netif->deinit(_base_netif);
-
+vs_status_e
+vs_packets_queue_deinit(void) {
     // Stop RX processing thread
     if (_queue_thread_ready) {
         _stop_queue = true;
@@ -164,12 +131,7 @@ _deinit_with_queue(struct vs_netif_t *netif) {
     }
 
     // Free RX Queue
-    if (_queued_netif.user_data) {
-        vs_msg_queue_free(_queue_ctx);
-    }
-
-    // Clean user data
-    _queued_netif.user_data = NULL;
+    vs_msg_queue_free(_queue_ctx);
 
     // Stop periodical thread
     if (_periodical_ready) {
@@ -178,22 +140,20 @@ _deinit_with_queue(struct vs_netif_t *netif) {
         _periodical_ready = false;
     }
 
-    return res;
+    return VS_CODE_OK;
 }
 
 /******************************************************************************/
-vs_netif_t *
-vs_netif_queued(vs_netif_t *base_netif) {
-    assert(base_netif);
-    CHECK_RET(base_netif, NULL, "Unable to initialize queued Netif because of wrong Base Netif");
-    _base_netif = base_netif;
+vs_status_e
+vs_packets_queue_add(struct vs_netif_t *netif, const uint8_t *data, const uint16_t data_sz) {
+    assert(_queue_ctx);
+    CHECK_RET(_queue_ctx, -1, "Queue context is Wrong");
 
-    memcpy(&_queued_netif, base_netif, sizeof(_queued_netif));
+    if (data && data_sz) {
+        return vs_msg_queue_push(_queue_ctx, netif, data, data_sz);
+    }
 
-    _queued_netif.init = _init_with_queue;
-    _queued_netif.deinit = _deinit_with_queue;
-
-    return &_queued_netif;
+    return VS_CODE_ERR_NULLPTR_ARGUMENT;
 }
 
 /******************************************************************************/
