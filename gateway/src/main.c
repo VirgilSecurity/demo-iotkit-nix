@@ -197,6 +197,7 @@ terminate:
     // Stop all gateway threads
 
     vs_main_stop_threads();
+
     // Deinitialize Virgil SDK modules
     vs_snap_deinit();
 
