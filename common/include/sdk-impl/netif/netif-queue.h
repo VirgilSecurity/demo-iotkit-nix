@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -39,6 +39,6 @@
 #include <virgil/iot/protocols/snap/snap-structs.h>
 
 vs_netif_t *
-vs_netif_queued(const vs_netif_t *base_netif);
+vs_netif_queued(vs_netif_t *base_netif);
 
 #endif // VS_IOT_NETIF_QUEUE_IMPL_H

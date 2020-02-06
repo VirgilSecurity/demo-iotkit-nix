@@ -90,9 +90,7 @@ target_link_libraries(thing
 		nix-common-firmware
 		$<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
 
-		vs-module-firmware
-		virgil-iot-status-code
-		vs-module-snap-thing
+		vs-high-level-thing
 
 		enable_sanitizers
         enable_pedantic_mode

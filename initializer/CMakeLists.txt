@@ -79,8 +79,8 @@ function(initializer_executable _is_gateway _manufacture _model)
             PRIVATE
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--whole-archive>
             nix-common
-            vs-module-snap-initializer
             $<$<NOT:$<BOOL:${APPLE}>>:-Wl,--no-whole-archive>
+            vs-high-level-initializer
 
             $<$<BOOL:${ENABLE_FUZZY_TESTING}>:enable_fuzz_mode>
             enable_sanitizers

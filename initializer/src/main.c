@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -33,12 +33,12 @@
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
 #include <virgil/iot/secbox/secbox.h>
-#include <virgil/iot/trust_list/trust_list.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/protocols/snap.h>
-#include <virgil/iot/protocols/snap/prvs/prvs-server.h>
 #include <virgil/iot/status_code/status_code.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/high-level/high-level.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <trust_list-config.h>
 
 #include "helpers/app-helpers.h"
@@ -48,12 +48,11 @@
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_snap_service_t *snap_prvs_server;
-    vs_status_e ret_code;
+    vs_iotkit_events_t iotkit_events = {.reboot_request_cb = NULL};
 
     // Implementation variables
     vs_secmodule_impl_t *secmodule_impl = NULL;
-    vs_netif_t *netif_impl = NULL;
+    vs_netif_t *netifs_impl[2] = {NULL, NULL};
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
 
@@ -66,11 +65,11 @@ main(int argc, char *argv[]) {
 #if GATEWAY
     const char *title = "Gateway initializer";
     const char *devices_dir = "gateway";
-    uint32_t device_roles = VS_SNAP_DEV_GATEWAY;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_GATEWAY | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #else
     const char *title = "Thing initializer";
     const char *devices_dir = "thing";
-    uint32_t device_roles = VS_SNAP_DEV_THING;
+    uint32_t device_roles = (uint32_t)VS_SNAP_DEV_THING | (uint32_t)VS_SNAP_DEV_INITIALIZER;
 #endif
 
     // Initialize Logger module
@@ -90,13 +89,12 @@ main(int argc, char *argv[]) {
     vs_app_str_to_bytes(manufacture_id, MANUFACTURE_ID, VS_DEVICE_MANUFACTURE_ID_SIZE);
     vs_app_str_to_bytes(device_type, DEVICE_MODEL, VS_DEVICE_TYPE_SIZE);
 
-
     //
     // ---------- Create implementations ----------
     //
 
     // Network interface
-    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+    netifs_impl[0] = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -110,32 +108,24 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
-    // ---------- Initialize Virgil SDK modules ----------
+    // ---------- Initialize IoTKit internals ----------
     //
-
-    // Provision module
-    ret_code = vs_provision_init(&tl_storage_impl, secmodule_impl);
-    if (VS_CODE_OK != ret_code && VS_CODE_ERR_NOINIT != ret_code) {
-        VS_LOG_ERROR("Cannot initialize Provision module");
-        goto terminate;
-    }
-
-    // SNAP module
-    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, device_roles),
-                 "Unable to initialize SNAP module");
-
-    //
-    // ---------- Register SNAP services ----------
-    //
-
-    //  PRVS service
-    snap_prvs_server = vs_snap_prvs_server(secmodule_impl);
-    STATUS_CHECK(vs_snap_register_service(snap_prvs_server), "Cannot register PRVS service");
-
+    STATUS_CHECK(vs_high_level_init(manufacture_id,
+                                    device_type,
+                                    serial,
+                                    device_roles,
+                                    secmodule_impl,
+                                    &tl_storage_impl,
+                                    netifs_impl,
+                                    iotkit_events),
+                 "Cannot initialize IoTKit");
 
     //
     // ---------- Application work ----------
     //
+
+    // Send broadcast notification about self start
+    vs_snap_info_start_notification(NULL);
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();
@@ -149,14 +139,13 @@ terminate:
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
-    // Deinit Virgil SDK modules
-    vs_snap_deinit();
+    // De-initialize IoTKit internals
+    vs_high_level_deinit();
 
-    // Deinit provision
-    vs_provision_deinit();
-
-    // Deinit Soft Security Module
+    // De-initialize Soft Security Module
     vs_soft_secmodule_deinit();
 
     return VS_CODE_OK;
 }
+
+/******************************************************************************/
