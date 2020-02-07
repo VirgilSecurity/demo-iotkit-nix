@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -326,8 +326,6 @@ vs_files_read(const char *folder,
         UNIX_CALL(fseek(fp, offset, SEEK_SET));
 
         *read_sz = max_avail_sz < buf_sz ? max_avail_sz : buf_sz;
-
-        VS_LOG_DEBUG("Read file '%s', %d bytes", file_path, (int)*read_sz);
 
         if (1 == fread((void *)data, *read_sz, 1, fp)) {
             res = true;

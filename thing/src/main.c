@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -32,14 +32,13 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
+#include <unistd.h>
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/snap.h>
-#include <virgil/iot/protocols/snap/fldt/fldt-client.h>
-#include <virgil/iot/protocols/snap/info/info-server.h>
-#include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
+#include <virgil/iot/high-level/high-level.h>
+#include <virgil/iot/protocols/snap/info/info-server.h>
 #include <trust_list-config.h>
 #include <update-config.h>
 
@@ -52,25 +51,22 @@
 static const char _test_message[] = TEST_UPDATE_MESSAGE;
 #endif
 
-static void
-_on_file_updated(vs_update_file_type_t *file_type,
-                 const vs_file_version_t *prev_file_ver,
-                 const vs_file_version_t *new_file_ver,
-                 vs_update_interface_t *update_interface,
-                 const vs_mac_addr_t *gateway,
-                 bool successfully_updated);
+/******************************************************************************/
+void
+vs_impl_msleep(size_t msec) {
+    usleep(msec * 1000);
+}
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_snap_service_t *snap_info_server;
-    const vs_snap_service_t *snap_fldt_client;
+    vs_iotkit_events_t iotkit_events = {.reboot_request_cb = vs_app_restart};
     int res = -1;
 
     // Implementation variables
     vs_secmodule_impl_t *secmodule_impl = NULL;
-    vs_netif_t *netif_impl = NULL;
+    vs_netif_t *netifs_impl[2] = {NULL, NULL};
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
     vs_storage_op_ctx_t fw_storage_impl;
@@ -108,7 +104,7 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+    netifs_impl[0] = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -126,36 +122,20 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
-    // ---------- Initialize Virgil SDK modules ----------
+    // ---------- Initialize IoTKit internals ----------
     //
 
-    // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl), "Cannot initialize Provision module");
-
-    // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
-                 "Unable to initialize Firmware module");
-
-    // SNAP module
-    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, VS_SNAP_DEV_THING),
-                 "Unable to initialize SNAP module");
-
-    //
-    // ---------- Register SNAP services ----------
-    //
-
-    //  INFO server service
-    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
-    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register INFO server service");
-
-    //  FLDT client service
-    snap_fldt_client = vs_snap_fldt_client(_on_file_updated);
-    STATUS_CHECK(vs_snap_register_service(snap_fldt_client), "Cannot register FLDT client service");
-    STATUS_CHECK(vs_fldt_client_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx()),
-                 "Unable to add firmware file type");
-    STATUS_CHECK(vs_fldt_client_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx()),
-                 "Unable to add firmware file type");
-
+    // Initialize IoTKit
+    STATUS_CHECK(vs_high_level_init(manufacture_id,
+                                    device_type,
+                                    serial,
+                                    VS_SNAP_DEV_THING,
+                                    secmodule_impl,
+                                    &tl_storage_impl,
+                                    &fw_storage_impl,
+                                    netifs_impl,
+                                    iotkit_events),
+                 "Cannot initialize IoTKit");
 
     //
     // ---------- Application work ----------
@@ -166,6 +146,9 @@ main(int argc, char *argv[]) {
         VS_LOG_INFO(_test_message);
     }
 #endif
+
+    // Send broadcast notification about self start
+    vs_snap_info_start_notification(NULL);
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();
@@ -180,14 +163,8 @@ terminate:
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
-    // Deinitialize Virgil SDK modules
-    vs_snap_deinit();
-
-    // Deinit firmware
-    vs_firmware_deinit();
-
-    // Deinit provision
-    vs_provision_deinit();
+    // De-initialize IoTKit internals
+    vs_high_level_deinit();
 
     // Deinit Soft Security Module
     vs_soft_secmodule_deinit();
@@ -195,49 +172,6 @@ terminate:
     res = vs_firmware_nix_update(argc, argv);
 
     return res;
-}
-
-/******************************************************************************/
-static void
-_on_file_updated(vs_update_file_type_t *file_type,
-                 const vs_file_version_t *prev_file_ver,
-                 const vs_file_version_t *new_file_ver,
-                 vs_update_interface_t *update_interface,
-                 const vs_mac_addr_t *gateway,
-                 bool successfully_updated) {
-
-    char file_descr[512];
-    const char *file_type_descr = NULL;
-
-    VS_IOT_ASSERT(update_interface);
-    VS_IOT_ASSERT(prev_file_ver);
-    VS_IOT_ASSERT(new_file_ver);
-    VS_IOT_ASSERT(gateway);
-
-    if (VS_UPDATE_FIRMWARE == file_type->type) {
-        file_type_descr = "firmware";
-    } else {
-        file_type_descr = "trust list";
-    }
-
-    VS_LOG_INFO(
-            "New %s was loaded and %s : %s",
-            file_type_descr,
-            successfully_updated ? "successfully installed" : "did not installed successfully",
-            update_interface->describe_version(
-                    update_interface->storage_context, file_type, new_file_ver, file_descr, sizeof(file_descr), false));
-    VS_LOG_INFO("Previous %s : %s",
-                file_type_descr,
-                update_interface->describe_version(update_interface->storage_context,
-                                                   file_type,
-                                                   prev_file_ver,
-                                                   file_descr,
-                                                   sizeof(file_descr),
-                                                   false));
-
-    if (file_type->type == VS_UPDATE_FIRMWARE && successfully_updated) {
-        vs_app_restart();
-    }
 }
 
 /******************************************************************************/

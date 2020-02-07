@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -142,6 +142,8 @@ _gateway_task(void *pvParameters) {
     vs_firmware_descriptor_t desc;
     vs_update_file_type_t *queued_file;
     vs_file_info_t *request;
+
+    vs_log_thread_descriptor("gtw thr");
 
     // Start Message Bin processing thread
     message_bin_thread = vs_message_bin_start_thread();
