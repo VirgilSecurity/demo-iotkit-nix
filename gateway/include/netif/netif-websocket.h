@@ -32,38 +32,21 @@
 //
 //  Lead Maintainer: Virgil Security Inc. <support@virgilsecurity.com>
 
-#ifndef VS_IOT_APP_HELPERS_H
-#define VS_IOT_APP_HELPERS_H
+#ifndef VS_IOT_NETIF_WEBSOCKET_IMPL_H
+#define VS_IOT_NETIF_WEBSOCKET_IMPL_H
 
-#include <virgil/iot/protocols/snap.h>
-char *
-vs_app_get_commandline_arg(int argc, char *argv[], const char *shortname, const char *longname);
 
-vs_status_e
-vs_app_get_mac_from_commandline_params(int argc, char *argv[], vs_mac_addr_t *forced_mac_addr);
+#include <virgil/iot/protocols/snap/snap-structs.h>
 
-vs_status_e
-vs_app_get_image_path_from_commandline_params(int argc, char *argv[], char **path);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void
-vs_app_print_title(const char *devices_dir,
-                   const char *app_file,
-                   const char *manufacture_id_str,
-                   const char *device_type_str);
+vs_netif_t *
+vs_hal_netif_websock(const char *url, const char *account, vs_mac_addr_t mac_addr);
 
-void
-vs_app_sleep_until_stop(void);
+#ifdef __cplusplus
+}
+#endif
 
-void
-vs_app_restart(void);
-
-void
-vs_app_str_to_bytes(uint8_t *dst, const char *src, size_t elem_buf_size);
-
-void
-vs_app_get_serial(vs_device_serial_t serial, vs_mac_addr_t mac);
-
-bool
-vs_app_is_need_restart(void);
-
-#endif // VS_IOT_APP_HELPERS_H
+#endif // VS_IOT_NETIF_WEBSOCKET_IMPL_H

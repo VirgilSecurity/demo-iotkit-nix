@@ -52,12 +52,17 @@ target_sources(gateway
 		${CMAKE_CURRENT_LIST_DIR}/include/threads/main-thread.h
 		${CMAKE_CURRENT_LIST_DIR}/include/threads/message-bin-thread.h
 		${CMAKE_CURRENT_LIST_DIR}/include/threads/file-download-thread.h
+		${CMAKE_CURRENT_LIST_DIR}/include/netif/curl-websocket.h
+		${CMAKE_CURRENT_LIST_DIR}/include/netif/netif-websocket.h
 
         # Sources
         ${CMAKE_CURRENT_LIST_DIR}/src/main.c
 		${CMAKE_CURRENT_LIST_DIR}/src/threads/message-bin-thread.c
 		${CMAKE_CURRENT_LIST_DIR}/src/threads/main-thread.c
 		${CMAKE_CURRENT_LIST_DIR}/src/threads/file-download-thread.c
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/curl-websocket.c
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/curl-websocket-utils.c
+		${CMAKE_CURRENT_LIST_DIR}/src/netif/netif-websocket.c
         )
 
 #
