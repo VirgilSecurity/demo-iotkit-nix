@@ -49,20 +49,6 @@ static bool is_retrieval_started;
 
 #define FWDIST_QUEUE_SZ 10
 
-#define THREAD_CANCEL_DISABLE                                                                                          \
-    do {                                                                                                               \
-        if (0 != pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_cancel_state)) {                                  \
-            VS_LOG_ERROR("[MB] Failed to disable thread cancel, errno = %d (%s)", errno, strerror(errno));             \
-            exit(-1);                                                                                                  \
-        }                                                                                                              \
-    } while (0)
-#define THREAD_CANCEL_RESTORE                                                                                          \
-    do {                                                                                                               \
-        if (0 != pthread_setcancelstate(old_cancel_state, &old_cancel_state)) {                                        \
-            VS_LOG_ERROR("[MB] Failed to disable thread cancel, errno = %d (%s)", errno, strerror(errno));             \
-            exit(-1);                                                                                                  \
-        }                                                                                                              \
-    } while (0)
 /*************************************************************************/
 static void
 _sw_retrieval_mb_notify(gtwy_t *gtwy, upd_request_t *request) {
