@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -152,6 +152,8 @@ terminate:
 static void *
 _upd_http_retrieval_task(void *pvParameters) {
     gtwy_t *gtwy = vs_gateway_ctx();
+
+    vs_log_thread_descriptor("file download thr");
 
     // Wait for the snap stack and services to be up before looking for new firmware
     vs_event_group_wait_bits(&gtwy->shared_events, SNAP_INIT_FINITE_BIT, false, true, VS_EVENT_GROUP_WAIT_INFINITE);

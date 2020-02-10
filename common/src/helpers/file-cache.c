@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -40,7 +40,7 @@
 
 #include "helpers/file-cache.h"
 
-#define VS_FILE_CACHE_SZ (30)
+#define VS_FILE_CACHE_SZ (40)
 #define VS_FILE_CACHE_MAX_FILE_SZ (2 * 1024 * 1024)
 
 typedef struct {

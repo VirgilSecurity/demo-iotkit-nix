@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -36,11 +36,8 @@
 #include <virgil/iot/logger/logger.h>
 #include <virgil/iot/macros/macros.h>
 #include <virgil/iot/protocols/snap.h>
-#include <virgil/iot/protocols/snap/fldt/fldt-server.h>
+#include <virgil/iot/high-level/high-level.h>
 #include <virgil/iot/vs-curl-http/curl-http.h>
-#include <virgil/iot/protocols/snap/info/info-server.h>
-#include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/iot/firmware/firmware.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <trust_list-config.h>
 #include <update-config.h>
@@ -51,36 +48,18 @@
 #include "sdk-impl/firmware/firmware-nix-impl.h"
 #include <virgil/iot/vs-aws-message-bin/aws-message-bin.h>
 #include <threads/message-bin-thread.h>
-
-/******************************************************************************/
-static vs_status_e
-_add_filetype(const vs_update_file_type_t *file_type, vs_update_interface_t **update_ctx) {
-    switch (file_type->type) {
-    case VS_UPDATE_FIRMWARE:
-        *update_ctx = vs_firmware_update_ctx();
-        break;
-    case VS_UPDATE_TRUST_LIST:
-        *update_ctx = vs_tl_update_ctx();
-        break;
-    default:
-        VS_LOG_ERROR("Unsupported file type : %d", file_type->type);
-        return VS_CODE_ERR_UNSUPPORTED_PARAMETER;
-    }
-
-    return VS_CODE_OK;
-}
+#include <virgil/iot/protocols/snap/info/info-server.h>
 
 /******************************************************************************/
 int
 main(int argc, char *argv[]) {
     vs_mac_addr_t forced_mac_addr;
-    const vs_snap_service_t *snap_info_server;
-    const vs_snap_service_t *snap_fldt_server;
+    vs_iotkit_events_t iotkit_events = {.reboot_request_cb = NULL};
     int res = -1;
 
     // Implementation variables
     vs_secmodule_impl_t *secmodule_impl = NULL;
-    vs_netif_t *netif_impl = NULL;
+    vs_netif_t *netifs_impl[2] = {NULL, NULL};
     vs_storage_op_ctx_t tl_storage_impl;
     vs_storage_op_ctx_t slots_storage_impl;
     vs_storage_op_ctx_t fw_storage_impl;
@@ -118,7 +97,7 @@ main(int argc, char *argv[]) {
     //
 
     // Network interface
-    netif_impl = vs_app_create_netif_impl(forced_mac_addr);
+    netifs_impl[0] = vs_app_create_netif_impl(forced_mac_addr);
 
     // TrustList storage
     STATUS_CHECK(vs_app_storage_init_impl(&tl_storage_impl, vs_app_trustlist_dir(), VS_TL_STORAGE_MAX_PART_SIZE),
@@ -136,19 +115,8 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     //
-    // ---------- Initialize Virgil SDK modules ----------
+    // ---------- Initialize IoTKit internals ----------
     //
-
-    // Provision module
-    STATUS_CHECK(vs_provision_init(&tl_storage_impl, secmodule_impl), "Cannot initialize Provision module");
-
-    // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
-                 "Unable to initialize Firmware module");
-
-    // SNAP module
-    STATUS_CHECK(vs_snap_init(netif_impl, manufacture_id, device_type, serial, VS_SNAP_DEV_GATEWAY),
-                 "Unable to initialize SNAP module");
 
     // Cloud module
     STATUS_CHECK(vs_cloud_init(vs_curl_http_impl(), vs_aws_message_bin_impl(), secmodule_impl),
@@ -157,22 +125,17 @@ main(int argc, char *argv[]) {
     // Register message bin default handlers
     STATUS_CHECK(vs_message_bin_register_handlers(), "Unable to register message bin handlers");
 
-    //
-    // ---------- Register SNAP services ----------
-    //
-
-    //  INFO server service
-    snap_info_server = vs_snap_info_server(&tl_storage_impl, &fw_storage_impl, NULL);
-    STATUS_CHECK(vs_snap_register_service(snap_info_server), "Cannot register FLDT server service");
-
-    //  FLDT server service
-    snap_fldt_server = vs_snap_fldt_server(&forced_mac_addr, _add_filetype);
-    STATUS_CHECK(vs_snap_register_service(snap_fldt_server), "Cannot register FLDT server service");
-    STATUS_CHECK(vs_fldt_server_add_file_type(vs_firmware_update_file_type(), vs_firmware_update_ctx(), false),
-                 "Unable to add Firmware file type");
-    STATUS_CHECK(vs_fldt_server_add_file_type(vs_tl_update_file_type(), vs_tl_update_ctx(), false),
-                 "Unable to add Trust List file type");
-
+    // Initialize IoTKit
+    STATUS_CHECK(vs_high_level_init(manufacture_id,
+                                    device_type,
+                                    serial,
+                                    VS_SNAP_DEV_GATEWAY,
+                                    secmodule_impl,
+                                    &tl_storage_impl,
+                                    &fw_storage_impl,
+                                    netifs_impl,
+                                    iotkit_events),
+                 "Cannot initialize IoTKit");
 
     //
     // ---------- Application work ----------
@@ -183,6 +146,9 @@ main(int argc, char *argv[]) {
 
     // Start app
     vs_main_start_threads();
+
+    // Send broadcast notification about self start
+    vs_snap_info_start_notification(NULL);
 
     // Sleep until CTRL_C
     vs_app_sleep_until_stop();
@@ -197,15 +163,8 @@ terminate:
     VS_LOG_INFO("\n\n\n");
     VS_LOG_INFO("Terminating application ...");
 
-
-    // Deinitialize Virgil SDK modules
-    vs_snap_deinit();
-
-    // Deinit firmware
-    vs_firmware_deinit();
-
-    // Deinit provision
-    vs_provision_deinit();
+    // De-initialize IoTKit internals
+    vs_high_level_deinit();
 
     // Deinit Soft Security Module
     vs_soft_secmodule_deinit();

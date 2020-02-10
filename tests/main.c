@@ -1,4 +1,4 @@
-//  Copyright (C) 2015-2019 Virgil Security, Inc.
+//  Copyright (C) 2015-2020 Virgil Security, Inc.
 //
 //  All rights reserved.
 //
@@ -42,7 +42,6 @@
 #include <virgil/iot/secbox/secbox.h>
 #include <virgil/iot/storage_hal/storage_hal.h>
 #include <virgil/iot/trust_list/trust_list.h>
-#include <virgil/crypto/foundation/vscf_assert.h>
 #include <virgil/iot/vs-soft-secmodule/vs-soft-secmodule.h>
 #include <virgil/iot/firmware/firmware.h>
 #include <update-config.h>
@@ -126,16 +125,13 @@ _remove_keystorage_dir() {
 }
 
 /********************************************************************************/
-static void
-_assert_handler_fn(const char *message, const char *file, int line) {
-    VS_LOG_ERROR("%s %s %u", message, file, line);
-}
-
-/********************************************************************************/
 int
 main(int argc, char *argv[]) {
     int res = -1;
     vs_mac_addr_t mac;
+
+    vs_provision_events_t provision_events = {NULL};
+    vs_file_version_t ver;
 
     // Device parameters
     vs_device_manufacture_id_t manufacture_id;
@@ -155,7 +151,6 @@ main(int argc, char *argv[]) {
     vs_app_str_to_bytes(device_type, TEST_DEVICE_TYPE, sizeof(device_type));
 
     vs_logger_init(VS_LOGLEV_DEBUG);
-    vscf_assert_change_handler(_assert_handler_fn);
 
     // Set self path
     vs_firmware_nix_set_info(argv[0], manufacture_id, device_type);
@@ -184,11 +179,11 @@ main(int argc, char *argv[]) {
     secmodule_impl = vs_soft_secmodule_impl(&slots_storage_impl);
 
     // Provision module.
-    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl),
+    CHECK(VS_CODE_ERR_NOINIT == vs_provision_init(&tl_storage_impl, secmodule_impl, provision_events),
           "Initialization of provision module must return VS_CODE_ERR_NOINIT code");
 
     // Firmware module
-    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type),
+    STATUS_CHECK(vs_firmware_init(&fw_storage_impl, secmodule_impl, manufacture_id, device_type, &ver),
                  "Unable to initialize Firmware module");
 
     // Secbox module

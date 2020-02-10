@@ -105,8 +105,7 @@ target_link_libraries(gateway
 		vs-default-aws-message-bin
 		vs-module-cloud
 		vs-module-firmware
-		virgil-iot-status-code
-		vs-module-snap-gateway
+		vs-high-level-gateway
 
 		enable_sanitizers
         enable_pedantic_mode
@@ -117,7 +116,7 @@ target_link_libraries(gateway
 #
 if(NOT GO_DISABLE)
 	if(NOT GW_APP_FILE_SIZE)
-		set(GW_APP_FILE_SIZE "1048576" CACHE STRING "Full gateway application file size")
+		set(GW_APP_FILE_SIZE "2097152" CACHE STRING "Full gateway application file size")
 	endif()
 
 	if(NOT GW_APP_CHUNK_SIZE)
