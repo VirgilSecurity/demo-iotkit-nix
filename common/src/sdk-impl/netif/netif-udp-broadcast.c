@@ -211,6 +211,7 @@ _prepare_dst_addr(void) {
 
     VS_LOG_INFO("VS_BCAST_SUBNET_ADDR = %s", _bcast_addr_str);
     _dst_addr = inet_addr(_bcast_addr_str);
+    VS_LOG_INFO("_dst_addr = %llx", (unsigned long long)_dst_addr);
 }
 
 /******************************************************************************/
